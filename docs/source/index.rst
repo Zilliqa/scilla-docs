@@ -10,23 +10,17 @@ Scilla
 Scilla is an intermediate-level smart contract language being developed for
 Zilliqa.
 
-Scilla by Example
-======================================
 
-
-License
-======================================
-
+Contents
+=========
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   license
+   intro
+   scilla-by-example
+   scilla-in-depth
+   interface
+   contact
 
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
