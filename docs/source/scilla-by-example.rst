@@ -2,8 +2,51 @@ Scilla by Example
 ==================
 
 
-Ping Pong
+HelloWorld
 ###################
+
+.. code-block:: ocaml
+
+    (* This contract implements a simple HelloWorld contract.*)
+
+
+    (***************************************************)
+    (*               Associated library                *)
+    (***************************************************)
+    library HelloWorld
+
+    let one_msg = 
+      fun (msg : Message) => 
+      let nil_msg = Nil {Message} in
+      Cons {Message} msg nil_msg
+
+    let not_owner_code  = 1
+
+    (***************************************************)
+    (*             The contract definition             *)
+    (***************************************************)
+
+    contract HelloWorld
+    (owner : Address)
+
+    field msg_str : String = "HelloWorld"
+    
+    transition SayHello ()
+	    is_owner = builtin eq owner _sender;
+  	    match is_owner with
+  	    | False => 
+ 	      msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
+                  code : not_owner_code};
+          msgs = one_msg msg;
+          send msgs
+	    | True =>
+	      greet <- msgstr;
+          msg = {_tag : Main; _recipient : _sender; _amount : 0; welcome_msg : greet};
+          msgs = one_msg msg;
+          send msgs
+        end
+    end 
+
 
 
 Crowdfunding
