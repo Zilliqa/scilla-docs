@@ -6,6 +6,13 @@
 Scilla
 ======================================
 
+.. image:: nstatic/imgs/scilla-logo-color.jpg
+    :width: 200px
+    :align: center
+    :height: 200px
+    :alt: alternate text
+
+
 
 Scilla is an intermediate-level smart contract language being developed for
 Zilliqa.
