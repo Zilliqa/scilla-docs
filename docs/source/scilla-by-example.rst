@@ -7,7 +7,7 @@ HelloWorld
 
 .. code-block:: ocaml
 
-    (* This contract implements a simple HelloWorld contract.*)
+    (* HelloWorld contract *)
 
 
     (***************************************************)
@@ -27,27 +27,24 @@ HelloWorld
     (***************************************************)
 
     contract HelloWorld
-    (owner : Address)
+    (owner: Address)
 
-    field msg_str : String = "HelloWorld"
-    
-    transition SayHello ()
-	    is_owner = builtin eq owner _sender;
-  	    match is_owner with
-  	    | False => 
- 	      msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-                  code : not_owner_code};
-          msgs = one_msg msg;
-          send msgs
-	    | True =>
-	      greet <- msgstr;
-          msg = {_tag : Main; _recipient : _sender; _amount : 0; welcome_msg : greet};
-          msgs = one_msg msg;
-          send msgs
-        end
-    end 
+    field msgstr : String = "Hello World"
 
-
+    transition SayHello()
+      is_owner = builtin eq owner _sender;
+      match is_owner with
+      | False =>
+        msg = {_tag : Main; _recipient : _sender; _amount : 0; code : not_owner_code};
+        msgs = one_msg msg;
+        send msgs
+      | True =>
+        greeting <- msgstr;
+        msg = {_tag : Main; _recipient : _sender; _amount : 0; welcome_msg : greeting};
+        msgs = one_msg msg;
+        send msgs
+      end
+    end
 
 Crowdfunding
 ###################
