@@ -6,23 +6,68 @@ HelloWorld
 ###################
 
 We start off by writing a classical ``HelloWorld.scilla`` contract with the
-following specification:
+following  specification:
 
-+ It should have an immutable field named ``owner`` that will be initialized by
+
++ It should have an immutable field ``owner`` to be initialized by
   the creator of the contract. ``owner`` will be of type ``Address``. 
 
-+ It should have a mutable field named ``welcome_msg`` of type ``String`` initialized to
-  empty.
++ It should have a mutable field ``welcome_msg`` of type ``String`` initialized to
+  ``""``.
 
-+ The ``owner`` and only her should be able to modify ``welcome_msg`` through a
-  transition ``SetHello (msg: String)``, where ``msg`` is the value to which
++ The ``owner`` and only her should be able to modify ``welcome_msg`` through an
+  interface ``SetHello (msg: String)``, where ``msg`` is a value to which
   ``welcome_msg`` should be changed. 
 
-+ Any sender can call a transition named ``Get_msg()`` to be welcomed with
++ It should have an interface ``GetHello()`` that welcomes any caller with
   ``welcome_msg``. 
 
-The code to define the contract and its mutable and immutable parameters is
-given below:  
+
+Defining Contract and its (Im)Mutable Parameters
+**************************************************
+
+A contract is declared using the ``contract`` keyword that starts the scope of
+the contract. The keyword is followed by the name of the contract which is
+``HelloWorld`` in this case. 
+
+.. code-block:: ocaml
+
+    contract HelloWorld
+
+
+.. note::
+	In the current implementation, a scilla contract can only contain a single
+	contract declaration and hence any code that follows the ``contract`` is part
+	of contract declaration. In other words, there is no explicit keyword to
+	declare the end of the contract definition.
+
+
+
+Then follows the declaration of immutable parameters, the scope of which is
+defined by ``()``.  Each immutable variable is declared in the following way:
+``vname: vtype``, where ``vname`` is the variable name and ``vtype`` is the
+variable type. Immutable parameters are separted by ``,``. As per the
+specification, the contract will have only one immutable variable ``owner`` of
+type ``Address``.  
+
+
+.. code-block:: ocaml
+
+    (owner: Address)
+
+Mutable parameters in a contract are declared through keyword ``field``. Each
+mutable variable is declared in the following way: ``field vname : vtype
+= init_val``, where ``vname`` is the variable name, ``vtype`` is its 
+type and ``init_val`` is the value to which the variable has to be initialized.
+The contract has one mutable parameter ``welcome_msg`` of type ``String``
+initialized to ``""``.
+
+.. code-block:: ocaml
+
+    field welcome_msg : String = ""
+
+
+At this stage, the contract fragment will look like the following:
 
 .. code-block:: ocaml
 
@@ -32,24 +77,28 @@ given below:
     field welcome_msg : String = ""
 
 
-The ``contract`` keyword starts the scope of the contract and is followed by
-the name of the contract which is ``HelloWorld`` in this case. 
+Defining Interfaces `aka` Transitions
+***************************************
 
-Then, follows the set of immutable parameters the scope of which is defined by
-parantheses ``()``.  Each immutable variable is declared in the following way:
-``name: type``, where ``name`` is the variable name and ``type`` is the
-variable type. As per the specification defined above, we have an ``owner``
-variable of type ``Address``.  
+Interfaces like ``SetHello (msg :  String)`` are referred to as `transitions`
+in Scilla. Transitions are similar to `functions` or `methods` in other
+languages.  
 
-Mutable parameters in a contract are identified through keyword ``field``. Each
-mutable variable is declared in the following way: ``field var_name : var_type
-= init_val``, where ``var_name`` is the variable name, ``var_type`` is variable
-type and ``init_val`` is the value to which the variable has to be initia;ozed.
-The contract has one mutable parameter ``welcome_msg`` of type ``String``
-initialized to ``""``.
+A transition is identified by the keyword ``transition``. The end of the scope
+of a  transition is declared by the keyword ``end``. The ``transition``
+keyword is followed by the transition name, which is ``SetHello`` in the
+example. Then follows the input prarmeters within ``()``. Each input prameter
+is separated by a ``,`` and is declared in the following format: ``vname :
+vtype``. According to the specification, ``SetHello`` takes only one parameter
+of name ``msg`` of type ``String``.
 
+.. code-block:: ocaml
 
-Below is the first transition ``SetHello (msg : String)``.
+    transition SetHello (msg : String)
+
+What follows the transition signature is the body of the transition. Code
+for the first transition ``SetHello (msg :  String)`` to set ``welcome_msg`` is given below: 
+
 
 
 .. code-block:: ocaml
@@ -58,28 +107,20 @@ Below is the first transition ``SetHello (msg : String)``.
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        msg = {_tag : Main; _recipient : _sender; _amount : 0; code : not_owner_code};
+        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : not_owner_code};
         msgs = one_msg msg;
         send msgs
       | True =>
         welcome_msg := msg;
-        msg = {_tag : Main; _recipient : _sender; _amount : 0; code : set_hello_code};
+        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : set_hello_code};
         msgs = one_msg msg;
         send msgs
       end
     end
 
-A transition is identified by the keyword ``transition``. The end of the
-transition is identified by ``end``. The ``transition`` keyword is followed by
-the transition name, which is ``SetHello`` in the example. Then follows the
-input prarmeters within ``()``. Each input prameter is separated by a ``,`` and
-is declared in the following format: ``vname : vtype``. According to the
-specification, ``SetHello`` takes only one parameter of name ``msg`` of type
-``String``.
+At first, the sender of the transaction is checked against the ``owner`` using
+the instruction ``builtin eq owner _sender`` which returns a boolean value.
 
-What follows the transition signature is the body of the transition. At first,
-the sender of the transaction is checked against the ``owner`` using the
-instruction ``builtin eq owner _sender`` which returns a boolean value.
 
 .. note::
 
@@ -87,10 +128,29 @@ instruction ``builtin eq owner _sender`` which returns a boolean value.
     special variables are often prefixed by ``_``. For instance, ``_sender`` in
     Scilla means the account address that called the current contract.
 
+Depending on the boolean value, the transition takes different paths using pattern matching, the syntax of which is standard.
+
+.. code-block:: ocaml
+
+	match expr with
+	| x => expr_1
+	| y => expr_2
+        end 
+
     
-In the case where, the sender is not the ``owner``, the contract is going to
-return a message (denoted ``msg``) as an output. An outgoing message is a list
-of ``vname : value`` pairs, each
+In case the caller is different from ``owner``, the contract sends a message
+(denoted ``msg``) as an output, with an error code ``code : not_owner_code``.
+More concretely, the output message in this case is:
+
+.. code-block:: ocaml
+
+        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : not_owner_code};
+
+.. note::
+
+	An outgoing message from a contract is a list of ``vname : value`` pairs, the
+	scope of which is defined using ``{}``. Each outgoing message must have three
+	compulsory fields: `_tag`, ``_recipient`` and  
 
 
 .. code-block:: ocaml
