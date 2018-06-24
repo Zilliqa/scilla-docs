@@ -10,7 +10,6 @@ Scilla
     :width: 200px
     :align: center
     :height: 200px
-    :alt: alternate text
 
 
 
