@@ -19,12 +19,12 @@ following  specification:
   the value of a variable even after the contract has been deployed.
 
 + The ``owner`` and **only her** should be able to modify ``welcome_msg``
-  through an interface ``SetHello``. The interface takes a ``msg`` (of type
+  through an interface ``setHello``. The interface takes a ``msg`` (of type
   ``String``) as input and  allows the ``owner`` to set the value of
   ``welcome_msg`` to ``msg``. 
 
-+ It should have an interface ``GetHello`` that welcomes any caller with
-  ``welcome_msg``. ``GetHello`` will not take any input. 
++ It should have an interface ``getHello`` that welcomes any caller with
+  ``welcome_msg``. ``getHello`` will not take any input. 
 
 
 Defining Contract and its (Im)Mutable Fields
@@ -83,11 +83,21 @@ that includes the contract name and its (im)mutable variables:
 
     field welcome_msg : String = ""
 
+    
+
+.. note::
+        In addition to these fields, any contract in Scilla has an implicitly
+        declared mutable field balance (initialised upon the contract’s
+        creation), which keeps the amount of funds held by the contract.  This
+        field can be freely read within the implementation, but can only
+        modified by explicitly transferring funds to other accounts.
+
+
 
 Defining Interfaces `aka` Transitions
 ***************************************
 
-Interfaces like ``SetHello`` are referred to as `transitions` in Scilla.
+Interfaces like ``setHello`` are referred to as `transitions` in Scilla.
 Transitions are similar to `functions` or `methods` in other languages.  
 
 
@@ -101,18 +111,18 @@ Transitions are similar to `functions` or `methods` in other languages.
 
 A transition is declared using the keyword ``transition``. The end of a
 transition scope is declared using the keyword ``end``. The ``transition``
-keyword is followed by the transition name, which is ``SetHello`` for our
+keyword is followed by the transition name, which is ``setHello`` for our
 example. Then follows the input parameters within ``()``. Each input parameter
 is separated by a ``,`` and is declared in the following format: ``vname :
-vtype``.  According to the specification, ``SetHello`` takes only one parameter
+vtype``.  According to the specification, ``setHello`` takes only one parameter
 of name ``msg`` of type ``String``.  This yields the following code fragment:
 
 .. code-block:: ocaml
 
-    transition SetHello (msg : String)
+    transition setHello (msg : String)
 
 What follows the transition signature is the body of the transition. Code for
-the first transition ``SetHello (msg :  String)`` to set ``welcome_msg`` is
+the first transition ``setHello (msg :  String)`` to set ``welcome_msg`` is
 given below: 
 
 
@@ -120,7 +130,7 @@ given below:
 .. code-block:: ocaml
     :linenos:
 
-    transition SetHello (msg : String)
+    transition setHello (msg : String)
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
@@ -286,7 +296,7 @@ At this stage, our contract fragment will have the following form:
 
     field welcome_msg : String = ""
 
-    transition SetHello (msg : String)
+    transition setHello (msg : String)
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
@@ -301,16 +311,16 @@ At this stage, our contract fragment will have the following form:
       end
     end
 
-Giving Final Touches
+Final Touches
 *********************
 
-We may now add the second transition ``GetHello()`` that allows any caller to be greeted by ``welcome_msg``. The declaration is similar to ``SetHello (msg : String)`` accept that ``GetHello()`` does not take any parameter. 
+We may now add the second transition ``getHello()`` that allows any caller to be greeted by ``welcome_msg``. The declaration is similar to ``setHello (msg : String)`` accept that ``getHello()`` does not take any parameter. 
 
 
 
 .. code-block:: ocaml
 
-    transition GetHello ()
+    transition getHello ()
         r <- welcome_msg;
         msg = {_tag : Main; _recipient : _sender; _amount : 0; msg : r};
         msgs = one_msg msg;
@@ -349,7 +359,7 @@ The complete contract that implements the desired specification is given below:
 
     field welcome_msg : String = ""
 
-    transition SetHello (msg : String)
+    transition setHello (msg : String)
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
@@ -364,7 +374,7 @@ The complete contract that implements the desired specification is given below:
       end
     end
 
-    transition GetHello ()
+    transition getHello ()
         r <- welcome_msg;
         msg = {_tag : Main; _recipient : _sender; _amount : 0; msg : r};
         msgs = one_msg msg;
@@ -376,10 +386,32 @@ The complete contract that implements the desired specification is given below:
 Crowdfunding
 ###################
 
-Below is an example of a crowdfunding contract in Scilla. The contract has the following specification:
+In this section, we present a slightly more involved contract that runs a
+crowdfunding campaign. In a crowdfunding campaign, a project owner wishes to
+raise funds through donations from the community. 
+
+It is  assumed that the owner (``owner``) wishes to run the campaign for a
+certain pre-determined period of time (``max_block``). The owner also wishes to
+raise a minimum amount of funds (``goal``) without which the project can not be
+started. The contract hence has three immutable variables ``owner``,
+``max_block`` and ``goal``. 
 
 
+The campaign is deemed successful if the owner can raise the minimum goal i the
+stipulated time. In
+case the campaign is unsuccessful, the donations are returned to the project
+backers who contributed during the campaign. The contract maintains two mutable
+variables: ``backer`` a map between contributor's address and amount
+contributed and a boolean flag ``funded`` that indicates whether the owner has already
+transferred the funds after the end of the campaign.
 
+The contract contains three transitions: ``Donate ()`` that allows anyone to
+contribute to the crowdfunding campaign, ``GetFunds ()`` that allows **only the
+owner** to claim the donated amount and transfer it to ``owner`` and
+``ClaimBack()`` that allows contributors to claim back their donations in case
+the campaign is not successful.
+
+The complete contract is given below:
 
 .. code-block:: ocaml
 
@@ -534,7 +566,9 @@ Below is an example of a crowdfunding contract in Scilla. The contract has the f
 	  match after_deadline with
 	  | False =>
 	    msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-		    code : too_early_code};
+		    
+		The complete contract is given below:
+		code : too_early_code};
 	    msgs = one_msg msg;
 	    send msgs
 	  | True =>
