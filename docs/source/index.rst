@@ -23,6 +23,7 @@ Contents
    :maxdepth: 3
 
    intro
+   scilla-trial
    scilla-by-example
    scilla-in-depth
    interface
