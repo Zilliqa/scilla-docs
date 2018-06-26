@@ -5,7 +5,7 @@ Scilla is under active development. At this stage, there are two ways to try
 out Scilla. 
 
 
-Scilla Blockchain IDE
+Blockchain IDE
 **********************
 
 The simplest way to try out Scilla is through the `Scilla Blokchain IDE`. The
@@ -33,7 +33,7 @@ To try out the Blockchain IDE, users need to go through the Zilliqa testnet
 wallet.
 
 
-Scilla Interpreter IDE
+Interpreter IDE
 ************************
 
 `Scilla Interpreter IDE` is a simple development environment meant for users
