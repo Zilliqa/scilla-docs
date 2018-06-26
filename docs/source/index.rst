@@ -6,15 +6,22 @@
 Scilla
 ======================================
 
-.. image:: nstatic/imgs/scilla-logo-color.jpg
+.. image:: nstatic/imgs/scilla-logo-color-transparent.png
     :width: 200px
     :align: center
     :height: 200px
 
 
 
-Scilla short for `Smart Contract Intermediate-Level LAnguage`  is an
+`Scilla` short for `Smart Contract Intermediate-Level LAnguage`  is an
 intermediate-level smart contract language being developed for Zilliqa.
+
+Zilliqa is a blockchain infrastructure designed to be scalable. It employs the
+idea of sharding to process transactions in parallel. Zilliqa has an intrinsic
+token named `Zilling` (ZIL for short) that are required to run smart contracts
+on Zilliqa.
+
+
 
 
 Contents
@@ -23,6 +30,7 @@ Contents
    :maxdepth: 3
 
    intro
+   scilla-trial
    scilla-by-example
    scilla-in-depth
    interface

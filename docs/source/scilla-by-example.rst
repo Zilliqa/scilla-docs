@@ -134,12 +134,12 @@ given below:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : not_owner_code};
+        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : not_owner_code};
         msgs = one_msg msg;
         send msgs
       | True =>
         welcome_msg := msg;
-        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : set_hello_code};
+        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : set_hello_code};
         msgs = one_msg msg;
         send msgs
       end
@@ -188,7 +188,7 @@ The output message in this case is an error code ``not_owner_code`` included in
 
 .. code-block:: ocaml
 
-        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : not_owner_code};
+        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : not_owner_code};
 
 
         
@@ -300,12 +300,12 @@ At this stage, our contract fragment will have the following form:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : not_owner_code};
+        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : not_owner_code};
         msgs = one_msg msg;
         send msgs
       | True =>
         welcome_msg := msg;
-        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : set_hello_code};
+        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : set_hello_code};
         msgs = one_msg msg;
         send msgs
       end
