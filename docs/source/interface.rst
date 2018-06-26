@@ -1,32 +1,32 @@
 Interpreter Interface
 =========================
 
-The Scilla interpreter executable provides a calling interface so as to allow
-invoking of transitions with specified inputs and obtain outputs. Execution of
+The Scilla interpreter executable provides a calling interface that enables users
+to invoke transitions with specified inputs and obtain outputs. Execution of
 a contract with supplied inputs will result in a set of outputs and a change in
 the smart contract mutable state. 
 
 Calling Interface
 ###################
 
-A transition defined in a smart contract can be called either by issuing a
-transaction or by another smart contract through message calls. The same
-interface will be used to call a contract via a transaction from outside and
-also for inter-contract message calls.
+A transition defined in a smart contract can be called either by the issuance of a
+transaction or by message calls from another smart contract. As such, the
+calling interface will be used to call the contract via external transactions and
+inter-contract message calls.
 
-The input to the interpreter (``scilla-runner``) consists of four JSON files.
-Each of these are described below. Every execution of the interpreter will be
-provided with four json inputs: ::
+The inputs to the interpreter (``scilla-runner``) consists of four JSON files 
+as described below. Every execution of the interpreter can be
+provided with these four json inputs: ::
 
     ./scilla-runner -init init.json -istate input_state.json -iblockchain input_blockchain.json -imessage input_message.json -o output.json -i input.scilla
 
 The interpreter executable can be run either to create a contract (denoted
 ``CreateContract``) or to invoke a function in a contract (``InvokeContract``).
-Depending on the two cases, some of the arguments will be absent. The table
+Depending on which of these two cases, some of the arguments will be absent. The table
 below presents the arguments that should be present in either of the two cases.
-A ``CreateContract`` or an ``InvokeContract`` can be distinguished based on the
+A ``CreateContract`` can be distinguished from an ``InvokeContract``, based on the
 presence of ``input_message.json``. If the argument is absent, then the
-interpreter will treat evaluation as a ``CreateContract`` else it will treat it
+interpreter will evaluate it as a ``CreateContract``. Else, it will treat it
 as an ``InvokeContract``. Note that for ``CreateContract``, the interpreter
 only performs basic type checking to match with contract’s immutable
 parameters.
@@ -55,8 +55,8 @@ Initial Immutable State
 #########################
 
 ``init.json`` defines the values of the immutable variables in a contract.
-`init.json` does not change b/w invocations.  ``init.json`` is an array of
-objects, each of which contains the following fields:
+`init.json` does not change between invocations.  ``init.json`` is an array of
+objects, where each of which contains the following fields:
 
 =====  ==========================================
 Field      Description
@@ -96,7 +96,7 @@ A sample ``init.json`` for this contract will look like the following:
 Example 2
 **********
     
-For  ``Crowdfunding.scilla`` contract fragment given below, we have three 
+For the ``Crowdfunding.scilla`` contract fragment given below, we have three 
 immutable variables ``owner``, ``max_block`` and ``goal``.
 
 
@@ -135,13 +135,13 @@ A sample ``init.json`` for this contract will look like the following:
 Input Blockchain State
 ########################
 
-``input_blockchain.json`` supplies the current blockchain state to the
+``input_blockchain.json`` feeds the current blockchain state to the
 interpreter. It is similar to ``init.json``, except that it is a fixed size
-array of objects, each object having ``vname`` fields only from a
+array of objects, where each object has ``vname`` fields only from a
 pre-determined set (which correspond to actual blockchain state variables). 
 
-Permitted JSON example: only JSONs that differ in the ``value`` field from the
-below example are permitted for now.
+**Permitted JSON fields:** Only JSONs that differ in the ``value`` field as per the
+example below are permitted for now.
 
 .. code-block:: json
 
@@ -157,7 +157,7 @@ Input Message
 ###############
 
 ``input_message.json`` contains the required information to invoke a
-transition. The json is an array of the following four objects:
+transition. The json is an array containing the following four objects:
 
 =======  ===========================================
 Field      Description
@@ -173,8 +173,8 @@ The first three fields namely ``_sender``, ``_amount``, and ``_tag`` are compuls
 sense that their value cannot be ``NULL``. 
 
 The ``params`` array is encoded similar to how ``init.json`` is encoded,
-specifying the (``vname``, ``type``, ``value``) of each parameter that has to be
-passed to the transition being invoked. 
+with each parameter specifying the (``vname``, ``type``, ``value``) that has to be
+passed to the transition that is being invoked. 
 
 Example 1
 **********
@@ -243,11 +243,11 @@ fields:
 Field      Description
 =======  ================================================================  
 message   The emitted message to another contract/non-contract account. 
-states    And array of objects that form the new contract state
+states    An array of objects that form the new contract state
 =======  ================================================================  
 
-``message`` is a JSON object that will have a similar format as
-``input_message.json``, except that instead of ``_sender``, it will have a
+``message`` is a JSON object that will have a similar format to
+``input_message.json``, except that instead of ``_sender`` field, it will have a
 ``_recipient`` field. The fields in ``message`` are given below:
 
 ===========       ===========================================
@@ -261,10 +261,12 @@ params             An array of parameter objects to be passed
 
 
 The ``params`` array is encoded similar to how ``init.json`` is encoded,
-specifying the (``vname``, ``type``, ``value``) of each parameter that has to
-be passed to the transition being invoked. ``states`` is an array of objects
+with each parameter specifying the (``vname``, ``type``, ``value``) that has to
+be passed to the transition that is being invoked. 
+
+``states`` is an array of objects
 that represents the mutable state of the contract. Each entry of the ``states``
-array also specifies ``vname``, ``type``, ``value``. 
+array also specifies (``vname``, ``type``, ``value``). 
 
 
 Example 1
@@ -327,17 +329,17 @@ Another slightly more involved example with ``Map`` in ``states``.
 .. note::
 
     For mutable variables of type ``Map``, the first entry in the ``value``
-    field is a type of the ``key`` and ``value``. Also note the ``value``
-    field of a variable of type ``ADT`` that has several field namely,
+    field are the types of the ``key`` and ``value``. Also, note that the ``value``
+    field of a variable of type ``ADT`` has several fields namely,
     ``constructor``, ``argtypes`` and ``arguments``.
 
 Input Mutable Contract State
 ############################
 
 ``input_state.json`` contains the current value of mutable state variables. It
-is similar to the ``states`` field in ``output.json`` except that there is an
+is similar to the ``states`` field in ``output.json``, except that there is an
 extra field ``_balance`` that contains the balance of the contract in ZILs.
-Given below is an example of ``input_state.json`` for ``Crowdfunding.scilla``. 
+An example of ``input_state.json`` for ``Crowdfunding.scilla`` is given below. 
 
 .. code-block:: json
 
