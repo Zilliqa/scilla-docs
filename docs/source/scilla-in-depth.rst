@@ -30,15 +30,15 @@ writing from/to a mutable smart contract variable.
 - ``x <- f`` : Read from a mutable field ``f`` into ``x``.
 - ``f := x`` : Write ``x`` to a mutable field  ``f``.
 
-One can also read from the blockchain state. Blockchain state consists of
-certain values associated with blocks, for instance, the ``BLOCKNUMBER``. 
+One can also read from the blockchain state. A blockchain state consists of
+certain values associated with their block, for instance, the ``BLOCKNUMBER``. 
 
 - ``x <- &B`` reads from the blockchain state variable ``B`` into ``x``.
 
 
 
 Whenever ZIL tokens are sent via a transition, the transition has to explicitly
-accept the transfer. It is done through ``accept`` statement.
+accept the transfer. This is done through the ``accept`` statement.
 
 - ``accept`` : Accept incoming payment.
 
@@ -90,11 +90,11 @@ declared by specifying using keyword `String`.
 
 The following ``String`` operations are language built-in.
 
-- ``eq s1 s1`` : Is ``String s1`` equal to ``String s2``.
+- ``eq s1 s2`` : Is ``String s1`` equal to ``String s2``.
   Returns ``Bool``.
 - ``concat s1 s2`` : Concatenate ``String s1`` with ``String s2``.
   Returns `String`.
-- ``substr s1 i2 i2`` : Extract sub-string of ``String s2`` starting
+- ``substr s1 i1 i2`` : Extract sub-string of ``String s1`` starting
   from position ``Uint32 i1`` with length ``Uint32 i2``.
   Returns ``String``.
 
@@ -105,7 +105,7 @@ with ``0x`` and have 64 hexadecimal characters (32 bytes). The keyword
 ``Hash`` specifies variables of this type.
 
 The following ``Hash`` operations are language built-in. In the
-description below, ``Any`` can be ``IntX``, ``UintX``, ``String``,
+description below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``,
 ``Address`` or ``Hash``.
 
 - ``eq h1 h2``: Is ``Hash h1`` equal to ``Hash h2``. Returns ``Bool``.
@@ -119,15 +119,15 @@ Maps
 ``Map`` values provide key-value store. Keys can have types ``IntX``,
 ``UintX``, ``String``, ``Hash`` or ``Address``. Values can be of any type.
 
-- ``put m k v``: Insert key ``k`` and value ``v ``into ``Map m``.
-  Returns a new ``Map`` with the just inserted key/value in addition to
+- ``put m k v``: Insert key ``k`` and value ``v`` into ``Map m``.
+  Returns a new ``Map`` with the newly inserted key/value in addition to
   the key/value pairs contained earlier.
 - ``get m k``: In ``Map m``, for key ``k``, return the associated value
   as ``Option v``. The returned value is ``None`` if ``k`` is not in the
   map ``m``.
 - ``remove k``: Remove key ``k`` and it's associated value ``v``
   from the map. Returns a new updated ``Map``.
-- ``contains k``: Is key ``k`` and it's associated value ``v`` present in the map?
+- ``contains k``: Is key ``k`` and it's associated value ``v`` present in the map.
   Returns ``Bool``.
 
 Addresses
@@ -144,14 +144,14 @@ The following ``Address`` operations are language built-in.
 Block Numbers
 *************
 Block numbers have a dedicated type in Scilla. Variables of this type are
-specified with the keyword ``BNum``. A ``BNum`` literal is an sequence of
+specified with the keyword ``BNum``. A ``BNum`` literal is a sequence of
 digits with the keyword ``block`` prefixed (example ``block 101``).
 
 The following ``BNum`` operations are language built-in.
 
 - ``eq b1 b2``: Is ``BNum b1`` equal to ``BNum b2``. Returns ``Bool``.
 - ``blt b1 b2``: Is ``BNum b1`` less than ``BNum b2``. Returns ``Bool``.
-- ``badd b1 i1``: Add ``UintX i1`` to BNum b1. Returns ``BNum``.
+- ``badd b1 i1``: Add ``UintX i1`` to ``BNum b1``. Returns ``BNum``.
 
 Algebraic Data Types (ADTs)
 ######################################
@@ -165,8 +165,8 @@ using the constructors ``True`` and ``False``.
 
 Option
 *******
-Similar to ``Option`` in OCaml, the ``Option`` ADT in Scilla provides
-a means to represent the presence of a value ``x`` or the absense of
+Similar to ``Option`` in OCaml, the ``Option`` ADT in Scilla provides 
+means to represent the presence of a value ``x`` or the absense of
 any value. The presence of a value ``x`` can be constructed as
 ``Some {'A} x`` and the absence of any value is constructed as
 ``None {'A}``. ``'A`` here is a type variable that can be instantiated
@@ -177,11 +177,11 @@ List
 ****
 The ``List`` ADT, similar to Lists in other functional languages
 provides a structure to contain a list of values of the same type.
-A ``List`` is specified using the ``List`` keyword and can be 
-constructed to be an empty list ``Nil {'A}`` or adding element to
+A ``List`` is specified using the ``List`` keyword and can be used for
+constructing an empty list ``Nil {'A}`` or adding an element to
 an existing list ``Cons {'A} h l``, where ``'A`` is a type variable
-that can be instantiated withy any type and ``h`` is an element of
-type ``'A`` which is inserted to the beginning of list ``l`` (of type 
+that can be instantiated with any type and ``h`` is an element of
+type ``'A`` that is inserted to the beginning of list ``l`` (of type 
 ``List 'A``).
 
 
@@ -190,6 +190,6 @@ Pair
 ``Pair`` ADTs are used to contain a pair of values of possibly different
 types. ``Pair`` variables are specified using the ``Pair`` keyword and
 can be constructed using the constructor ``Pair {'A 'B} a b`` where
-``'A`` and ``'B`` are type variables that can be instantiated to any type
+``'A`` and ``'B`` are type variables that can be instantiated to any type,
 and ``a`` and ``b`` are variables of type ``'A`` and ``'B`` respectively.
 
