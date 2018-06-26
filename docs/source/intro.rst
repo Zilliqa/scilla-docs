@@ -46,15 +46,39 @@ designed to achieve both `expressivity` and `tractability` at the same time,
 while enabling formal reasoning about contract behavior by adopting certain
 fundamental design principles as described below:
 
-Separation Between Computation and Communication
-################################################
+**Separation Between Computation and Communication**
+
+Contracts in Scilla are structured as communicating automata: every in-contract
+computation (e.g., changing its balance or computing a value of a function) is
+implemented as a standalone, atomic transition, i.e., without involving any
+other parties. Whenever such involvement is required (e.g., for transferring
+control to another party), a transition would end, with an explicit
+communication, by means of sending and receiving messages. The automata-based
+structure makes it possible to disentangle the contract-specific effects (i.e.,
+transitions) from blockchain-wide interactions (i.e., sending/receiving funds
+and messages), thus providing a clean reasoning mechanism about contract
+composition and invariants.
 
 
 
-Separation Between Effectful and Pure Computations
-##################################################
+**Separation Between Effectful and Pure Computations**
 
+Any in-contract computation happening within a transition has to terminate, and
+have a predictable effect on the state of the contract and the execution.  In
+order to achieve this, Scilla draws inspiration from functional programming
+with effects, drawing a distinction between pure expressions (e.g., expressions
+with primitive data types and maps), impure local state manipulations (i.e.,
+reading/writing into contract fields) and blockchain reflection (e.g., reading
+current block number). By carefully designing semantics of interaction between
+pure and impure language aspects, Scilla ensures a number of foundational
+properties about contract transitions, such as progress and type preservation,
+while also making them amenable to interactive and/or automatic verification
+with standalone tools.
 
+**Separation Between Invocation and Continuation**
 
-Separation Between Invocation and Continuation
-##################################################
+Structuring contracts as communicating automata provides a computational model,
+known as continuation-passing style (CPS), in which every call to an external
+function (i.e., another contract) can be done as the absolutely last
+instruction. 
+
