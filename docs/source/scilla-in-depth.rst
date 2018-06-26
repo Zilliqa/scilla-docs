@@ -20,11 +20,38 @@ Transitions
 Pure Computations
 *****************
 
-Impure Computations
-*******************
+Statements 
+***********
+
+Statements in Scilla are operations with effect, i.e., these operations are
+impure and hence non purely mathematical. Such operations including reading or
+writing from/to a mutable smart contract variable. 
+
+- ``x <- f`` : Read from a mutable field ``f`` into ``x``.
+- ``f := x`` : Write ``x`` to a mutable field  ``f``.
+
+One can also read from the blockchain state. Blockchain state consists of
+certain values associated with blocks, for instance, the ``BLOCKNUMBER``. 
+
+- ``x <- &B`` reads from the blockchain state variable ``B`` into ``x``.
+
+
+
+Whenever ZIL tokens are sent via a transition, the transition has to explicitly
+accept the transfer. It is done through ``accept`` statement.
+
+- ``accept`` : Accept incoming payment.
+
 
 Communication
 ***************
+
+A contract can communicate with other contracts (or non-contract) accounts
+through ``send`` statement:
+
+- ``send ms`` : send a list of messages ``ms``.
+
+
 
 Primitive Data Types & Operations
 #################################
