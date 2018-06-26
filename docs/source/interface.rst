@@ -1,7 +1,7 @@
 Interpreter Interface
 =========================
 
-The Scilla interpreter executable provides a calling interface that enables the User
+The Scilla interpreter executable provides a calling interface that enables users
 to invoke transitions with specified inputs and obtain outputs. Execution of
 a contract with supplied inputs will result in a set of outputs and a change in
 the smart contract mutable state. 
@@ -11,7 +11,7 @@ Calling Interface
 
 A transition defined in a smart contract can be called either by the issuance of a
 transaction or by message calls from another smart contract. As such, the
-Calling Interface will be used to call the contract via external transactions and
+calling interface will be used to call the contract via external transactions and
 inter-contract message calls.
 
 The inputs to the interpreter (``scilla-runner``) consists of four JSON files 
