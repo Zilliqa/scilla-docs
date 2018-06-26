@@ -6,7 +6,7 @@
 Scilla
 ======================================
 
-.. image:: nstatic/imgs/scilla-logo-color.jpg
+.. image:: nstatic/imgs/scilla-logo-color-transparent.png
     :width: 200px
     :align: center
     :height: 200px
