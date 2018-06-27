@@ -206,6 +206,17 @@ that can be instantiated with any type and ``h`` is an element of
 type ``'A`` that is inserted to the beginning of list ``l`` (of type 
 ``List 'A``).
 
+The following two structural recursion primitives are provided for any
+``List``.
+
+- ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  For any types ``'A`` and ``'B``, ``list_foldl`` recursively processes
+  the input list (``List 'A``) from left to right, by applying an 
+  iterator function (``'B -> 'A -> 'B``) to the element being processed
+  and an accummulator (``'B``). The initial value of this accummulator is
+  provided as argument to ``list_foldl``.
+- ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  Same as ``list_foldl`` but process the list elements from right to left.
 
 Pair
 ****
