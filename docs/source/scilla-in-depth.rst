@@ -17,8 +17,32 @@ Mutable Variables
 Transitions
 ************
 
-Pure Computations
-*****************
+Exressions 
+************
+
+Expression handle pure operations. The supported expressions in Scilla are:
+
+- ``let x = f in e`` :  Give ``f`` the name ``x`` within expression ``e``.
+  The binding of ``x`` to ``f`` within ``e`` here is local and hence limited to ``e``.
+
+- ``let x = f`` : Give  ``f`` the name ``x`` in the contract. The binding of
+  ``x`` to ``f`` is global and extends to the end of the contract.
+
+
+- ``{ <entry>_k}`` : Message, where each entry has the following form:
+
+- ``<entry> := b : x`` : Entry with identified ``b`` of value ``x``.
+
+- ``fun (x : T) => e`` : A function that takes an input ``x`` of type ``T`` and
+  returns the value to which expression ``e`` evaluates.
+
+- ``f x`` : Apply ``f`` on ``x``.
+
+- ``builtin f x``: Apply ``builtin`` ``f`` on ``x``.
+
+- 
+  
+
 
 Statements 
 ***********
@@ -34,8 +58,6 @@ One can also read from the blockchain state. A blockchain state consists of
 certain values associated with their block, for instance, the ``BLOCKNUMBER``. 
 
 - ``x <- &B`` reads from the blockchain state variable ``B`` into ``x``.
-
-
 
 Whenever ZIL tokens are sent via a transition, the transition has to explicitly
 accept the transfer. This is done through the ``accept`` statement.
@@ -184,6 +206,17 @@ that can be instantiated with any type and ``h`` is an element of
 type ``'A`` that is inserted to the beginning of list ``l`` (of type 
 ``List 'A``).
 
+The following two structural recursion primitives are provided for any
+``List``.
+
+- ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  For any types ``'A`` and ``'B``, ``list_foldl`` recursively processes
+  the input list (``List 'A``) from left to right, by applying an 
+  iterator function (``'B -> 'A -> 'B``) to the element being processed
+  and an accummulator (``'B``). The initial value of this accummulator is
+  provided as argument to ``list_foldl``.
+- ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  Same as ``list_foldl`` but process the list elements from right to left.
 
 Pair
 ****
