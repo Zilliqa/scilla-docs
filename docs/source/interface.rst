@@ -14,26 +14,27 @@ Calling Interface
 ###################
 
 A transition defined in a smart contract can be called either by the issuance
-of a transaction or by message calls from another smart contract. As such, the
+of a transaction or by message calls from another smart contract. The same
 calling interface will be used to call the contract via external transactions
 and inter-contract message calls.
 
-The inputs to the interpreter (``scilla-runner``) consists of four JSON files
-as described below. Every execution of the interpreter can be provided with
-these four json inputs: ::
+The inputs to the interpreter (``scilla-runner``) consists of four input JSON
+files as described below. Every invocation of the interpreter to execute a 
+transition must be provided with these four json inputs: ::
 
     ./scilla-runner -init init.json -istate input_state.json -iblockchain input_blockchain.json -imessage input_message.json -o output.json -i input.scilla
 
 The interpreter executable can be run either to create a contract (denoted
-``CreateContract``) or to invoke a function in a contract (``InvokeContract``).
-Depending on which of these two cases, some of the arguments will be absent.
-The table below presents the arguments that should be present in either of the
-two cases.  A ``CreateContract`` can be distinguished from an
-``InvokeContract``, based on the presence of ``input_message.json``. If the
-argument is absent, then the interpreter will evaluate it as a
-``CreateContract``. Else, it will treat it as an ``InvokeContract``. Note that
-for ``CreateContract``, the interpreter only performs basic type checking to
-match with contract’s immutable parameters.
+``CreateContract``) or to invoke a transition (function) in a contract (``InvokeContract``).
+Depending on which of these two, some of the arguments will be absent.
+The table below outlays the arguments that should be present in eac of
+these two cases.  A ``CreateContract`` is distinguished from an
+``InvokeContract``, based on the presence of ``input_message.json`` and
+``input_state.json``. If these argument is absent, then the interpreter will 
+evaluate it as a ``CreateContract``. Else, it will treat it as an ``InvokeContract``. 
+Note that for ``CreateContract``, the interpreter only performs basic checks such as
+matching the contract’s immutable parameters with ``init.json`` and whether the
+contract definition is free of syntax errors.
 
 
 +---------------------------+---------------------------+------------------------------------------+
@@ -41,7 +42,7 @@ match with contract’s immutable parameters.
 +===========================+===========================+=====================+====================+
 | Input                     |    Description            |``CreateContract``   | ``InvokeContract`` |
 +---------------------------+---------------------------+---------------------+--------------------+
-| ``init.json``             | Immutable fields          | Yes                 |  Yes               |
+| ``init.json``             | Immutable contract params | Yes                 |  Yes               |
 +---------------------------+---------------------------+---------------------+--------------------+
 | ``input_state.json``      | Mutable contract state    | No                  |  Yes               |  
 +---------------------------+---------------------------+---------------------+--------------------+
@@ -55,12 +56,12 @@ match with contract’s immutable parameters.
 +---------------------------+---------------------------+---------------------+--------------------+
 
 
-Initial Immutable State
-#########################
+Initializing the Immutable State
+################################
 
-``init.json`` defines the values of the immutable variables in a contract.
-`init.json` does not change between invocations.  ``init.json`` is an array of
-objects, where each of which contains the following fields:
+``init.json`` defines the values of the immutable paramters of a contract.
+It does not change between invocations.  The JSON is an array of
+objects, each of which contains the following fields:
 
 =====  ==========================================
 Field      Description
@@ -145,7 +146,7 @@ array of objects, where each object has ``vname`` fields only from a
 pre-determined set (which correspond to actual blockchain state variables). 
 
 **Permitted JSON fields:** Only JSONs that differ in the ``value`` field as per
-the example below are permitted for now.
+the example below are permitted currently.
 
 .. code-block:: json
 
@@ -173,8 +174,8 @@ params    An array of parameter objects
 =======  ===========================================  
 
 
-The first three fields namely ``_sender``, ``_amount``, and ``_tag`` are
-compulsory in the sense that their value cannot be ``NULL``. 
+All the four fields are mandatory. ``params`` can be empty if the transition
+takes no parameters.
 
 The ``params`` array is encoded similar to how ``init.json`` is encoded, with
 each parameter specifying the (``vname``, ``type``, ``value``) that has to be
