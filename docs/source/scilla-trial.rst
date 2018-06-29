@@ -66,13 +66,15 @@ Both IDEs come with the following sample smart contracts written in Scilla:
   to a pre-defined account. Else, if the campaign fails, then contributors can
   take back their donations.
 
+
 + **Zil-game**: It is a two-player game where the goal is to find the closest
   pre-image of a given SHA256 digest. More formally, given a digest `d`, and
-  two values `x` and `y`, `x` is said to be a closer pre-image than `y` of `d` if 
-  Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for some `Distance`
+  two values `x` and `y`, `x` is said to be a closer pre-image than `y` of `d`
+  if Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for some `Distance`
   function.
 
-+ **FungibleToken**: Fungible token contract mimics and ERC20 style fungible token standard.
++ **FungibleToken**: Fungible token contract mimics and ERC20 style fungible
+  token standard.
 
 + **OpenAuction** : A simple open auction contract where bidders can make their
   bid, the highest and winning bid amount goes to a pre-defined account. The
