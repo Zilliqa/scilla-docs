@@ -218,6 +218,58 @@ The following two structural recursion primitives are provided for any
 - ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` :
   Same as ``list_foldl`` but process the list elements from right to left.
 
+The following code example demonstrates building a list of ``Int32`` values.
+
+.. code-block:: ocaml
+
+  let one = Int32 1 in
+  let two = Int32 2 in
+  let ten = Int32 10 in
+  let eleven = Int32 11 in
+
+  let nil = Nil {Int32} in
+  let l1 = Cons {Int32} one nil in
+  let l2 = Cons {Int32} ten l1 in
+  let l3 = Cons {Int32} two l2 in
+    Cons {Int32} eleven l3
+
+Here, we build the list beginning with an empty list ``Nil {Int32}``.
+The rest of the list is built by inserting numbers to the beginning
+of the list. The final list built in this example is ``[1;2;10;11]``.
+
+To further illustrate ``List`` in Scilla, we show a small example using
+``list_foldl`` to count the number of elements in a list.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_length =
+    tfun 'A =>
+    fun (l : List 'A) =>
+      let folder = @list_foldr 'A Int32 in
+      let init = Int32 0 in
+      let iter =
+        fun (h : 'A) =>
+        fun (z : Int32) =>
+          let one = Int32 1 in
+            builtin add one z
+       in
+         folder iter init l
+
+``list_length`` defines a function that takes one argument ``l`` of
+type ``List 'A``, where ``'A`` is a parametric type (type variable),
+specified in ``line 2``. We instantiate ``list_foldl`` in ``line 4``
+for a list of type ``'A`` with the accummulator type being ``Int32``.
+An initial value of ``0`` is used for the accummulator. The iterator
+function ``iter`` increments the accummulator as it is invoked by
+the folder for each element of the list ``l``. The final value of
+the accummulator will be the number of increments or in other words,
+the number of elements in the list.
+
+Common ``List`` utilities (including ``list_length``) are provided
+in the ``ListUtils`` library, part of the standard library distribution
+for Scilla.
+
 Pair
 ****
 ``Pair`` ADTs are used to contain a pair of values of possibly different
@@ -226,3 +278,30 @@ can be constructed using the constructor ``Pair {'A 'B} a b`` where
 ``'A`` and ``'B`` are type variables that can be instantiated to any type,
 and ``a`` and ``b`` are variables of type ``'A`` and ``'B`` respectively.
 
+Below is an example for constructor a ``Pair`` of ``Int32`` values.
+
+.. code-block:: ocaml
+
+  let one = 1 in
+  let two = 2 in
+  let p = Pair {Int32 Int32} one two in
+    ...
+
+We now illustrate how pattern matching can be used to extract the
+first element from a ``Pair``. The function ``fst`` shown below
+is defined in the ``PairUtils`` library of the Scilla standard library.
+
+.. code-block:: ocaml
+
+  let fst =
+    tfun 'A =>
+    fun (p : Pair 'A 'A) =>
+    match p with
+    | Pair {'A 'A} a b =>
+        a
+    end
+
+  let p = Pair {Int32 Int32} one two in
+  let fst_int = @fst Int32 in
+  let a = fst_int p in
+    ... (* a = one *) ...
