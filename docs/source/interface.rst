@@ -27,10 +27,10 @@ transition must be provided with these four json inputs: ::
 The interpreter executable can be run either to create a contract (denoted
 ``CreateContract``) or to invoke a transition (function) in a contract (``InvokeContract``).
 Depending on which of these two, some of the arguments will be absent.
-The table below outlays the arguments that should be present in eac of
+The table below outlays the arguments that should be present in each of
 these two cases.  A ``CreateContract`` is distinguished from an
 ``InvokeContract``, based on the presence of ``input_message.json`` and
-``input_state.json``. If these argument is absent, then the interpreter will 
+``input_state.json``. If these arguments are absent, then the interpreter will 
 evaluate it as a ``CreateContract``. Else, it will treat it as an ``InvokeContract``. 
 Note that for ``CreateContract``, the interpreter only performs basic checks such as
 matching the contract’s immutable parameters with ``init.json`` and whether the
