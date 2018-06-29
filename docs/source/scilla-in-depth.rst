@@ -5,6 +5,66 @@ Structure of a Scilla Contract
 #################################
 
 
+The general structure of a Scilla contract is given in the code fragment below.
+It starts with the declaration of a ``library`` that contains purely
+mathematical functions, for instance, a function to compute the boolean ``AND``
+of two bits or computing factorial of a given natural number.  After the
+library code block follows the actual contract definition declared using the
+keyword ``contract``. A contract has three parts. The first part declares the
+immutable parameters of the contract; the second declares the mutable fields
+and the third part contains all ``transition`` definitions. 
+
+
+
+.. code-block:: ocaml
+
+    (* Scilla contract structure *)
+
+
+    (***************************************************)
+    (*               Associated library                *)
+    (***************************************************)
+    
+    library MyContractLib
+
+    
+    (* Library code block follows *)
+    
+    
+
+    (***************************************************)
+    (*             Contract definition                 *)
+    (***************************************************)
+
+    contract MyContract
+
+    (* Immutable fields declaration *)
+
+    (vname_1 : vtype_1,
+     vname_2 : vtype_2)
+
+    (* Mutable fields declaration *)
+
+    field vname_1 : vtype_1 = init_val_1
+    field vname_2 : vtype_2 = init_val_2
+
+    (* Transitions *)
+
+
+    (* Transition signature *)
+    transition firstTransition (param_1 : type_1, param_2 : type_2)
+      (* Transition body *)
+    
+     end
+
+    transition secondTransition (param_1: type_1)
+      (* Transition body *)
+    
+    end
+
+
+
+
 Libraries
 **********
 

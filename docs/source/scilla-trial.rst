@@ -48,3 +48,33 @@ inputs, for instance, the current contract and blockchain state among others.
 Refer to :ref:`interface-label`  to read about the format of the inputs. 
 
 In order to user this IDE, users do not need to hold testnet ZIL.
+
+
+Example Contracts
+******************
+
+Both IDEs come with the following sample smart contracts written in Scilla:
+
++ **HelloWorld**: It is a simple contract that allows a pre-defined
+  account to set a welcome message. Later anyone can call the contract to be
+  returned the welcome message.
+
+
++ **Crowdfunding**: Crowdfunding implements a kickstarter campaign where
+  users can donate funds to the contract. If the campaign is successful, i.e.,
+  enough money is raised within a given time period, the raised money can be sent
+  to a pre-defined account. Else, if the campaign fails, then contributors can
+  take back their donations.
+
++ **Zil-game**: It is a two-player game where the goal is to find the closest
+  pre-image of a given SHA256 digest. More formally, given a digest `d`, and
+  two values `x` and `y`, `x` is said to be a closer pre-image than `y` of `d` if 
+  Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for some `Distance`
+  function.
+
++ **FungibleToken**: Fungible token contract mimics and ERC20 style fungible token standard.
+
++ **OpenAuction** : A simple open auction contract where bidders can make their
+  bid, the highest and winning bid amount goes to a pre-defined account. The
+  remaining bidding amounts can be claimed back by the corresponding bidders.  
+
