@@ -70,12 +70,65 @@ Libraries
 
 Immutable Variables
 *******************
+Immutable variables, or contract parameters have their values defined
+at the time of contract creation and cannot be modified after that.
+The list of immutable variables in the contract is specified at the
+beginning of the contract, right after the contract name is defined.
+
+Declaration of immutable varialbes has the following format:
+
+.. code-block:: ocaml
+
+  (vname1 : type1,
+   vname2 : type2,
+    ...  )
+
+Each declaration consists of a variable name (an identifier) and
+its type, separated by ``:``. Multiple variable declarations are
+separated by ``,``. The initialization values for variables are to
+be specified in ``init.json`` at the time of contract creation.
 
 Mutable Variables
 *****************
+Mutable variables represent the mutable state of the contract. They
+are also called fields. They are declared after the immutable variables,
+with each declaration prefixed with the keyword ``field``.
+
+.. code-block:: ocaml
+
+  field name1 : type1 = expr1
+  field name2 : type2 = expr2
+  ...
+
+Each expression here is an initializer for that value. The definitions
+complete the initial state of the contract, at the time of creation.
+As the contract goes through transition, new values for these fields are
+obtained from the input state (``input_state.json``) on each transition
+invocation.
 
 Transitions
 ************
+Transition define the change in state of the contract. These functions
+are defined with the keyword ``transition`` followed by the name and
+parameters to the function. The definition ends with the ``end`` keyword.
+
+.. code-block:: ocaml
+
+  transition foo (name1 : type1, name2 : type2, ...)
+    ...
+  end
+
+where ``name : type `` specify the name and type of each paramter and
+multiple parameters separated by ``,``. In addition to parameters that
+are explicitly declared in the definition, each ``transition`` has,
+available to it, the following implicit parameters.
+
+- ``_sender : Address`` : The account (sender of message) that triggered
+  this transition.
+- ``_amount : Uint128`` : Incoming amount (ZILs). This must be explicitly
+  accepted using the ``accept`` statement. The money transfer does not happen
+  if the transition does not execute ``accept``.
+
 
 Exressions 
 ************
@@ -88,20 +141,31 @@ Expression handle pure operations. The supported expressions in Scilla are:
 - ``let x = f`` : Give  ``f`` the name ``x`` in the contract. The binding of
   ``x`` to ``f`` is global and extends to the end of the contract.
 
-
-- ``{ <entry>_k}`` : Message, where each entry has the following form:
-
-- ``<entry> := b : x`` : Entry with identified ``b`` of value ``x``.
+- ``{ <entry>_1 ; <entry>_2 ... }``: Message expression, where each entry 
+  has the following form: ``b : x``. Here ``b`` is an identifier and 
+  ``x`` a variable, whose value is bound to the identifier in the message.
 
 - ``fun (x : T) => e`` : A function that takes an input ``x`` of type ``T`` and
   returns the value to which expression ``e`` evaluates.
 
 - ``f x`` : Apply ``f`` on ``x``.
 
-- ``builtin f x``: Apply ``builtin`` ``f`` on ``x``.
+- ``builtin f x``: Apply the ``builtin`` function ``f`` on ``x``.
 
-- 
-  
+- `match` expression: Matches a bound variable with patterns and executes
+  the statements in that clause. The `match` expression is similar to the
+  `match` in OCaml. The pattern to be matched can be a variable binding, 
+  an ADT constructor (see ADTs_) or the wildcard ``_`` symbol to match anything.
+
+.. code-block:: ocaml
+
+  match x with
+  | pattern1 =>
+     statements ...
+  | pattern2 =>
+     statements ...
+  end
+
 
 
 Statements 
@@ -112,7 +176,7 @@ impure and hence non purely mathematical. Such operations including reading or
 writing from/to a mutable smart contract variable. 
 
 - ``x <- f`` : Read from a mutable field ``f`` into ``x``.
-- ``f := x`` : Write ``x`` to a mutable field  ``f``.
+- ``f := x`` : Updatemutable field  ``f`` with value ``x``.
 
 One can also read from the blockchain state. A blockchain state consists of
 certain values associated with their block, for instance, the ``BLOCKNUMBER``. 
@@ -132,7 +196,6 @@ A contract can communicate with other contracts (or non-contract) accounts
 through ``send`` statement:
 
 - ``send ms`` : send a list of messages ``ms``.
-
 
 
 Primitive Data Types & Operations
@@ -237,6 +300,8 @@ The following ``BNum`` operations are language built-in.
 
 Algebraic Data Types (ADTs)
 ######################################
+.. _ADTs:
+
 Algebraic data types are composite types, used commonly in functional
 programming. The following ADTs are featured in Scilla.
 
