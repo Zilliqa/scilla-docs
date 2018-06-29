@@ -366,6 +366,31 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
   let a = fst_int p in
     ... (* a = one *) ...
 
+Nat
+***
+Scilla provides an ADT for working with natural numbers. A natural
+number ``Nat`` is defined to be either ``Zero`` or ``Succ Nat``,
+i.e., the successor of a natural number. We show a formal definition
+for ``Nat`` in OCaml below:
+
+.. code-block:: ocaml
+
+  type nat = Zero | Succ of nat
+
+The following folding (structural recursion) is defined for ``Nat``
+in Scilla, where ``'T`` is a parametric type variable.
+
+.. code-block:: ocaml
+
+  nat_fold : ('T -> Nat -> 'T) -> 'T -> Nat -> 'T
+
+Similar in spirit to the ``List`` folds described earlier, the ``Nat``
+fold takes an initial accummulator (of type ``'T``) and a function that
+takes as arguments a ``Nat`` and the intermediate accummulator (``'T``)
+and return a new accummulator value. This iterator function has type
+``'T -> Nat -> 'T``. The fold iterates through all natural numbers,
+applying the iterator function and returns a final accummulator.
+
 More ADT examples
 #################
 To make it easier to understand how ADTs can be used, we provide two
