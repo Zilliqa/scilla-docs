@@ -305,3 +305,114 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
   let fst_int = @fst Int32 in
   let a = fst_int p in
     ... (* a = one *) ...
+
+More ADT examples
+#################
+To make it easier to understand how ADTs can be used, we provide two
+more examples and describe them in detail. Both the functions described
+below are distributed as ``ListUtils`` in the Scilla standard library.
+
+List: Head
+**********
+The code below extracts the first element of a ``List`` and returns
+it as an ``Option``. i.e., ``Some`` element is returned if the list
+has at least one element, ``None`` otherwise.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_head =
+    tfun 'A =>
+    fun (l : List 'A) =>
+      match l with
+      | Cons h t =>
+        Some h
+      | Nil =>
+        None
+      end
+  in
+
+  let int_head = @list_head Int32 in
+
+  let one = Int32 1 in
+  let two = Int32 2 in
+  let three = Int32 3 in
+  let nil = Nil {Int32} in
+
+  let l1 = Cons {Int32} three nil in
+  let l2 = Cons {Int32} two l1 in
+  let l3 = Cons {Int32} one l2 in
+  int_head l3
+
+In ``lines 14-21`` we build a list that can be used as input to the
+``list_head`` function. ``Line 12`` instantiates the ``list_head``
+function for ``Int32`` and the last line invokes the instantiated
+``list_head`` function.
+
+``tfun 'A`` in ``line 2`` specifies that ``'A`` is a parametric type
+/ variable to the function, while ``fun`` in ``line 3`` specifies that
+``l`` is a paramter of type ``List 'A``. In other words, in
+``lines 1-3``, we are specifying a function ``list_head`` that can
+be instantiated for any type ``'A`` and takes as argument, a variable
+of type ``List 'A``. The pattern matching in ``line 5`` matches for a
+``List`` which is constructed as ``Cons h t`` where ``h`` is the head
+and ``t`` is the tail and returns the head as ``Some h``. If the list
+is empty, then it matches the pattern match for ``Nil`` in ``line 7``
+and returns ``None``, indicating that the list has no head.
+
+List: Exists
+************
+We now describe a function, which given a list and a predicate function,
+returns ``True`` if the predicate holds for at least one element of
+the list.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_exists =
+    tfun 'A =>
+    fun (f : 'A -> Bool) =>
+    fun (l : List 'A) =>
+      let folder = @list_foldl 'A Bool in
+      let init = False in
+      let iter =
+        fun (z : Bool) =>
+        fun (h : 'A) =>
+          let res = f h in
+          match res with
+          | True =>
+            True
+          | False =>
+            z
+          end
+      in
+        folder iter init l
+
+  let int_exists = @list_exists Int128 in
+  let f =
+    fun (a : Int128) =>
+      let three = Int128 3 in
+      builtin lt a three
+
+  ...
+  (* build list l3 similar to previous example *)
+  ...
+
+  (* check if l3 has at least one element satisfying f *)
+  int_exists f l3
+
+Similar to the previous example, ``'A`` is a type variable to
+the function. The function takes two arguments (1) a list ``l``
+of type ``List 'A`` and a predicate, i.e., a function that takes
+an element of the list (of type ``'A``) and returns ``True`` or
+``False``, indicating satisfaction of the predicate.
+
+To iterate through all elements of the input list ``l``, we use
+``list_foldl``. An instantiation of ``list_foldl`` for list type
+``'A`` and accummulator type ``Bool`` is done in ``line 5``. The
+initial accummulator value is ``False`` (to indicate that no element
+that satisfies the predicate is seen yet). The iterator function
+``iter`` defined in ``line 6`` tests the current list element
+provided as argument ``h`` for the predicate and returns an updated
+accummulator. If the accummulator is found ``True`` at some point,
+that value remains unchanged for the rest of the fold.
