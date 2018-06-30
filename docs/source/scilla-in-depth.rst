@@ -67,7 +67,6 @@ and the third part contains all ``transition`` definitions.
 Immutable Variables
 *******************
 
-<<<<<<< HEAD
 `Immutable variables`, or contract parameters have their values defined at the
 time of contract creation and cannot be modified later.  The set of immutable
 variables in the contract is specified at the beginning of the contract, right
@@ -81,10 +80,10 @@ Declaration of immutable variables has the following format:
    vname2 : type2,
     ...  )
 
-Each declaration consists of a variable name (an identifier) and
-its type, separated by ``:``. Multiple variable declarations are
-separated by ``,``. The initialization values for variables are to
-be specified in ``init.json`` at the time of contract creation.
+Each declaration consists of a variable name (an identifier) and its type,
+separated by ``:``. Multiple variable declarations are separated by ``,``. The
+initialization values for variables are to be specified at the time of contract
+creation.
 
 Mutable Variables
 *****************
@@ -99,17 +98,18 @@ declaration prefixed with the keyword ``field``.
   field name2 : type2 = expr2
   ...
 
-Each expression here is an initializer for that value. The definitions
-complete the initial state of the contract, at the time of creation.
-As the contract goes through transition, new values for these fields are
-obtained from the input state (``input_state.json``) on each transition
-invocation.
+Each expression here is an initializer for that value. The definitions complete
+the initial state of the contract, at the time of creation.  As the contract
+goes through transitions, the values of these fields get modified.
+
+.. are obtained from the input state (``input_state.json``) on each transition invocation.
 
 Transitions
 ************
-Transition define the change in state of the contract. These functions
-are defined with the keyword ``transition`` followed by the name and
-parameters to the function. The definition ends with the ``end`` keyword.
+
+`Transitions` define the change in  the state of the contract. These are
+defined with the keyword ``transition`` followed by the name and parameters to
+be passed. The definition ends with the ``end`` keyword.
 
 .. code-block:: ocaml
 
@@ -117,12 +117,12 @@ parameters to the function. The definition ends with the ``end`` keyword.
     ...
   end
 
-where ``name : type `` specify the name and type of each paramter and
-multiple parameters separated by ``,``. In addition to parameters that
-are explicitly declared in the definition, each ``transition`` has,
-available to it, the following implicit parameters.
+where ``name : type`` specifies the name and type of each parameter and
+multiple parameters are separated by ``,``. In addition to parameters that are
+explicitly declared in the definition, each ``transition`` has available to it,
+the following implicit parameters.
 
-- ``_sender : Address`` : The account (sender of message) that triggered
+- ``_sender : Address`` : The account (sender of the message) that triggered
   this transition.
 - ``_amount : Uint128`` : Incoming amount (ZILs). This must be explicitly
   accepted using the ``accept`` statement. The money transfer does not happen
@@ -132,28 +132,60 @@ available to it, the following implicit parameters.
 Expressions 
 ************
 
-Expression handle pure operations. The supported expressions in Scilla are:
+`Expression` handle pure operations. The supported expressions in Scilla are:
 
-- ``let x = f in e`` :  Give ``f`` the name ``x`` within expression ``e``.
-  The binding of ``x`` to ``f`` within ``e`` here is local and hence limited to ``e``.
+- ``let x = f in e`` :  Give ``f`` the name ``x`` within expression ``e``.  The
+  binding of ``x`` to ``f`` within ``e`` here is local and hence limited to
+  ``e``. The following example binds the value of ``one`` to ``1`` in the
+  expression ``builtin add one Int32 5`` which adds ``5`` to ``one`` and hence
+  evaluates to ``6``.  
+
+    .. code-block:: ocaml
+
+        let one = 1 in builtin add one Int32 5
+
 
 - ``let x = f`` : Give  ``f`` the name ``x`` in the contract. The binding of
-  ``x`` to ``f`` is global and extends to the end of the contract.
+  ``x`` to ``f`` is global and extends to the end of the contract. Note the
+  missing ``in``, which implies that the binding holds for the entire contract
+  and not within a specific expression. The following code fragment defines a
+  constant ``one`` whose values is ``1`` throughout the contract.
 
-- ``{ <entry>_1 ; <entry>_2 ... }``: Message expression, where each entry 
-  has the following form: ``b : x``. Here ``b`` is an identifier and 
-  ``x`` a variable, whose value is bound to the identifier in the message.
+    .. code-block:: ocaml
+
+        let one = 1 
+
+
+
+
+- ``{ <entry>_1 ; <entry>_2 ... }``: Message expression (see below for
+  ``Message`` type), where each entry has the following form: ``b : x``. Here
+  ``b`` is an identifier and ``x`` a variable, whose value is bound to the
+  identifier in the message. The following code defines a ``msg`` with four
+  entries ``_tag``, ``_recipient``, ``_amount`` and ``code``. 
+
+    .. code-block:: ocaml
+
+        msg = { _tag : "Main"; _recipient : sender; _amount : Uint128 0; code : Uint32 0 };
+
 
 - ``fun (x : T) => e`` : A function that takes an input ``x`` of type ``T`` and
   returns the value to which expression ``e`` evaluates.
+
+
+- ``tfun T => e`` : A type function that takes ``T`` as a parametric type and
+  returns the value to which expression ``e`` evaluates. See the section on
+  ``Pair`` below for an example. 
+
+- ``@x T``: Instantiate a variable ``x`` with type ``T``.
 
 - ``f x`` : Apply ``f`` on ``x``.
 
 - ``builtin f x``: Apply the ``builtin`` function ``f`` on ``x``.
 
-- `match` expression: Matches a bound variable with patterns and executes
-  the statements in that clause. The `match` expression is similar to the
-  `match` in OCaml. The pattern to be matched can be a variable binding, 
+- ``match`` expression: Matches a bound variable with patterns and executes
+  the statements in that clause. The ``match`` expression is similar to the
+  ``match`` in OCaml. The pattern to be matched can be a variable binding, 
   an ADT constructor (see ADTs_) or the wildcard ``_`` symbol to match anything.
 
 .. code-block:: ocaml
@@ -171,7 +203,7 @@ Statements
 ***********
 
 Statements in Scilla are operations with effect, i.e., these operations are
-impure and hence non purely mathematical. Such operations including reading or
+impure and hence not purely mathematical. Such operations including reading or
 writing from/to a mutable smart contract variable. 
 
 - ``x <- f`` : Read from a mutable field ``f`` into ``x``.
@@ -230,14 +262,14 @@ Strings
 *******
 As with most languages, ``String`` literals in Scilla are expressed with
 a sequence of characters enclosed in double quotes. Variables can be
-declared by specifying using keyword `String`.
+declared by specifying using keyword ``String``.
 
 The following ``String`` operations are language built-in.
 
 - ``eq s1 s2`` : Is ``String s1`` equal to ``String s2``.
   Returns ``Bool``.
 - ``concat s1 s2`` : Concatenate ``String s1`` with ``String s2``.
-  Returns `String`.
+  Returns ``String``.
 - ``substr s1 i1 i2`` : Extract sub-string of ``String s1`` starting
   from position ``Uint32 i1`` with length ``Uint32 i2``.
   Returns ``String``.
@@ -266,13 +298,14 @@ Maps
 - ``put m k v``: Insert key ``k`` and value ``v`` into ``Map m``.
   Returns a new ``Map`` with the newly inserted key/value in addition to
   the key/value pairs contained earlier.
-- ``get m k``: In ``Map m``, for key ``k``, return the associated value
-  as ``Option v``. The returned value is ``None`` if ``k`` is not in the
-  map ``m``.
-- ``remove k``: Remove key ``k`` and it's associated value ``v``
-  from the map. Returns a new updated ``Map``.
-- ``contains k``: Is key ``k`` and it's associated value ``v`` present in the map.
-  Returns ``Bool``.
+
+- ``get m k``: In ``Map m``, for key ``k``, return the associated value as
+  ``Option v`` (Check below for ``Option`` data type). The returned value is
+  ``None`` if ``k`` is not in the map ``m``. 
+  
+- ``remove m k``: Remove key ``k`` and its associated value from the map ``m``. Returns a new updated ``Map``.
+
+- ``contains m k``: Is key ``k`` and its associated value  present in the map ``m``.  Returns ``Bool``.
 
 Addresses
 *********
@@ -301,48 +334,71 @@ Algebraic Data Types (ADTs)
 ######################################
 .. _ADTs:
 
-Algebraic data types are composite types, used commonly in functional
-programming. The following ADTs are featured in Scilla.
+`Algebraic data types` are composite types, used commonly in functional
+programming. The following ADTs are featured in Scilla. Each ADT is defined as
+a set of constructors. Each constructor takes a set of arguments of certain
+types.
 
 Boolean
 *******
-Boolean values, specified using the keyword ``Bool`` can be constructed
-using the constructors ``True`` and ``False``.
+
+Boolean values are specified using the keyword ``Bool``. ``Bool`` ADT has two
+constructors: ``True`` and ``False`` that do not take any argument. Thus the
+following code fragment constructs a ``Bool`` ADT that represents ``True``:
+
+.. code-block:: ocaml
+
+    x = True
+
 
 Option
 *******
-Similar to ``Option`` in OCaml, the ``Option`` ADT in Scilla provides 
-means to represent the presence of a value ``x`` or the absence of
-any value. The presence of a value ``x`` can be constructed as
-``Some {'A} x`` and the absence of any value is constructed as
-``None {'A}``. ``'A`` here is a type variable that can be instantiated
-with any type. ``Option`` variables are specified using the ``Option`` 
-keyword.
+Similar to ``Option`` in OCaml, the ``Option`` ADT in Scilla provides means to
+represent the presence of a value ``x`` or the absence of any value. ``Option``
+has two constructors ``None`` and ``Some``. 
+
+   + ``Some`` represents the presence of a value. ``Some {`A} x`` constructs an
+     ADT that represents the presence of a value ``x`` of type ``'A``. The
+     following code fragment constructs an ``Option`` using the ``Some``
+     constructor with an argument of type ``Int32``:
+
+    .. code-block:: ocaml
+
+        x = Some {Int32} 10 
+
+
+   + ``None`` represents the absence of any value. ``None {`A}`` constructs an
+     ADT that represents the absence of any value of type ``'A``. The following
+     code fragment constructs an ``Option`` using the ``None`` constructor with
+     an argument of type ``Hash``:
+
+  
+    .. code-block:: ocaml
+
+        x = None {Hash} 
 
 List
 ****
-The ``List`` ADT, similar to Lists in other functional languages
-provides a structure to contain a list of values of the same type.
-A ``List`` is specified using the ``List`` keyword and can be used for
-constructing an empty list ``Nil {'A}`` or adding an element to
-an existing list ``Cons {'A} h l``, where ``'A`` is a type variable
-that can be instantiated with any type and ``h`` is an element of
-type ``'A`` that is inserted to the beginning of list ``l`` (of type 
-``List 'A``).
 
-The following two structural recursion primitives are provided for any
-``List``.
+The ``List`` ADT, similar to Lists in other functional languages provides a
+structure to contain a list of values of the same type.  A ``List`` is
+specified using the ``List`` keyword and has two constructors:
 
-- ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  For any types ``'A`` and ``'B``, ``list_foldl`` recursively processes
-  the input list (``List 'A``) from left to right, by applying an 
-  iterator function (``'B -> 'A -> 'B``) to the element being processed
-  and an accummulator (``'B``). The initial value of this accummulator is
-  provided as argument to ``list_foldl``.
-- ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  Same as ``list_foldl`` but process the list elements from right to left.
+   + ``Nil`` creates an empty ``List``. It takes the following form: ``Nil
+     {'A}``, and creates an empty list of entries of type ``'A``.
+
+   + ``Cons`` adds an element to an existing list. It takes the following form:
+     ``Cons {'A} h l``, where ``'A`` is a type variable that can be
+     instantiated with any type and ``h`` is an element of type ``'A`` that is
+     inserted to the beginning of list ``l`` (of type ``List 'A``).
+
 
 The following code example demonstrates building a list of ``Int32`` values.
+To do this, we start with  an empty list ``Nil {Int32}``.  The rest of the list
+is built by inserting numbers to the beginning of the list.  The final list
+built in this example is ``[1;2;10;11]``.
+
+
 
 .. code-block:: ocaml
 
@@ -357,9 +413,20 @@ The following code example demonstrates building a list of ``Int32`` values.
   let l3 = Cons {Int32} two l2 in
     Cons {Int32} eleven l3
 
-Here, we build the list beginning with an empty list ``Nil {Int32}``.
-The rest of the list is built by inserting numbers to the beginning
-of the list. The final list built in this example is ``[1;2;10;11]``.
+
+
+The following two structural recursion primitives are provided for any
+``List``.
+
+- ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  For any types ``'A`` and ``'B``, ``list_foldl`` recursively processes
+  the input list (``List 'A``) from left to right, by applying an 
+  iterator function (``'B -> 'A -> 'B``) to the element being processed
+  and an accummulator (``'B``). The initial value of this accummulator is
+  provided as argument to ``list_foldl``.
+- ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  Same as ``list_foldl`` but process the list elements from right to left.
+
 
 To further illustrate ``List`` in Scilla, we show a small example using
 ``list_foldl`` to count the number of elements in a list.
@@ -394,15 +461,18 @@ Common ``List`` utilities (including ``list_length``) are provided
 in the ``ListUtils`` library, as part of the standard library distribution
 for Scilla.
 
+
+
 Pair
 ****
+
 ``Pair`` ADTs are used to contain a pair of values of possibly different
 types. ``Pair`` variables are specified using the ``Pair`` keyword and
 can be constructed using the constructor ``Pair {'A 'B} a b`` where
 ``'A`` and ``'B`` are type variables that can be instantiated to any type,
 and ``a`` and ``b`` are variables of type ``'A`` and ``'B`` respectively.
 
-Below is an example for constructor a ``Pair`` of ``Int32`` values.
+Below is an example to construct a ``Pair`` of ``Int32`` values.
 
 .. code-block:: ocaml
 
@@ -432,7 +502,7 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
 
 Nat
 ***
-Scilla provides an ADT for working with natural numbers. A natural
+Scilla provides an ADT to work with natural numbers. A natural
 number ``Nat`` is defined to be either ``Zero`` or ``Succ Nat``,
 i.e., the successor of a natural number. We show a formal definition
 for ``Nat`` in OCaml below:
@@ -451,7 +521,7 @@ in Scilla, where ``'T`` is a parametric type variable.
 Similar in spirit to the ``List`` folds described earlier, the ``Nat``
 fold takes an initial accummulator (of type ``'T``) and a function that
 takes as arguments a ``Nat`` and the intermediate accummulator (``'T``)
-and return a new accummulator value. This iterator function has type
+and returns a new accummulator value. This iterator function has type
 ``'T -> Nat -> 'T``. The fold iterates through all natural numbers,
 applying the iterator function and returns a final accummulator.
 

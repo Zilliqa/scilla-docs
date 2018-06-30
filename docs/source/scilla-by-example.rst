@@ -87,7 +87,7 @@ that includes the contract name and its (im)mutable variables:
 
 .. note::
         In addition to these fields, any contract in Scilla has an implicitly
-        declared mutable field balance (initialised upon the contract’s
+        declared mutable field ``_balance`` (initialised upon the contract’s
         creation), which keeps the amount of funds held by the contract.  This
         field can be freely read within the implementation, but can only
         modified by explicitly transferring funds to other accounts.
