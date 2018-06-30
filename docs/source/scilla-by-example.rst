@@ -33,7 +33,7 @@ Defining Contract and its (Im)Mutable Fields
 A contract is declared using the ``contract`` keyword that starts the scope of
 the contract. The keyword is followed by the name of the contract which will be
 ``HelloWorld`` in our example. So, the following code fragment declares a
-```HelloWorld`` contract. 
+``HelloWorld`` contract. 
 
 .. code-block:: ocaml
 
@@ -238,7 +238,7 @@ It is done through the following instruction.
 
 
 And as in the previous case, the contract then sends out a message to the caller
-with the code ``code : set_hello_code``. 
+with the code ``set_hello_code``. 
 
 
 Libraries 
@@ -397,7 +397,7 @@ started. The contract hence has three immutable variables ``owner``,
 ``max_block`` and ``goal``. 
 
 
-The campaign is deemed successful if the owner can raise the minimum goal i the
+The campaign is deemed successful if the owner can raise the minimum goal in the
 stipulated time. In
 case the campaign is unsuccessful, the donations are returned to the project
 backers who contributed during the campaign. The contract maintains two mutable

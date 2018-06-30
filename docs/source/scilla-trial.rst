@@ -10,13 +10,13 @@ out Scilla.
 Blockchain IDE
 **********************
 
-The simplest way to try out Scilla is through the `Scilla Blockhain IDE`. The
+The simplest way to try out Scilla is through the `Scilla Blockchain IDE`. The
 IDE is connected to the Zilliqa blockchain via a `testnet wallet
 <https://wallet-scilla.zilliqa.com>`_ and a `block explorer
-<https://blcok-explorer.zilliqa.com>`_ and hence comes with (almost) all the
+<https://explorer-scilla.zilliqa.com>`_ and hence comes with (almost) all the
 features needed to test a Scilla contract in a real blockchain environment. 
 
-In order to use Scilla Blockchain IDE, a user will have to hold Testnet ZIL
+In order to use the Scilla Blockchain IDE, a user will have to hold Testnet ZIL
 (tokens to use Zilliqa's blockchain infrastructure). These tokens are
 periodically distributed for free. Testnet ZIL tokens are required to pay for
 gas fees to deploy and run smart contracts. 
@@ -28,7 +28,7 @@ gas, while each transition invocation from a non-contract account to a contract
 account will cost 10 units of gas. Any message call from a contract account to
 another contract account or otherwise will also cost 10 units of gas. 
 
-For example, a chained invocation, where, a user say Alice calling a contract
+For example, a chained invocation, where, a user say Alice calls a contract
 ``C_1`` that  in turn calls another contract ``C_2`` will require 20 units of
 gas in total.
 
@@ -62,8 +62,8 @@ Both IDEs come with the following sample smart contracts written in Scilla:
 + **HelloWorld**: It is a simple contract that allows a specified account
   denoted ``owner`` to set a welcome message. Setting the welcome message is
   done via  ``setHello(msg: String)``. The contract also provides an interface
-  ``getHello()`` to allow any account to be  returned the welcome message when
-  called.
+  ``getHello()`` to allow any account to be  returned with the welcome message
+  when called.
 
 
 + **Crowdfunding**: Crowdfunding implements a kickstarter campaign where users
@@ -83,20 +83,19 @@ Both IDEs come with the following sample smart contracts written in Scilla:
   transition ``Play(guess: Hash)``.  Once the first player has submitted her
   hash, the second player has a bounded time to submit her hash. If the second
   player does not submit her hash within the stipulated time, then the first
-  player may become the winner. In the second phase, players have to submit
-  the corresponding values ``x`` or ``y`` using the transition
+  player may become the winner. In the second phase, players have to submit the
+  corresponding values ``x`` or ``y`` using the transition
   ``ClaimReward(solution: Int128)``. The player submitting the closest
   pre-image is declared the winner and wins a reward. The contract also
   provides a transition ``Withdraw ()`` to recover funds and send to a
   specified ``owner`` in case no player plays the game.   
 
-+ **FungibleToken**: Fungible token contract mimics an ERC20 style fungible
++ **FungibleToken**: Fungible token contract that  mimics an ERC20 style fungible
   token standard.
 
 + **OpenAuction** : A simple open auction contract where bidders can make their
-  bid using ``Bid ()``, the highest and winning bid amount goes to a
+  bid using ``Bid ()``, and the highest and winning bid amount goes to a
   pre-defined account. Bidders who don't win can take back their bid using the
-  transition ``Withdraw()``. The organiser of the auction can at the end of the
-  campaign can claim the highest bid by invoking the transition
-  ``AuctionEnd()``.
+  transition ``Withdraw()``. The organiser of the auction can claim the highest
+  bid by invoking the transition ``AuctionEnd()``.
 

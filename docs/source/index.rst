@@ -28,7 +28,7 @@ semantics and its embedding into the `Coq proof assistant
 <https://coq.inria.fr/>`_ — a state-of-the art tool for mechanized proofs about
 properties of programs. Coq is  based on advanced dependently-typed theory and
 features a large set of mathematical libraries.  It has been successfully
-applied previously for implementing certified (i.e., fully mechanically
+applied previously to implement certified (i.e., fully mechanically
 verified) compilers, concurrent and distributed applications, including
 blockchains among others.
 
