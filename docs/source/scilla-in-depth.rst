@@ -64,18 +64,15 @@ and the third part contains all ``transition`` definitions.
 
 
 
-
-Libraries
-**********
-
 Immutable Variables
 *******************
-Immutable variables, or contract parameters have their values defined
-at the time of contract creation and cannot be modified after that.
-The list of immutable variables in the contract is specified at the
-beginning of the contract, right after the contract name is defined.
 
-Declaration of immutable varialbes has the following format:
+`Immutable variables`, or contract parameters have their values defined at the
+time of contract creation and cannot be modified later.  The set of immutable
+variables in the contract is specified at the beginning of the contract, right
+after the contract name is defined.
+
+Declaration of immutable variables has the following format:
 
 .. code-block:: ocaml
 
@@ -90,9 +87,10 @@ be specified in ``init.json`` at the time of contract creation.
 
 Mutable Variables
 *****************
-Mutable variables represent the mutable state of the contract. They
-are also called fields. They are declared after the immutable variables,
-with each declaration prefixed with the keyword ``field``.
+
+`Mutable variables` represent the mutable state of the contract. They are also
+called fields. They are declared after the immutable variables, with each
+declaration prefixed with the keyword ``field``.
 
 .. code-block:: ocaml
 

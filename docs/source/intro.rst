@@ -1,5 +1,5 @@
-Introduction to Scilla
-=======================
+Scilla Design Principles
+=========================
 
 `Smart contracts` provide a mechanism to express computations on a blockchain,
 i.e., a decentralized Byzantine-fault tolerant distributed ledger. With the
@@ -78,7 +78,6 @@ with standalone tools.
 **Separation Between Invocation and Continuation**
 
 Structuring contracts as communicating automata provides a computational model,
-known as continuation-passing style (CPS), in which every call to an external
-function (i.e., another contract) can be done as the absolutely last
-instruction. 
+which only allows `tail-calls`, i.e., every call to an external function (i.e.,
+another contract) has to be done as the absolutely last instruction. 
 
