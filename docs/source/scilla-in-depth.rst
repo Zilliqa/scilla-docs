@@ -11,7 +11,7 @@ mathematical functions, for instance, a function to compute the boolean ``AND``
 of two bits or computing factorial of a given natural number.  After the
 library code block follows the actual contract definition declared using the
 keyword ``contract``. A contract has three parts. The first part declares the
-immutable parameters of the contract; the second declares the mutable fields
+immutable parameters of the contract, the second declares the mutable fields
 and the third part contains all ``transition`` definitions. 
 
 
@@ -75,7 +75,7 @@ at the time of contract creation and cannot be modified after that.
 The list of immutable variables in the contract is specified at the
 beginning of the contract, right after the contract name is defined.
 
-Declaration of immutable varialbes has the following format:
+Declaration of immutable variables has the following format:
 
 .. code-block:: ocaml
 
@@ -130,7 +130,7 @@ available to it, the following implicit parameters.
   if the transition does not execute ``accept``.
 
 
-Exressions 
+Expressions 
 ************
 
 Expression handle pure operations. The supported expressions in Scilla are:
@@ -176,7 +176,7 @@ impure and hence non purely mathematical. Such operations including reading or
 writing from/to a mutable smart contract variable. 
 
 - ``x <- f`` : Read from a mutable field ``f`` into ``x``.
-- ``f := x`` : Updatemutable field  ``f`` with value ``x``.
+- ``f := x`` : Update mutable field  ``f`` with value ``x``.
 
 One can also read from the blockchain state. A blockchain state consists of
 certain values associated with their block, for instance, the ``BLOCKNUMBER``. 
@@ -313,7 +313,7 @@ using the constructors ``True`` and ``False``.
 Option
 *******
 Similar to ``Option`` in OCaml, the ``Option`` ADT in Scilla provides 
-means to represent the presence of a value ``x`` or the absense of
+means to represent the presence of a value ``x`` or the absence of
 any value. The presence of a value ``x`` can be constructed as
 ``Some {'A} x`` and the absence of any value is constructed as
 ``None {'A}``. ``'A`` here is a type variable that can be instantiated
@@ -392,7 +392,7 @@ the accummulator will be the number of increments or in other words,
 the number of elements in the list.
 
 Common ``List`` utilities (including ``list_length``) are provided
-in the ``ListUtils`` library, part of the standard library distribution
+in the ``ListUtils`` library, as part of the standard library distribution
 for Scilla.
 
 Pair
