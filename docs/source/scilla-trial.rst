@@ -1,3 +1,5 @@
+.. _trial-label:
+
 Trying out Scilla
 =================
 
