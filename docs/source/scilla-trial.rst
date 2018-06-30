@@ -10,12 +10,12 @@ out Scilla.
 Blockchain IDE
 **********************
 
-The simplest way to try out Scilla is through the `Scilla Blokchain IDE`. The
+The simplest way to try out Scilla is through the `Scilla Blockchain IDE`. The
 IDE is connected to the Zilliqa blockchain via a testnet wallet and a block
 explorer and hence comes with (almost) all the features needed to test a Scilla
 contract in a blockchain environment. 
 
-In order to use Scilla Blockchain IDE, a user will have to hold Testnet ZIL
+In order to use the Scilla Blockchain IDE, a user will have to hold Testnet ZIL
 (tokens to use Zilliqa's blockchain infrastructure). These tokens are
 periodically distributed for free. Testnet ZIL tokens are required to pay for
 gas fees to deploy and run smart contracts. The IDE comes with a set of
@@ -27,7 +27,7 @@ gas, while each transition invocation from a non-contract account to a contract
 account will cost 10 units of gas. Any message call from a contract account to
 a another contract account or otherwise will also cost 10 units of gas. 
 
-For example, a chained invocation, where, a user say Alice calling a contract
+For example, a chained invocation, where, a user say Alice calls a contract
 ``C_1`` that  in turn calls another contract ``C_2`` will require 20 units of
 gas in total.
 
@@ -59,7 +59,7 @@ Both IDEs come with the following sample smart contracts written in Scilla:
 
 + **HelloWorld**: It is a simple contract that allows a pre-defined
   account to set a welcome message. Later anyone can call the contract to be
-  returned the welcome message.
+  returned with the welcome message.
 
 
 + **Crowdfunding**: Crowdfunding implements a kickstarter campaign where
@@ -75,10 +75,10 @@ Both IDEs come with the following sample smart contracts written in Scilla:
   if Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for some `Distance`
   function.
 
-+ **FungibleToken**: Fungible token contract mimics and ERC20 style fungible
++ **FungibleToken**: Fungible token contract that mimics an ERC20 style fungible
   token standard.
 
 + **OpenAuction** : A simple open auction contract where bidders can make their
-  bid, the highest and winning bid amount goes to a pre-defined account. The
+  bid, and the highest and winning bid amount goes to a pre-defined account. The
   remaining bidding amounts can be claimed back by the corresponding bidders.  
 
