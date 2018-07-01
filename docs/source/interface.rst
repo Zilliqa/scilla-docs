@@ -20,7 +20,7 @@ and inter-contract message calls.
 
 The inputs to the interpreter (``scilla-runner``) consists of four input JSON
 files as described below. Every invocation of the interpreter to execute a 
-transition must be provided with these four json inputs: ::
+transition must be provided with these four JSON inputs: ::
 
     ./scilla-runner -init init.json -istate input_state.json -iblockchain input_blockchain.json -imessage input_message.json -o output.json -i input.scilla
 

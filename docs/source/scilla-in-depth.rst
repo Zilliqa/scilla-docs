@@ -422,7 +422,7 @@ The following two structural recursion primitives are provided for any
   For any types ``'A`` and ``'B``, ``list_foldl`` recursively processes
   the input list (``List 'A``) from left to right, by applying an 
   iterator function (``'B -> 'A -> 'B``) to the element being processed
-  and an accummulator (``'B``). The initial value of this accummulator is
+  and an accumulator (``'B``). The initial value of this accumulator is
   provided as argument to ``list_foldl``.
 - ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` :
   Same as ``list_foldl`` but process the list elements from right to left.
@@ -450,11 +450,11 @@ To further illustrate ``List`` in Scilla, we show a small example using
 ``list_length`` defines a function that takes one argument ``l`` of
 type ``List 'A``, where ``'A`` is a parametric type (type variable),
 specified in ``line 2``. We instantiate ``list_foldl`` in ``line 4``
-for a list of type ``'A`` with the accummulator type being ``Int32``.
-An initial value of ``0`` is used for the accummulator. The iterator
-function ``iter`` increments the accummulator as it is invoked by
+for a list of type ``'A`` with the accumulator type being ``Int32``.
+An initial value of ``0`` is used for the accumulator. The iterator
+function ``iter`` increments the accumulator as it is invoked by
 the folder for each element of the list ``l``. The final value of
-the accummulator will be the number of increments or in other words,
+the accumulator will be the number of increments or in other words,
 the number of elements in the list.
 
 Common ``List`` utilities (including ``list_length``) are provided
@@ -519,11 +519,11 @@ in Scilla, where ``'T`` is a parametric type variable.
   nat_fold : ('T -> Nat -> 'T) -> 'T -> Nat -> 'T
 
 Similar in spirit to the ``List`` folds described earlier, the ``Nat``
-fold takes an initial accummulator (of type ``'T``) and a function that
-takes as arguments a ``Nat`` and the intermediate accummulator (``'T``)
-and returns a new accummulator value. This iterator function has type
+fold takes an initial accumulator (of type ``'T``) and a function that
+takes as arguments a ``Nat`` and the intermediate accumulator (``'T``)
+and returns a new accumulator value. This iterator function has type
 ``'T -> Nat -> 'T``. The fold iterates through all natural numbers,
-applying the iterator function and returns a final accummulator.
+applying the iterator function and returns a final accumulator.
 
 More ADT examples
 #################
@@ -534,7 +534,7 @@ below are distributed as ``ListUtils`` in the Scilla standard library.
 List: Head
 **********
 The code below extracts the first element of a ``List`` and returns
-it as an ``Option``. i.e., ``Some`` element is returned if the list
+it as an ``Option``, i.e., ``Some`` element is returned if the list
 has at least one element, ``None`` otherwise.
 
 .. code-block:: ocaml
@@ -570,7 +570,7 @@ function for ``Int32`` and the last line invokes the instantiated
 
 ``tfun 'A`` in ``line 2`` specifies that ``'A`` is a parametric type
 / variable to the function, while ``fun`` in ``line 3`` specifies that
-``l`` is a paramter of type ``List 'A``. In other words, in
+``l`` is a parameter of type ``List 'A``. In other words, in
 ``lines 1-3``, we are specifying a function ``list_head`` that can
 be instantiated for any type ``'A`` and takes as argument, a variable
 of type ``List 'A``. The pattern matching in ``line 5`` matches for a
@@ -620,6 +620,7 @@ the list.
   (* check if l3 has at least one element satisfying f *)
   int_exists f l3
 
+ 
 Similar to the previous example, ``'A`` is a type variable to
 the function. The function takes two arguments (1) a list ``l``
 of type ``List 'A`` and a predicate, i.e., a function that takes

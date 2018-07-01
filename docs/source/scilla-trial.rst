@@ -51,7 +51,7 @@ block number.
 As a result, the contract writer or the invoker will have to mimic certain
 inputs, for instance, the current contract and blockchain state among others
 and pass it to the interpreter as inputs.  Refer to :ref:`interface-label`  to
-read about the format of the inputs to pass to the interpter. 
+read about the format of the inputs to pass to the interpreter. 
 
 In order to user this IDE, users do not need to hold testnet ZIL. To try out
 the Interpreter IDE, users need to visit `Scilla Interpreter IDE
@@ -100,6 +100,6 @@ Both IDEs come with the following sample smart contracts written in Scilla:
 + **OpenAuction** : A simple open auction contract where bidders can make their
   bid using ``Bid ()``, and the highest and winning bid amount goes to a
   pre-defined account. Bidders who don't win can take back their bid using the
-  transition ``Withdraw()``. The organiser of the auction can claim the highest
+  transition ``Withdraw()``. The organizer of the auction can claim the highest
   bid by invoking the transition ``AuctionEnd()``.
 
