@@ -47,8 +47,8 @@ currently comes with an interpreter binary that has been integrated into two
 Scilla-specific web-based IDEs. :ref:`trial-label` presents the features of the
 two IDEs.  
 
-Note that Scilla does have a type checker implemented yet and hence type safety
-of contracts written in Scilla is not guaranteed.
+Note that Scilla does not have a type checker implemented yet and hence type
+safety of contracts written in Scilla is not guaranteed.
 
 Resources
 *********
