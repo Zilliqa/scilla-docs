@@ -54,7 +54,7 @@ and pass it to the interpreter as inputs.  Refer to :ref:`interface-label`  to
 read about the format of the inputs to pass to the interpter. 
 
 In order to user this IDE, users do not need to hold testnet ZIL. To try out
-the Interpreter IDE, users need to go visit `Scilla Interpreter IDE
+the Interpreter IDE, users need to visit `Scilla Interpreter IDE
 <https://ide.zilliqa.com>`_.
 
 
