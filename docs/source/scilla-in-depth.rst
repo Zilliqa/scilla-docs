@@ -437,7 +437,7 @@ To further illustrate ``List`` in Scilla, we show a small example using
   let list_length =
     tfun 'A =>
     fun (l : List 'A) =>
-      let folder = @list_foldr 'A Int32 in
+      let folder = @list_foldl 'A Int32 in
       let init = Int32 0 in
       let iter =
         fun (h : 'A) =>
