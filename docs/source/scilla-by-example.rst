@@ -565,15 +565,13 @@ The complete contract is given below:
 	  after_deadline = builtin blt max_block blk;
 	  match after_deadline with
 	  | False =>
-	    msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-		    
-		The complete contract is given below:
+	    msg  = {_tag : Main; _recipient : _sender; _amount : 0;
 		code : too_early_code};
 	    msgs = one_msg msg;
 	    send msgs
 	  | True =>
 	    bs <- backers;
-	    bal <- balance;
+	    bal <- _balance;
 	    (* Goal has not been reached *)
 	    f <- funded;
 	    c1 = builtin lt bal goal;
