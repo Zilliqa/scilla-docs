@@ -395,8 +395,8 @@ specified using the ``List`` keyword and has two constructors:
 
 The following code example demonstrates building a list of ``Int32`` values.
 To do this, we start with  an empty list ``Nil {Int32}``.  The rest of the list
-is built by inserting numbers to the beginning of the list.  The final list
-built in this example is ``[1;2;10;11]``.
+is built by inserting items into the list.  The final list built in this
+example is ``[11 -> 10 -> 2 -> 1 -> NIL]``.
 
 
 
@@ -409,8 +409,8 @@ built in this example is ``[1;2;10;11]``.
 
   let nil = Nil {Int32} in
   let l1 = Cons {Int32} one nil in
-  let l2 = Cons {Int32} ten l1 in
-  let l3 = Cons {Int32} two l2 in
+  let l2 = Cons {Int32} two l1 in
+  let l3 = Cons {Int32} ten l2 in
     Cons {Int32} eleven l3
 
 
@@ -533,9 +533,11 @@ below are distributed as ``ListUtils`` in the Scilla standard library.
 
 List: Head
 **********
-The code below extracts the first element of a ``List`` and returns
-it as an ``Option``, i.e., ``Some`` element is returned if the list
-has at least one element, ``None`` otherwise.
+
+The code below extracts the first item of a ``List`` and returns it as an
+``Option``, i.e., ``Some`` element is returned if the list has at least one
+element, ``None`` otherwise. The given test case takes ``[ 1 -> 2 -> 3 ->
+NIL]`` as an input and returns ``1``.
 
 .. code-block:: ocaml
   :linenos:
