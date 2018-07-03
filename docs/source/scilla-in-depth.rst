@@ -390,7 +390,7 @@ specified using the ``List`` keyword and has two constructors:
    + ``Cons`` adds an element to an existing list. It takes the following form:
      ``Cons {'A} h l``, where ``'A`` is a type variable that can be
      instantiated with any type and ``h`` is an element of type ``'A`` that is
-     inserted to the beginning of list ``l`` (of type ``List 'A``).
+     inserted at the head of list ``l`` (of type ``List 'A``).
 
 
 The following code example demonstrates building a list of ``Int32`` values.
