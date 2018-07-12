@@ -480,6 +480,19 @@ Below is an example to construct a ``Pair`` of ``Int32`` values.
   let two = 2 in
   let p = Pair {Int32 Int32} one two in
     ...
+    
+The syntax to declare a mutable field with Pair type is ``Pair (A') (B')``, 
+where ``A'`` and ``B'`` can be instantiated to any type. Note that type declaration uses parathesis instead of curly braces. 
+ 
+For example. to instantiate a Pair of ``Int32`` values as  ``pp`` and initalize it with values: 
+
+.. code-block:: ocaml
+
+  field pp: Pair (Int32) (Int32) =
+              let one = Int32 1 in
+              let two = Int32 2  in
+              Pair {Int32 Int32} one two
+    ...
 
 We now illustrate how pattern matching can be used to extract the
 first element from a ``Pair``. The function ``fst`` shown below
