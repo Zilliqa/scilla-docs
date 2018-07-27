@@ -538,7 +538,7 @@ The complete contract is given below:
 	    blk <- & BLOCKNUMBER;
 	    in_time = blk_leq blk max_block;
 	    c1 = negb in_time;
-	    bal <- balance;
+	    bal <- _balance;
 	    c2 = builtin lt bal goal;
 	    c3 = negb c2;
 	    c4 = andb c1 c3;
