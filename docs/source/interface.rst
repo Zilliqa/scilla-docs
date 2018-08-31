@@ -82,7 +82,7 @@ immutable variable ``owner``.
 
     contract HelloWorld
      (* Immutable parameters *)
-     (owner: Address)
+     (owner: ByStr20)
 
 
 A sample ``init.json`` for this contract will look like the following:
@@ -92,7 +92,7 @@ A sample ``init.json`` for this contract will look like the following:
     [
         {
             "vname" : "owner",
-            "type"  : "Address", 
+            "type"  : "ByStr20", 
             "value" : "0x1234567890123456789012345678901234567890"
         }
     ]
@@ -109,7 +109,7 @@ immutable variables ``owner``, ``max_block`` and ``goal``.
 
     contract Crowdfunding
         (* Immutable parameters *)
-        (owner     : Address,
+        (owner     : ByStr20,
          max_block : BNum,
          goal      : UInt128)
 
@@ -122,7 +122,7 @@ A sample ``init.json`` for this contract will look like the following:
     [
         {
             "vname" : "owner",
-            "type"  : "Address", 
+            "type"  : "ByStr20", 
             "value" : "0x1234567890123456789012345678901234567890"
         },
         {
@@ -206,7 +206,7 @@ For the following transition:
 
 .. code-block:: ocaml
 
-    transition TransferFrom (from : Address, to : Address, tokens : Uint128)
+    transition TransferFrom (from : ByStr20, to : ByStr20, tokens : Uint128)
 
 an example ``input_message.json`` is given below:
 
@@ -219,12 +219,12 @@ an example ``input_message.json`` is given below:
       "params"  : [
         {
           "vname" : "from",
-          "type"  : "Address",
+          "type"  : "ByStr20",
           "value" : "0x1234567890123456789012345678901234567890"
         },
         {
           "vname" : "to",
-          "type"  : "Address",
+          "type"  : "ByStr20",
           "value" : "0x78345678901234567890123456789012345678cd"
         },
         {
@@ -343,7 +343,7 @@ Another slightly more involved example with ``Map`` in ``states``.
         "type"  : "Map",
         "value" : [
           {
-            "keyType" : "Address",
+            "keyType" : "ByStr20",
             "valType" : "Uint128"
           },
           {
@@ -389,7 +389,7 @@ has the same forms  as the ``states`` field in ``output.json``.  An example of
         "type"  : "Map",
         "value" : [
           {
-            "keyType" : "Address",
+            "keyType" : "ByStr20",
             "valType" : "Uint128"
           },
           {

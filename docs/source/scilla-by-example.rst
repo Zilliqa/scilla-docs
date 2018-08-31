@@ -12,7 +12,7 @@ following  specification:
 + It should have an `immutable variable` ``owner`` to be initialized by the
   creator of the contract. The variable is immutable in the sense that once
   initialized, its value cannot be changed. ``owner`` will be of type
-  ``Address``. 
+  ``ByStr20`` (representing a hexadecimal Byte String of length 20). 
 
 + It should have a `mutable variable` ``welcome_msg`` of type ``String``
   initialized to ``""``. Mutability here refers to the possibility of modifying
@@ -53,13 +53,13 @@ variables, the scope of which is defined by ``()``.  Each immutable variable is
 declared in the following way: ``vname: vtype``, where ``vname`` is the
 variable name and ``vtype`` is the variable type. Immutable variables are
 separated by ``,``.  As per the specification, the contract will have only one
-immutable variable ``owner`` of type ``Address`` and hence the following code
+immutable variable ``owner`` of type ``ByStr20`` and hence the following code
 fragment.  
 
 
 .. code-block:: ocaml
 
-    (owner: Address)
+    (owner: ByStr20)
 
 Mutable variables in a contract are declared through keyword ``field``. Each
 mutable variable is declared in the following way: ``field vname : vtype =
@@ -79,7 +79,7 @@ that includes the contract name and its (im)mutable variables:
 .. code-block:: ocaml
 
     contract HelloWorld
-    (owner: Address)
+    (owner: ByStr20)
 
     field welcome_msg : String = ""
 
@@ -292,7 +292,7 @@ At this stage, our contract fragment will have the following form:
 
 
     contract HelloWorld
-    (owner: Address)
+    (owner: ByStr20)
 
     field welcome_msg : String = ""
 
@@ -355,7 +355,7 @@ The complete contract that implements the desired specification is given below:
     (***************************************************)
 
     contract HelloWorld
-    (owner: Address)
+    (owner: ByStr20)
 
     field welcome_msg : String = ""
 
@@ -455,15 +455,15 @@ The complete contract is given below:
 	    Cons {Message} msg nil_msg
 	    
 	let check_update = 
-	  fun (bs : Map Address Int) =>
-	  fun (_sender : Address) =>
+	  fun (bs : Map ByStr20 Int) =>
+	  fun (_sender : ByStr20) =>
 	  fun (_amount : Int) =>
 	    let c = builtin contains bs _sender in
 	    match c with 
 	    | False => 
 	      let bs1 = builtin put bs _sender _amount in
-	      Some {Map Address Int} bs1 
-	    | True  => None {Map Address Int}
+	      Some {Map ByStr20 Int} bs1 
+	    | True  => None {Map ByStr20 Int}
 	    end
 
 	let blk_leq =
@@ -489,12 +489,12 @@ The complete contract is given below:
 	contract Crowdfunding
 
 	(*  Parameters *)
-	(owner     : Address,
+	(owner     : ByStr20,
 	 max_block : BNum,
 	 goal      : Int)
 
 	(* Mutable fields *)
-	field backers : Map Address Int = Emp Address Int
+	field backers : Map ByStr20 Int = Emp ByStr20 Int
 	field funded : Bool = False
 
 	transition Donate ()

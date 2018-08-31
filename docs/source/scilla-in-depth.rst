@@ -122,7 +122,7 @@ multiple parameters are separated by ``,``. In addition to parameters that are
 explicitly declared in the definition, each ``transition`` has available to it,
 the following implicit parameters.
 
-- ``_sender : Address`` : The account (sender of the message) that triggered
+- ``_sender : ByStr20`` : The account (sender of the message) that triggered
   this transition.
 - ``_amount : Uint128`` : Incoming amount (ZILs). This must be explicitly
   accepted using the ``accept`` statement. The money transfer does not happen
@@ -276,24 +276,25 @@ The following ``String`` operations are language built-in.
 
 Hashes
 ******
-Scilla has in-built support for ``Hash`` values. ``Hash`` literals begin
-with ``0x`` and have 64 hexadecimal characters (32 bytes). The keyword
-``Hash`` specifies variables of this type.
 
-The following ``Hash`` operations are language built-in. In the
-description below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``,
-``Address`` or ``Hash``.
+A hash in Scilla is declared using the data type ``ByStr32``. A ``ByStr32``
+represents a hexadecimal Byte String of 32 bytes (64 hexadecimal characters)
+prefixed with ``0x``. 
 
-- ``eq h1 h2``: Is ``Hash h1`` equal to ``Hash h2``. Returns ``Bool``.
-- ``dist h1 h2``: The distance between ``Hash h1`` and ``Hash h2``.
+The following operations on hashes are language built-ins. In the description
+below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
+``ByStr32``.
+
+- ``eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns ``Bool``.
+- ``dist h1 h2``: The distance between ``ByStr32 h1`` and ``ByStr32 h2``.
   Returns ``Uint128``. In the future, with ``Uint256`` support, this
   will return ``Uint256``.
-- ``sha256 x`` : The SHA256 hash of value ``Any`` x. Returns ``Hash``.
+- ``sha256 x`` : The SHA256 hash of value ``Any`` x. Returns ``ByStr32``.
 
 Maps
 ****
 ``Map`` values provide key-value store. Keys can have types ``IntX``,
-``UintX``, ``String``, ``Hash`` or ``Address``. Values can be of any type.
+``UintX``, ``String``, ``ByStr32`` or ``ByStr20``. Values can be of any type.
 
 - ``put m k v``: Insert key ``k`` and value ``v`` into ``Map m``.
   Returns a new ``Map`` with the newly inserted key/value in addition to
@@ -307,15 +308,19 @@ Maps
 
 - ``contains m k``: Is key ``k`` and its associated value  present in the map ``m``.  Returns ``Bool``.
 
+- ``to_list m:`` Convert ``Map m`` into a ``List (Pair ('A) ('B))`` where ``'A`` and ``'B`` are key
+  and value types.
+
+
 Addresses
 *********
-Addresses can be represented using the ``Address`` data type, specified
-using the same keyword. ``Address`` literals being with ``0x`` and contain
-40 hexadecimal characters (20 bytes).
 
-The following ``Address`` operations are language built-in.
+Addresses are declared using the data type  ``ByStr20`` data type. ``ByStr20``
+literals being with ``0x`` and contain 20 bytes (40 hexadecimal characters).
 
-- ``eq a1 a2``: Is ``Address a1`` equal to ``Address a2``.
+The following operations on addresses are language built-in.
+
+- ``eq a1 a2``: Is ``ByStr20`` equal to ``ByStr20``.
   Returns ``Bool``.
 
 Block Numbers
@@ -370,12 +375,12 @@ has two constructors ``None`` and ``Some``.
    + ``None`` represents the absence of any value. ``None {`A}`` constructs an
      ADT that represents the absence of any value of type ``'A``. The following
      code fragment constructs an ``Option`` using the ``None`` constructor with
-     an argument of type ``Hash``:
+     an argument of type ``ByStr20``:
 
   
     .. code-block:: ocaml
 
-        x = None {Hash} 
+        x = None {ByStr20} 
 
 List
 ****

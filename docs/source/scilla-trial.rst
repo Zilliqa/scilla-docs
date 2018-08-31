@@ -84,7 +84,7 @@ Both IDEs come with the following sample smart contracts written in Scilla:
   than `y` of `d` if Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for
   some `Distance` function. The game is played in two phases. In the first
   phase, players submit their hash,  i.e., SHA-256(x) and SHA-256(y) using the
-  transition ``Play(guess: Hash)``.  Once the first player has submitted her
+  transition ``Play(guess: ByStr32)``.  Once the first player has submitted her
   hash, the second player has a bounded time to submit her hash. If the second
   player does not submit her hash within the stipulated time, then the first
   player may become the winner. In the second phase, players have to submit the
