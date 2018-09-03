@@ -688,7 +688,7 @@ ListUtils
 
 - ``list_flatten : (List List 'A) -> List 'A``.
 
-  Concatenate a list of lists. Each element (``List 'A``) of the input (``List List 'A``) are all concatenated together (in the same order) to give the result. linear complexity over the total number of elements in all of the lists.
+    Concatenate a list of lists. Each element (``List 'A``) of the input (``List List 'A``) are all concatenated together (in the same order) to give the result. linear complexity over the total number of elements in all of the lists.
 
 - ``list_length : List 'A -> Int32``
 
@@ -728,11 +728,11 @@ ListUtils
 
 - ``list_unzip : List (Pair 'A 'B) -> Pair (List 'A) (List 'B)``.
 
-   Convert a list ``l : Pair 'A 'B`` of ``Pair``s into a ``Pair`` of lists. Linear complexity.
+   Convert a list ``l : Pair 'A 'B`` of ``Pair`` s into a ``Pair`` of lists. Linear complexity.
 
 - ``list_nth : Int32 -> List 'A -> Option 'A``.
 
-   Returns ``Some 'A `` if n'th element exists in list. ``None`` otherwise. Linear complexity.
+   Returns ``Some 'A`` if n'th element exists in list. ``None`` otherwise. Linear complexity.
 
 
 
