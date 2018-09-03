@@ -643,3 +643,97 @@ that satisfies the predicate is seen yet). The iterator function
 provided as argument ``h`` for the predicate and returns an updated
 accummulator. If the accummulator is found ``True`` at some point,
 that value remains unchanged for the rest of the fold.
+
+
+Standard Libraries
+#####################
+
+Scilla comes with four standard library contracts ``BoolUtils.scilla``, ``ListUtils.scilla``, ``NatUtils.scilla``and ``PairUtils.scilla``. As the name suggests these contracts respecively implement operations on ``Bool``, ``List``, ``Nat``and ``Pair``data types. In order to use the functions defined in these contracts, an ``import`` utility is provided. So, for instance, if one wants to use all the operations defined on ``List``, one has to add ``import ListUtils`` just befire the declaration of any contract-specific library.  
+
+Below, we present the functions defined in each of the library.
+
+BoolUtils
+************
+
+- ``andb``: Computes the logical AND of two ``Bool`` values.
+- ``orb``: Computes the logical OR of two ``Bool`` values.
+- ``negb``: Computes the logical negation of a ``Bool`` value.
+
+ListUtils
+************
+
+- ``list_map : ('A -> 'B) -> List 'A -> : List 'B`` : Apply ``f : 'A -> 'B`` to every element of ``l : List 'A``.
+
+- ``list_filter : ('A -> Bool) -> List 'A -> List 'A``.
+
+   Preserving the order of elements in ``l : List 'A``, return new list containing only those elements that satisfy the predicate ``f : 'A -> Bool``. Linear complexity.
+
+- ``list_head : (List 'A) -> (Option 'A)``.
+
+   Return the head element of a list ``l : List 'A`` as ``Some 'A``, ``None`` if ``l`` is ``Nil`` (the empty list).
+
+- ``list_tail : (List 'A) -> (Option List 'A)``.
+
+   For input list ``l : List 'A``, returns ``Some l'``, where ``l'`` is ``l`` except for it's head; returns ``Some Nil`` if ``l`` has only one element; returns ``None`` if ``l`` is empty.
+
+- ``list_append : (List 'A -> List 'A ->  List 'A)``.
+
+   Append the second list to the first one and return a new List. Linear complexity (on first list).
+
+- ``list_reverse : (List 'A -> List 'A)``.
+
+   Return the reverse of the input list. Linear complexity.
+
+- ``list_flatten : (List List 'A) -> List 'A``.
+
+  Concatenate a list of lists. Each element (``List 'A``) of the input (``List List 'A``) are all concatenated together (in the same order) to give the result. linear complexity over the total number of elements in all of the lists.
+
+- ``list_length : List 'A -> Int32``
+
+   Number of elements in list. Linear complexity.
+
+- ``list_eq : ('A -> 'A -> Bool) -> List 'A -> List 'A -> Bool``.
+
+   Takes a function ``f : 'A -> 'A -> Bool`` to compare elements of lists ``l1 : List 'A`` and ``l2 : List 'A`` and returns True iff all elements of the lists compare equal. Linear complexity.
+
+- ``list_mem : ('A -> 'A -> Bool) -> 'A -> List 'A -> Bool``.
+
+   Checks whether an element ``a : 'A`` is in the list ``l : List'A`. `f : 'A -> 'A -> Bool`` should be provided for equality comparison. Linear complexity.
+
+- ``list_forall : ('A -> Bool) -> List 'A -> Bool``.
+
+   Return True iff all elements of list ``l : List 'A`` satisfy predicate ``f : 'A -> Bool``. Linear complexity.
+
+- ``list_exists : ('A -> Bool) -> List 'A -> Bool``.
+
+   Return True if at least one element of list ``l : List 'A`` satisfies predicate ``f : 'A -> Bool``.  Linear complexity.
+
+- ``list_sort : ('A -> 'A -> Bool) -> List 'A -> List 'A``.
+
+   Stable sort the input list ``l : List 'A``. Function ``flt : 'A -> 'A -> Bool`` provided must return True iff its first argument is lesser-than its second argument. Linear complexity.
+
+- ``list_find : ('A -> Bool) -> 'A -> 'A``.
+
+   Return ``Some a``, where ``a`` is the first element of ``l : List 'A`` that satisfies the predicate ``f : 'A -> Bool``. Returns ``None`` iff none of the elements in ``l`` satisfy ``f``. Linear complexity.
+
+- ``list_zip : List 'A -> List 'B -> List (Pair 'A 'B)``.
+
+  Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` into a ``Pair`` and return the resulting list. In case of different number of elements in the lists, the extra elements are ignored.
+
+- ``list_zip_with : ('A -> 'B -> 'C) -> List 'A -> List 'B -> List 'C )``. Linear complexity.
+
+   Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` using ``f : 'A -> 'B -> 'C`` and return the resulting list of ``'C``. In case of different number of elements in the lists, the extra elements are ignored.
+
+- ``list_unzip : List (Pair 'A 'B) -> Pair (List 'A) (List 'B)``.
+
+   Convert a list ``l : Pair 'A 'B`` of ``Pair``s into a ``Pair`` of lists. Linear complexity.
+
+- ``list_nth : Int32 -> List 'A -> Option 'A``.
+
+   Returns ``Some 'A `` if n'th element exists in list. ``None`` otherwise. Linear complexity.
+
+
+
+ 
+
+
