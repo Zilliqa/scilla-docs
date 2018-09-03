@@ -648,7 +648,7 @@ that value remains unchanged for the rest of the fold.
 Standard Libraries
 #####################
 
-Scilla comes with four standard library contracts ``BoolUtils.scilla``, ``ListUtils.scilla``, ``NatUtils.scilla``and ``PairUtils.scilla``. As the name suggests these contracts respecively implement operations on ``Bool``, ``List``, ``Nat``and ``Pair``data types. In order to use the functions defined in these contracts, an ``import`` utility is provided. So, for instance, if one wants to use all the operations defined on ``List``, one has to add ``import ListUtils`` just befire the declaration of any contract-specific library.  
+Scilla comes with four standard library contracts ``BoolUtils.scilla``, ``ListUtils.scilla``, ``NatUtils.scilla`` and ``PairUtils.scilla``. As the name suggests these contracts respecively implement operations on ``Bool``, ``List``, ``Nat`` and ``Pair`` data types. In order to use the functions defined in these contracts, an ``import`` utility is provided. So, if one wants to use all the operations defined on ``List``, one has to add ``import ListUtils`` just before the declaration of any contract-specific library.  
 
 Below, we present the functions defined in each of the library.
 
@@ -662,7 +662,9 @@ BoolUtils
 ListUtils
 ************
 
-- ``list_map : ('A -> 'B) -> List 'A -> : List 'B`` : Apply ``f : 'A -> 'B`` to every element of ``l : List 'A``.
+- ``list_map : ('A -> 'B) -> List 'A -> : List 'B``. 
+    
+   Apply ``f : 'A -> 'B`` to every element of ``l : List 'A``.
 
 - ``list_filter : ('A -> Bool) -> List 'A -> List 'A``.
 
