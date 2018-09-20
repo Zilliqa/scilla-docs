@@ -5,15 +5,19 @@ Structure of a Scilla Contract
 #################################
 
 
-The general structure of a Scilla contract is given in the code fragment below.
-It starts with the declaration of a ``library`` that contains purely
-mathematical functions, for instance, a function to compute the boolean ``AND``
-of two bits or computing factorial of a given natural number.  After the
-library code block follows the actual contract definition declared using the
-keyword ``contract``. A contract has three parts. The first part declares the
-immutable parameters of the contract, the second declares the mutable fields
-and the third part contains all ``transition`` definitions. 
+The general structure of a Scilla contract is given in the code fragment below:
 
++ It starts with the declaration of a ``library`` that contains purely
+  mathematical functions. For instance, a function to compute the boolean ``AND``
+  of two bits or computing factorial of a given natural number.
+
++ Then, follows the actual contract definition declared using the keyword ``contract``.
+
++ Within a contract, there are then three distinct parts:
+
+  1. The first part declares the immutable parameters of the contract.
+  2. The second part declares the mutable fields.
+  3. The third part contains all ``transition`` definitions. 
 
 
 .. code-block:: ocaml
@@ -55,7 +59,7 @@ and the third part contains all ``transition`` definitions.
     transition firstTransition (param_1 : type_1, param_2 : type_2)
       (* Transition body *)
     
-     end
+    end
 
     transition secondTransition (param_1: type_1)
       (* Transition body *)
@@ -67,20 +71,18 @@ and the third part contains all ``transition`` definitions.
 Immutable Variables
 *******************
 
-`Immutable variables`, or contract parameters have their values defined at the
-time of contract creation and cannot be modified later.  The set of immutable
-variables in the contract is specified at the beginning of the contract, right
-after the contract name is defined.
+`Immutable variables`, are the contract's initial parameters, whose values 
+are defined at the time of contract creation and cannot be modified after.
 
 Declaration of immutable variables has the following format:
 
 .. code-block:: ocaml
 
-  (vname1 : type1,
-   vname2 : type2,
+  (vname_1 : vtype_1,
+   vname_2 : vtype_2,
     ...  )
 
-Each declaration consists of a variable name (an identifier) and its type,
+Each declaration consists of a variable name (an identifier) and followed by its type,
 separated by ``:``. Multiple variable declarations are separated by ``,``. The
 initialization values for variables are to be specified at the time of contract
 creation.
@@ -94,8 +96,8 @@ declaration prefixed with the keyword ``field``.
 
 .. code-block:: ocaml
 
-  field name1 : type1 = expr1
-  field name2 : type2 = expr2
+  field vname_1 : vtype_1 = expr_1
+  field vname_2 : vtype_2 = expr_2
   ...
 
 Each expression here is an initializer for that value. The definitions complete
@@ -107,25 +109,25 @@ goes through transitions, the values of these fields get modified.
 Transitions
 ************
 
-`Transitions` define the change in  the state of the contract. These are
-defined with the keyword ``transition`` followed by the name and parameters to
+`Transitions` define the change in the state of the contract. These are
+defined with the keyword ``transition`` followed by the parameters to
 be passed. The definition ends with the ``end`` keyword.
 
 .. code-block:: ocaml
 
-  transition foo (name1 : type1, name2 : type2, ...)
+  transition foo (vname_1 : vtype_1, vname_2 : vtype_2, ...)
     ...
   end
 
-where ``name : type`` specifies the name and type of each parameter and
+where ``vname : vtype`` specifies the name and type of each parameter and
 multiple parameters are separated by ``,``. In addition to parameters that are
 explicitly declared in the definition, each ``transition`` has available to it,
-the following implicit parameters.
+the following implicit parameters:
 
-- ``_sender : ByStr20`` : The account (sender of the message) that triggered
+- ``_sender : ByStr20`` : The account address (sender of the message) that triggered
   this transition.
-- ``_amount : Uint128`` : Incoming amount (ZILs). This must be explicitly
-  accepted using the ``accept`` statement. The money transfer does not happen
+- ``_amount : Uint128`` : Incoming amount (ZILs) sent by the sender. This amount must be explicitly
+  accepted using the ``accept`` statement within the transition. The money transfer does not happen
   if the transition does not execute ``accept``.
 
 
@@ -134,48 +136,55 @@ Expressions
 
 `Expression` handle pure operations. The supported expressions in Scilla are:
 
-- ``let x = f in e`` :  Give ``f`` the name ``x`` within expression ``e``.  The
-  binding of ``x`` to ``f`` within ``e`` here is local and hence limited to
-  ``e``. The following example binds the value of ``one`` to ``1`` in the
-  expression ``builtin add one Int32 5`` which adds ``5`` to ``one`` and hence
-  evaluates to ``6``.  
-
-    .. code-block:: ocaml
-
-        let one = 1 in builtin add one Int32 5
-
-
 - ``let x = f`` : Give  ``f`` the name ``x`` in the contract. The binding of
-  ``x`` to ``f`` is global and extends to the end of the contract. Note the
-  missing ``in``, which implies that the binding holds for the entire contract
-  and not within a specific expression. The following code fragment defines a
-  constant ``one`` whose values is ``1`` throughout the contract.
+  ``x`` to ``f`` is **global** and extends to the end of the contract. The following code 
+  fragment defines a constant ``one`` whose values is ``1`` of type ``Int32`` 
+  throughout the contract.
 
-    .. code-block:: ocaml
+  .. code-block:: ocaml
 
-        let one = 1 
+    let one = Int32 1 
 
+- ``let x = f in expr`` :  Bind ``f`` to the name ``x`` within expression ``expr``.  The
+  binding here is **local** to ``expr`` only. The following example binds the value of 
+  ``one`` to ``1`` of type ``Int32`` and ``two`` to ``2`` of type ``Int32``
+  in the expression ``builtin add one two``, which adds ``1`` to ``2`` and hence
+  evaluates to ``3`` of type ``Int32``.
 
+  .. code-block:: ocaml
 
+    let sum =
+      let one = Int32 1 in
+      let two = Int32 2 in 
+      builtin add one two
 
 - ``{ <entry>_1 ; <entry>_2 ... }``: Message expression (see below for
   ``Message`` type), where each entry has the following form: ``b : x``. Here
   ``b`` is an identifier and ``x`` a variable, whose value is bound to the
   identifier in the message. The following code defines a ``msg`` with four
-  entries ``_tag``, ``_recipient``, ``_amount`` and ``code``. 
+  entries ``_tag``, ``_recipient``, ``_amount`` and ``code``.
 
-    .. code-block:: ocaml
+  Note: ``_tag`` identifier entry is used to identify the name of the next transition
+  to be executed. It can be used to invoke a particular transition within the contract
+  that is being called. Default value of ``_tag`` should be bound to ``Main`` for Account to Account
+  transactions, and the ``_recipient`` should be bound to ``_sender``.
 
-        msg = { _tag : "Main"; _recipient : sender; _amount : Uint128 0; code : Uint32 0 };
+  .. code-block:: ocaml
+
+    (*Account to Account message passing*)
+    msg = { _tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : Uint32 0 };
+
+    (*Account to Contract message passing*)
+    (*Assume contractAddress is the address of the contract being called and the contract contains the transition setHello*)
+    msg = { _tag : "setHello"; _recipient : contractAddress; _amount : Uint128 0; code : Uint32 0 };
 
 
-- ``fun (x : T) => e`` : A function that takes an input ``x`` of type ``T`` and
-  returns the value to which expression ``e`` evaluates.
+- ``fun (x : T) => expr`` : A function that takes an input ``x`` of type ``T`` and
+  returns the value to which expression ``expr`` evaluates.
 
-
-- ``tfun T => e`` : A type function that takes ``T`` as a parametric type and
-  returns the value to which expression ``e`` evaluates. See the section on
-  ``Pair`` below for an example. 
+- ``tfun T => expr`` : A type function that takes ``T`` as a parametric type and
+  returns the value to which expression ``expr`` evaluates. These are typically used
+  to build library functions. See the section on Pairs_ below for an example.
 
 - ``@x T``: Instantiate a variable ``x`` with type ``T``.
 
@@ -188,14 +197,16 @@ Expressions
   ``match`` in OCaml. The pattern to be matched can be a variable binding, 
   an ADT constructor (see ADTs_) or the wildcard ``_`` symbol to match anything.
 
-.. code-block:: ocaml
+  .. code-block:: ocaml
 
-  match x with
-  | pattern1 =>
-     statements ...
-  | pattern2 =>
-     statements ...
-  end
+    match x with
+    | pattern_1 =>
+      statements ...
+    | pattern_2 =>
+      statements ...
+    | _ => (*Wildcard*)
+      statements ...
+    end
 
 
 
@@ -212,7 +223,7 @@ writing from/to a mutable smart contract variable.
 One can also read from the blockchain state. A blockchain state consists of
 certain values associated with their block, for instance, the ``BLOCKNUMBER``. 
 
-- ``x <- &B`` reads from the blockchain state variable ``B`` into ``x``.
+- ``x <- & BLOCKNUMBER`` reads from the blockchain state variable ``BLOCKNUMBER`` into ``x``.
 
 Whenever ZIL tokens are sent via a transition, the transition has to explicitly
 accept the transfer. This is done through the ``accept`` statement.
@@ -228,35 +239,47 @@ through ``send`` statement:
 
 - ``send ms`` : send a list of messages ``ms``.
 
+A contract can also communicate to the client (off-chain) by emitting events:
+
+- .. code-block:: ocaml
+
+    e = { _eventname : "eventName"; <entry>_2 ; <entry>_3 };
+    (*where entries are same form: b : x as message expression.*)
+    (*Here b is the identifier, and x the variable*)
+    event e;
+
+  Note that the first entry is always the eventname for events parameters.
 
 Primitive Data Types & Operations
 #################################
 
 Integer Types
 *************
-Scilla defines signed and unsigned integer types of 32, 64 and 128 bits.
-Support for 256 bit integers is planned for the future. These integer
-types can be specified with the keywords ``IntX`` and ``UintX`` where
-``X`` can be 32, 64 or 128. For example, an unsigned integer of 128 bits
+Scilla defines signed and unsigned integer types of 32, 64, 128, and 256 bits. 
+These integer types can be specified with the keywords ``IntX`` and ``UintX`` where
+``X`` can be 32, 64, 128, or 256. For example, an unsigned integer of 128 bits
 can be specified as ``Uint128``.
 
 .. note::
 
   Values related to money (such as amount transferred or the balance of
-  an account) are ``Uint128``.
+  an account) are ``Uint256``.
 
 The following operations on integers are language built-in. Each
 operation takes two integers ``IntX``/``UintX`` (of the same type) as
 arguments.
 
-- ``eq i1 i2`` : Is ``i1`` equal to ``i2`` Returns ``Bool``.
-- ``add i1 i2``: Add integer values ``i1`` and ``i2``.
+- ``builtin eq i1 i2`` : Is ``i1`` equal to ``i2`` Returns ``Bool``.
+- ``builtin add i1 i2``: Add integer values ``i1`` and ``i2``.
   Returns an integer of the same type.
-- ``sub i1 i2``: Subtract ``i2`` from ``i1``.
+- ``builtin sub i1 i2``: Subtract ``i2`` from ``i1``.
   Returns an integer of the same type.
-- ``mul i1 i2``: Integer product of ``i1`` and ``i2``.
+- ``builtin mul i1 i2``: Integer product of ``i1`` and ``i2``.
   Returns an integer of the same type.
-- ``lt i1 i2``: Is ``i1`` lesser than ``i2``. Returns ``Bool``.
+- ``builtin div i1 i2``: Integer division of ``i1`` by ``i2``.
+  Returns an integer of the same type.
+- ``builtin rem i1 i2``: ``i1`` modulo ``i2``. Returns an integer of the same type.
+- ``builtin lt i1 i2``: Is ``i1`` lesser than ``i2``. Returns ``Bool``.
 
 Strings
 *******
@@ -266,11 +289,11 @@ declared by specifying using keyword ``String``.
 
 The following ``String`` operations are language built-in.
 
-- ``eq s1 s2`` : Is ``String s1`` equal to ``String s2``.
+- ``builtin eq s1 s2`` : Is ``String s1`` equal to ``String s2``.
   Returns ``Bool``.
-- ``concat s1 s2`` : Concatenate ``String s1`` with ``String s2``.
+- ``builtin concat s1 s2`` : Concatenate ``String s1`` with ``String s2``.
   Returns ``String``.
-- ``substr s1 i1 i2`` : Extract sub-string of ``String s1`` starting
+- ``builtin substr s1 i1 i2`` : Extract sub-string of ``String s1`` starting
   from position ``Uint32 i1`` with length ``Uint32 i2``.
   Returns ``String``.
 
@@ -279,17 +302,29 @@ Hashes
 
 A hash in Scilla is declared using the data type ``ByStr32``. A ``ByStr32``
 represents a hexadecimal Byte String of 32 bytes (64 hexadecimal characters)
-prefixed with ``0x``. 
+prefixed with ``0x``.
 
 The following operations on hashes are language built-ins. In the description
 below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 ``ByStr32``.
 
-- ``eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns ``Bool``.
-- ``dist h1 h2``: The distance between ``ByStr32 h1`` and ``ByStr32 h2``.
-  Returns ``Uint128``. In the future, with ``Uint256`` support, this
-  will return ``Uint256``.
-- ``sha256 x`` : The SHA256 hash of value ``Any`` x. Returns ``ByStr32``.
+- ``builtin eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns ``Bool``.
+
+- ``builtin dist h1 h2``: The distance between ``ByStr32 h1`` and ``ByStr32 h2``.
+  Returns ``Uint256``.
+
+- ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns ``ByStr32``.
+
+- ``builtin to_byStr x'`` : Converts a hash ``x'`` of finite length, say of type ``ByStr32`` to one 
+  of arbitrary length.
+
+- ``builtin schnorr_gen_key_pair`` : Create a key pair of form ``Pair {ByStr32 BySt33}`` that 
+  consist of both private key of type ``ByStr32`` and public key of type ``ByStr33`` respectively.
+
+- ``builtin schnorr_sign privk msg`` : Sign a ``msg`` of type ``ByStr`` with the ``privk`` of type ``ByStr32``.
+
+- ``builtin schnorr_verify pubk msg sig`` : Verify a signed ``sig`` of type ``ByStr64`` against the ``msg`` of 
+  type ``ByStr32`` with the ``pubk`` of type ``ByStr33``.
 
 Maps
 ****
@@ -308,7 +343,7 @@ Maps
 
 - ``contains m k``: Is key ``k`` and its associated value  present in the map ``m``.  Returns ``Bool``.
 
-- ``to_list m:`` Convert ``Map m`` into a ``List (Pair ('A) ('B))`` where ``'A`` and ``'B`` are key
+- ``to_list m``: Convert ``Map m`` into a ``List (Pair ('A) ('B))`` where ``'A`` and ``'B`` are key
   and value types.
 
 
@@ -341,7 +376,7 @@ Algebraic Data Types (ADTs)
 
 `Algebraic data types` are composite types, used commonly in functional
 programming. The following ADTs are featured in Scilla. Each ADT is defined as
-a set of constructors. Each constructor takes a set of arguments of certain
+a set of **constructors**. Each constructor takes a set of arguments of certain
 types.
 
 Boolean
@@ -360,7 +395,7 @@ Option
 *******
 Similar to ``Option`` in OCaml, the ``Option`` ADT in Scilla provides means to
 represent the presence of a value ``x`` or the absence of any value. ``Option``
-has two constructors ``None`` and ``Some``. 
+has two constructors ``None`` and ``Some``.
 
    + ``Some`` represents the presence of a value. ``Some {`A} x`` constructs an
      ADT that represents the presence of a value ``x`` of type ``'A``. The
@@ -369,8 +404,10 @@ has two constructors ``None`` and ``Some``.
 
     .. code-block:: ocaml
 
-        x = Some {Int32} 10 
-
+        let x = 
+          let ten = Int32 10 in
+          Some {Int32} 10
+      
 
    + ``None`` represents the absence of any value. ``None {`A}`` constructs an
      ADT that represents the absence of any value of type ``'A``. The following
@@ -380,7 +417,38 @@ has two constructors ``None`` and ``Some``.
   
     .. code-block:: ocaml
 
-        x = None {ByStr20} 
+        x = None {ByStr20}
+
+    They are extremely useful for initialising a mutable variable with no value.
+
+    .. code-block:: ocaml
+
+        field empty_bool : Option Bool : None {Bool}
+    
+    Note that constructing ``Some {(ADT)}`` or ``None {(ADT)}`` will require the 
+    ``( )`` parentheses:
+
+
+    .. code-block:: ocaml
+
+        let one = Int32 1 in
+        x = Some {(Pair Int32 Int32)} one one
+        
+
+    Some constructor is also frequently used in extracting values from a Map:
+    
+
+    .. code-block:: ocaml
+
+        (*Assume m = Map ByStr20 Int32 that contains a key value pair of _sender data*)
+        getValue = builtin get m _sender;
+        match getValue with
+        | Some v =>
+          v = v + v;
+          statements...
+        | None =>
+          statements...
+        end
 
 List
 ****
@@ -470,6 +538,7 @@ for Scilla.
 
 Pair
 ****
+.. _Pairs:
 
 ``Pair`` ADTs are used to contain a pair of values of possibly different
 types. ``Pair`` variables are specified using the ``Pair`` keyword and
@@ -481,9 +550,10 @@ Below is an example to construct a ``Pair`` of ``Int32`` values.
 
 .. code-block:: ocaml
 
-  let one = 1 in
-  let two = 2 in
-  let p = Pair {Int32 Int32} one two in
+  let p = 
+    let one = 1 in
+    let two = 2 in
+    Pair {Int32 Int32} one two
     ...
 
 We now illustrate how pattern matching can be used to extract the
@@ -508,13 +578,17 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
 Nat
 ***
 Scilla provides an ADT to work with natural numbers. A natural
-number ``Nat`` is defined to be either ``Zero`` or ``Succ Nat``,
-i.e., the successor of a natural number. We show a formal definition
-for ``Nat`` in OCaml below:
+number ``Nat`` is constructed using ``Zero`` or ``Succ Nat``,
+i.e., the successor of a natural number. The following code shows
+the build up of ``Nat`` three:
 
 .. code-block:: ocaml
 
-  type nat = Zero | Succ of nat
+  let three = 
+    let zero = Zero in 
+    let one  = Succ zero in
+    let two  = Succ one in
+    Succ two
 
 The following folding (structural recursion) is defined for ``Nat``
 in Scilla, where ``'T`` is a parametric type variable.
@@ -534,7 +608,7 @@ More ADT examples
 #################
 To make it easier to understand how ADTs can be used, we provide two
 more examples and describe them in detail. Both the functions described
-below are distributed as ``ListUtils`` in the Scilla standard library.
+below are distributed as ``ListUtils`` in the Scilla standard library_.
 
 List: Head
 **********
@@ -647,8 +721,13 @@ that value remains unchanged for the rest of the fold.
 
 Standard Libraries
 #####################
+.. _library:
 
-Scilla comes with four standard library contracts ``BoolUtils.scilla``, ``ListUtils.scilla``, ``NatUtils.scilla`` and ``PairUtils.scilla``. As the name suggests these contracts respecively implement operations on ``Bool``, ``List``, ``Nat`` and ``Pair`` data types. In order to use the functions defined in these contracts, an ``import`` utility is provided. So, if one wants to use all the operations defined on ``List``, one has to add ``import ListUtils`` just before the declaration of any contract-specific library.  
+Scilla comes with four standard library contracts ``BoolUtils.scilla``, ``ListUtils.scilla``, ``NatUtils.scilla`` 
+and ``PairUtils.scilla``. As the name suggests these contracts respecively implement operations on ``Bool``, ``List``, 
+``Nat`` and ``Pair`` data types. In order to use the functions defined in these contracts, an ``import`` utility is provided. 
+So, if one wants to use all the operations defined on ``List``, one has to add ``import ListUtils`` just before the declaration 
+of any contract-specific library, or add ``import ListUtils PairUtils`` if one wants to use operations in both libraries.
 
 Below, we present the functions defined in each of the library.
 
@@ -659,80 +738,187 @@ BoolUtils
 - ``orb``: Computes the logical OR of two ``Bool`` values.
 - ``negb``: Computes the logical negation of a ``Bool`` value.
 
+PairUtils
+************
+
+- ``fst``: Extract the first element of a Pair.
+- ``snd``: Extract the second element of a Pair.
+
 ListUtils
 ************
 
 - ``list_map : ('A -> 'B) -> List 'A -> : List 'B``. 
     
-   Apply ``f : 'A -> 'B`` to every element of ``l : List 'A``.
+  | Apply ``f : 'A -> 'B`` to every element of ``l : List 'A``.
+
+  .. code-block:: ocaml
+
+      (*Library*)
+      let f =
+        func (a : Int32) =>
+          sha256hash a
+      
+      (*Contract transition*)
+      (*Assume l as a list [1 -> 2 -> 3 -> NIL]*)
+      transition
+
+      hash_list_int32 = @list_map Int32;
+      hashed_list = hash_list_int32 f l;
+
+      end
 
 - ``list_filter : ('A -> Bool) -> List 'A -> List 'A``.
 
-   Preserving the order of elements in ``l : List 'A``, return new list containing only those elements that satisfy the predicate ``f : 'A -> Bool``. Linear complexity.
+  | Preserving the order of elements in ``l : List 'A``, return new list containing only those elements that satisfy the predicate ``f : 'A -> Bool``. Linear complexity.
+
+  .. code-block:: ocaml
+
+    (*Library*)
+    let f =
+      fun (a : Int32) =>
+        let ten = Int32 10 in
+        builtin lt a ten
+
+    (*Contract transition*)
+    (*Assume l as a list [1 -> 2 -> 3 -> 11 -> NIL]*)
+    transition
+
+      less_ten_int32 = @list_filter Int32;
+      less_ten_list = less_ten_int32 f l
+      (*Returns a list [1 -> 2 -> 3 -> NIL]*)
+      
+    end
 
 - ``list_head : (List 'A) -> (Option 'A)``.
 
-   Return the head element of a list ``l : List 'A`` as ``Some 'A``, ``None`` if ``l`` is ``Nil`` (the empty list).
+  | Return the head element of a list ``l : List 'A`` as ``Some 'A``, ``None`` if ``l`` is ``Nil`` (the empty list).
 
 - ``list_tail : (List 'A) -> (Option List 'A)``.
 
-   For input list ``l : List 'A``, returns ``Some l'``, where ``l'`` is ``l`` except for it's head; returns ``Some Nil`` if ``l`` has only one element; returns ``None`` if ``l`` is empty.
+  | For input list ``l : List 'A``, returns ``Some l'``, where ``l'`` is ``l`` except for it's head; returns ``Some Nil`` if ``l`` has only one element; returns ``None`` if ``l`` is empty.
 
 - ``list_append : (List 'A -> List 'A ->  List 'A)``.
 
-   Append the second list to the first one and return a new List. Linear complexity (on first list).
+  | Append the second list to the first one and return a new List. Linear complexity (on first list).
 
 - ``list_reverse : (List 'A -> List 'A)``.
 
-   Return the reverse of the input list. Linear complexity.
+  | Return the reverse of the input list. Linear complexity.
 
 - ``list_flatten : (List List 'A) -> List 'A``.
 
-    Concatenate a list of lists. Each element (``List 'A``) of the input (``List List 'A``) are all concatenated together (in the same order) to give the result. linear complexity over the total number of elements in all of the lists.
+  | Concatenate a list of lists. Each element (``List 'A``) of the input (``List List 'A``) are all concatenated together (in the same order) to give the result. linear complexity over the total number of elements in all of the lists.
 
 - ``list_length : List 'A -> Int32``
 
-   Number of elements in list. Linear complexity.
+  | Number of elements in list. Linear complexity.
 
 - ``list_eq : ('A -> 'A -> Bool) -> List 'A -> List 'A -> Bool``.
 
-   Takes a function ``f : 'A -> 'A -> Bool`` to compare elements of lists ``l1 : List 'A`` and ``l2 : List 'A`` and returns True iff all elements of the lists compare equal. Linear complexity.
+  | Takes a function ``f : 'A -> 'A -> Bool`` to compare elements of lists ``l1 : List 'A`` and ``l2 : List 'A`` and returns True if all elements of the lists compare equal. Linear complexity.
 
 - ``list_mem : ('A -> 'A -> Bool) -> 'A -> List 'A -> Bool``.
 
-   Checks whether an element ``a : 'A`` is in the list ``l : List'A`. `f : 'A -> 'A -> Bool`` should be provided for equality comparison. Linear complexity.
+  | Checks whether an element ``a : 'A`` is in the list ``l : List'A`. `f : 'A -> 'A -> Bool`` should be provided for equality comparison. Linear complexity.
+ 
+  .. code-block:: ocaml
+
+    (*Library*)
+    let f =
+      fun (a : Int32) =>
+      fun (b : Int32) =>
+        builtin eq a b
+
+    (*transition*)
+    transition search (keynumber : Int32)
+
+      (*Assume l is a list of Int32, say [1 -> 2 -> 3 -> 4 -> NIL]*)
+      list_mem_int32 = @list_mem Int32;
+      check_result = list_mem_int32 f keynumber l (*Return Bool*)
+      
+    end
 
 - ``list_forall : ('A -> Bool) -> List 'A -> Bool``.
 
-   Return True iff all elements of list ``l : List 'A`` satisfy predicate ``f : 'A -> Bool``. Linear complexity.
+  | Return True if all elements of list ``l : List 'A`` satisfy predicate ``f : 'A -> Bool``. Linear complexity.
 
 - ``list_exists : ('A -> Bool) -> List 'A -> Bool``.
 
-   Return True if at least one element of list ``l : List 'A`` satisfies predicate ``f : 'A -> Bool``.  Linear complexity.
+  | Return True if at least one element of list ``l : List 'A`` satisfies predicate ``f : 'A -> Bool``.  Linear complexity.
 
 - ``list_sort : ('A -> 'A -> Bool) -> List 'A -> List 'A``.
 
-   Stable sort the input list ``l : List 'A``. Function ``flt : 'A -> 'A -> Bool`` provided must return True iff its first argument is lesser-than its second argument. Linear complexity.
+  | Stable sort the input list ``l : List 'A``. Function ``flt : 'A -> 'A -> Bool`` provided must return True if its first argument is lesser-than its second argument. Linear complexity.
+
+  .. code-block:: ocaml
+
+    (*Library*)
+    let int_sort = @list_sort Uint64 in
+
+    let flt =
+      fun (a : Uint64) => 
+      fun (b : Uint64) =>
+        builtin lt a b
+
+    let zero = Uint64 0 in
+    let one = Uint64 1 in
+    let two = Uint64 2 in
+    let three = Uint64 3 in
+    let four = Uint64 4 in
+
+    (* l6 = 2 4 3 2 1 2 3 *)
+      let l6 =
+      let nil = Nil {Uint64} in
+      let l0 = Cons {Uint64} two nil in
+      let l1 = Cons {Uint64} four l0 in
+      let l2 = Cons {Uint64} three l1 in
+      let l3 = Cons {Uint64} two l2 in
+      let l4 = Cons {Uint64} one l3 in
+      let l5 = Cons {Uint64} two l4 in
+      Cons {Uint64} three l5
+
+    (*transition*)
+    transition sortList ()
+
+      (* res1 = 1 2 2 2 3 3 4 *)
+      res1 = int_sort flt l6
+
+    end
 
 - ``list_find : ('A -> Bool) -> 'A -> 'A``.
 
-   Return ``Some a``, where ``a`` is the first element of ``l : List 'A`` that satisfies the predicate ``f : 'A -> Bool``. Returns ``None`` iff none of the elements in ``l`` satisfy ``f``. Linear complexity.
+  | Return ``Some a``, where ``a`` is the first element of ``l : List 'A`` that satisfies the predicate ``f : 'A -> Bool``. Returns ``None`` if none of the elements in ``l`` satisfy ``f``. Linear complexity.
 
 - ``list_zip : List 'A -> List 'B -> List (Pair 'A 'B)``.
 
-  Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` into a ``Pair`` and return the resulting list. In case of different number of elements in the lists, the extra elements are ignored.
+  | Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` into a ``Pair`` and return the resulting list. In case of different number of elements in the lists, the extra elements are ignored.
 
 - ``list_zip_with : ('A -> 'B -> 'C) -> List 'A -> List 'B -> List 'C )``. Linear complexity.
 
-   Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` using ``f : 'A -> 'B -> 'C`` and return the resulting list of ``'C``. In case of different number of elements in the lists, the extra elements are ignored.
+  | Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` using ``f : 'A -> 'B -> 'C`` and return the resulting list of ``'C``. In case of different number of elements in the lists, the extra elements are ignored.
 
 - ``list_unzip : List (Pair 'A 'B) -> Pair (List 'A) (List 'B)``.
 
-   Convert a list ``l : Pair 'A 'B`` of ``Pair`` s into a ``Pair`` of lists. Linear complexity.
+  | Convert a list ``l : Pair 'A 'B`` of ``Pair`` s into a ``Pair`` of lists. Linear complexity.
 
 - ``list_nth : Int32 -> List 'A -> Option 'A``.
 
-   Returns ``Some 'A`` if n'th element exists in list. ``None`` otherwise. Linear complexity.
+  | Returns ``Some 'A`` if n'th element exists in list. ``None`` otherwise. Linear complexity.
+
+  .. code-block:: ocaml
+
+    (*transition*)
+    (*Assume l as a list of Int32 [1 -> 2 -> 3 -> NIL]*)
+    transition search_nth (nth : Int32)
+      list_nth_int32 = @list_nth Int32;
+      search_nth = list_nth_int32 nth l;
+      match search_nth with
+      | Some v =>
+        statements...
+      | None =>
+        statements...
+      end
+    end
 
 
 
