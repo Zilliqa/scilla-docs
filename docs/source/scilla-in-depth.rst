@@ -556,6 +556,22 @@ Below is an example to construct a ``Pair`` of ``Int32`` values.
     Pair {Int32 Int32} one two
     ...
 
+Pair can be used to contain a pair of values with different types. 
+For example, to declare a pair of types ``String`` ``Uint32`` and initialize it 
+to a mutable field ``pp``:
+
+.. code-block:: ocaml
+
+  field pp: Pair (String) (Uint32) =
+                let s1 = "Hello" in
+                let num = Uint32 2 in
+                Pair {(String) (Uint32)} s1 num
+    ...
+
+Note the difference in how we perform a type declaration ``Pair{ (A') (B')}`` 
+and the syntax used to create a pair of values using the constructor ``Pair (A') (B')``.
+In the type declaration, a pair of curly braces surounds the two data types ``A'`` and ``B'``.
+
 We now illustrate how pattern matching can be used to extract the
 first element from a ``Pair``. The function ``fst`` shown below
 is defined in the ``PairUtils`` library of the Scilla standard library.
