@@ -22,17 +22,6 @@ In order to use the Scilla Blockchain IDE, a user will have to hold Testnet ZIL
 periodically distributed for free. Testnet ZIL tokens are required to pay for
 gas fees to deploy and run smart contracts. 
 
-
-Each regular payment from a non-contract account to a non-contract account
-corresponds to 1 unit of gas. Each contract creation corresponds to 50 units of
-gas, while each transition invocation from a non-contract account to a contract
-account will cost 10 units of gas. Any message call from a contract account to
-another contract account or otherwise will also cost 10 units of gas. 
-
-For example, a chained invocation, where, a user say Alice calls a contract
-``C_1`` that  in turn calls another contract ``C_2`` will require 20 units of
-gas in total.
-
 To try out the Blockchain IDE, users need to go through the `Zilliqa testnet
 wallet <https://wallet-scilla.zilliqa.com>`_.
 
@@ -40,22 +29,22 @@ wallet <https://wallet-scilla.zilliqa.com>`_.
 Interpreter IDE
 ************************
 
-`Scilla Interpreter IDE <https://ide.zilliqa.com>`_ is a simple development
+`Scilla Interpreter IDE <https://savant-ide.zilliqa.com>`_ is a simple development
 environment meant for users who would like to get their hands dirty with Scilla
 coding and testing. The Scilla Interpreter IDE is a standalone environment to
-test Scilla contracts. It runs a Scilla interpreter in the backend but is not
-connected to any blockchain network and hence does not maintain any persistent
-state and is not aware of any blockchain-wide parameters such as the current
-block number. 
+test Scilla contracts. 
 
-As a result, the contract writer or the invoker will have to mimic certain
-inputs, for instance, the current contract and blockchain state among others
-and pass it to the interpreter as inputs.  Refer to :ref:`interface-label`  to
-read about the format of the inputs to pass to the interpreter. 
+It runs a Scilla interpreter in the backend but is not connected to any
+blockchain network. It simulates an in-browser blockchain and maintain
+persistent state of contracts. 
+
+Refer to
+:ref:`interface-label`  to read about the format of the inputs to pass to the
+interpreter. 
 
 In order to user this IDE, users do not need to hold testnet ZIL. To try out
 the Interpreter IDE, users need to visit `Scilla Interpreter IDE
-<https://ide.zilliqa.com>`_.
+<https://savant-ide.zilliqa.com>`_.
 
 
 Example Contracts
