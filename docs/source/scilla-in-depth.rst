@@ -91,7 +91,7 @@ Mutable Variables
 *****************
 
 `Mutable variables` represent the mutable state of the contract. They are also
-called fields. They are declared after the immutable variables, with each
+called `fields`. They are declared after the immutable variables, with each
 declaration prefixed with the keyword ``field``.
 
 .. code-block:: ocaml
@@ -120,21 +120,27 @@ be passed. The definition ends with the ``end`` keyword.
   end
 
 where ``vname : vtype`` specifies the name and type of each parameter and
-multiple parameters are separated by ``,``. In addition to parameters that are
-explicitly declared in the definition, each ``transition`` has available to it,
-the following implicit parameters:
+multiple parameters are separated by ``,``. 
 
-- ``_sender : ByStr20`` : The account address (sender of the message) that triggered
-  this transition.
-- ``_amount : Uint128`` : Incoming amount (ZILs) sent by the sender. This amount must be explicitly
-  accepted using the ``accept`` statement within the transition. The money transfer does not happen
-  if the transition does not execute ``accept``.
+
+.. note::
+
+    In addition to parameters that are explicitly declared in the definition, each
+    ``transition`` has available to it, the following implicit parameters:
+
+    - ``_sender : ByStr20`` : The account address that triggered
+      this transition. In case, the transition was called by a contract account instead of a
+      user account, then ``_sender`` is the contract address.
+
+    - ``_amount : Uint128`` : Incoming amount (ZILs) sent by the sender. This amount must be explicitly
+      accepted using the ``accept`` statement within the transition. The money transfer does not happen
+      if the transition does not execute ``accept``.
 
 
 Expressions 
 ************
 
-`Expression` handle pure operations. The supported expressions in Scilla are:
+`Expressions` handle pure operations. The supported expressions in Scilla are:
 
 - ``let x = f`` : Give  ``f`` the name ``x`` in the contract. The binding of
   ``x`` to ``f`` is **global** and extends to the end of the contract. The following code 
@@ -158,27 +164,10 @@ Expressions
       let two = Int32 2 in 
       builtin add one two
 
-- ``{ <entry>_1 ; <entry>_2 ... }``: Message expression (see below for
-  ``Message`` type), where each entry has the following form: ``b : x``. Here
+- ``{ <entry>_1 ; <entry>_2 ... }``: Message expression, where each entry has the following form: ``b : x``. Here
   ``b`` is an identifier and ``x`` a variable, whose value is bound to the
-  identifier in the message. The following code defines a ``msg`` with four
-  entries ``_tag``, ``_recipient``, ``_amount`` and ``code``.
-
-  Note: ``_tag`` identifier entry is used to identify the name of the next transition
-  to be executed. It can be used to invoke a particular transition within the contract
-  that is being called. Default value of ``_tag`` should be bound to ``Main`` for Account to Account
-  transactions, and the ``_recipient`` should be bound to ``_sender``.
-
-  .. code-block:: ocaml
-
-    (*Account to Account message passing*)
-    msg = { _tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : Uint32 0 };
-
-    (*Account to Contract message passing*)
-    (*Assume contractAddress is the address of the contract being called and the contract contains the transition setHello*)
-    msg = { _tag : "setHello"; _recipient : contractAddress; _amount : Uint128 0; code : Uint32 0 };
-
-
+  identifier in the message. 
+  
 - ``fun (x : T) => expr`` : A function that takes an input ``x`` of type ``T`` and
   returns the value to which expression ``expr`` evaluates.
 
@@ -221,7 +210,7 @@ writing from/to a mutable smart contract variable.
 - ``f := x`` : Update mutable field  ``f`` with value ``x``.
 
 One can also read from the blockchain state. A blockchain state consists of
-certain values associated with their block, for instance, the ``BLOCKNUMBER``. 
+certain values associated with a block, for instance, the ``BLOCKNUMBER``. 
 
 - ``x <- & BLOCKNUMBER`` reads from the blockchain state variable ``BLOCKNUMBER`` into ``x``.
 
@@ -237,18 +226,36 @@ Communication
 A contract can communicate with other contracts (or non-contract) accounts
 through ``send`` statement:
 
-- ``send ms`` : send a list of messages ``ms``.
+- ``send msgs`` : send a list of messages ``msgs``.
+
+  The following code defines a ``msg`` with four entries ``_tag``,
+  ``_recipient``, ``_amount`` and ``param``.  ``_tag`` identifier entry is used
+  to identify the name of the next transition to be executed in ``_recipient``,
+  while ``_amount`` is the number of ZILs to be transferred to ``_recipient``,
+  where, ``param`` is any parameter to be passed to the transition.   
+  
+  .. code-block:: ocaml
+
+    (*Assume contractAddress is the address of the contract being called and the contract contains the transition setHello*)
+    msg = { _tag : "setHello"; _recipient : contractAddress; _amount : Uint128 0; param : Uint32 0 };
+
+ Every message must have ``_tag``, ``_recipient`` and ``_amount`` entries.
 
 A contract can also communicate to the client (off-chain) by emitting events:
 
-- .. code-block:: ocaml
+- ``event e``: emit an event ``e``. The following code emits an event with name
+  ``eventName``. 
+
+ .. code-block:: ocaml
 
     e = { _eventname : "eventName"; <entry>_2 ; <entry>_3 };
-    (*where entries are same form: b : x as message expression.*)
-    (*Here b is the identifier, and x the variable*)
+    (*where <entry> is of the form: b : x as in a message expression.*)
+    (*Here b is the identifier, and x the variable, whose value is bound to the
+    identifier.*)
     event e;
 
-  Note that the first entry is always the eventname for events parameters.
+Note that the first entry is always ``_eventname`` and is compulsory.
+
 
 Primitive Data Types & Operations
 #################################
@@ -257,15 +264,18 @@ Integer Types
 *************
 Scilla defines signed and unsigned integer types of 32, 64, 128, and 256 bits. 
 These integer types can be specified with the keywords ``IntX`` and ``UintX`` where
-``X`` can be 32, 64, 128, or 256. For example, an unsigned integer of 128 bits
-can be specified as ``Uint128``.
+``X`` can be 32, 64, 128, or 256. For example, an unsigned integer of 32 bits
+can be specified as ``Uint32``. 
 
-.. note::
 
-  Values related to money (such as amount transferred or the balance of
-  an account) are ``Uint256``.
+The following code snippet declares a global ``Uint32`` integer:
 
-The following operations on integers are language built-in. Each
+.. code-block:: ocaml
+        
+    let x = Uint32 43 
+
+
+The following operations on integers are language built-ins. Each
 operation takes two integers ``IntX``/``UintX`` (of the same type) as
 arguments.
 
@@ -281,13 +291,30 @@ arguments.
 - ``builtin rem i1 i2``: ``i1`` modulo ``i2``. Returns an integer of the same type.
 - ``builtin lt i1 i2``: Is ``i1`` lesser than ``i2``. Returns ``Bool``.
 
+
+.. note::
+
+  Values related to money (such as amount transferred or the balance of
+  an account) are ``Uint128``.
+
+
+
 Strings
 *******
-As with most languages, ``String`` literals in Scilla are expressed with
+As with most languages, ``String`` literals in Scilla are expressed using
 a sequence of characters enclosed in double quotes. Variables can be
-declared by specifying using keyword ``String``.
+declared by specifying using keyword ``String``. 
 
-The following ``String`` operations are language built-in.
+The following code snippet declares a global ``String`` constant:
+
+.. code-block:: ocaml
+        
+    let x = "Hello" 
+
+
+
+
+The following ``String`` operations are language built-ins.
 
 - ``builtin eq s1 s2`` : Is ``String s1`` equal to ``String s2``.
   Returns ``Bool``.
@@ -303,6 +330,15 @@ Hashes
 A hash in Scilla is declared using the data type ``ByStr32``. A ``ByStr32``
 represents a hexadecimal Byte String of 32 bytes (64 hexadecimal characters)
 prefixed with ``0x``.
+
+The following code snippet declares a global ``ByStr32`` constant:
+
+.. code-block:: ocaml
+        
+    let x = 0x123456789012345678901234567890123456789012345678901234567890abff 
+
+
+
 
 The following operations on hashes are language built-ins. In the description
 below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
@@ -777,10 +813,8 @@ ListUtils
       (*Contract transition*)
       (*Assume l as a list [1 -> 2 -> 3 -> NIL]*)
       transition
-
-      hash_list_int32 = @list_map Int32;
-      hashed_list = hash_list_int32 f l;
-
+         hash_list_int32 = @list_map Int32;
+         hashed_list = hash_list_int32 f l;
       end
 
 - ``list_filter : ('A -> Bool) -> List 'A -> List 'A``.
@@ -798,11 +832,9 @@ ListUtils
     (*Contract transition*)
     (*Assume l as a list [1 -> 2 -> 3 -> 11 -> NIL]*)
     transition
-
       less_ten_int32 = @list_filter Int32;
       less_ten_list = less_ten_int32 f l
       (*Returns a list [1 -> 2 -> 3 -> NIL]*)
-      
     end
 
 - ``list_head : (List 'A) -> (Option 'A)``.

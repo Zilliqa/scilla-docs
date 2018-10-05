@@ -7,60 +7,38 @@ Scilla is under active development. At this stage, there are two ways to try
 out Scilla. 
 
 
+Savant IDE
+************************
+
+`Savant IDE <https://savant-ide.zilliqa.com>`_ is a web-based development
+environment that is not connected to any external blockchain network.  It hence
+simulates a blockchain in the browser's memory by maintaining persistent
+account states. It is optimized for use in Chrome Web Browser.
+
+Users will not need to hold testnet ZIL to use Savant, instead they are given 20 arbitrary accounts with
+1,000,000,000 fake ZILs to test their contracts.
+
+Savant serves as a staging environment, before doing automated script testing with tools
+like `Kaya (TestRPC) <https://github.com/Zilliqa/kaya>`_ and `Javascript library <https://github.com/Zilliqa/Zilliqa-JavaScript-Library>`_. To try out the Savant IDE, users need to visit `Savant IDE <https://savant-ide.zilliqa.com>`_.
+
 Blockchain IDE
 **********************
 
-The simplest way to try out Scilla is through the `Scilla Blockchain IDE
+The other way try out Scilla is through the `Scilla Blockchain IDE
 <https://wallet-scilla.zilliqa.com>`_. The IDE is connected to the Zilliqa
 blockchain via a `testnet wallet <https://wallet-scilla.zilliqa.com>`_ and a
 `block explorer <https://explorer-scilla.zilliqa.com>`_ and hence comes with
 (almost) all the features needed to test a Scilla contract in a real blockchain
 environment. 
 
-In order to use the Scilla Blockchain IDE, a user will have to hold Testnet ZIL
-(tokens to use Zilliqa's blockchain infrastructure). These tokens are
-periodically distributed for free. Testnet ZIL tokens are required to pay for
-gas fees to deploy and run smart contracts. 
+In order to use the Scilla Blockchain IDE, users will have to hold Testnet ZIL
+(tokens to use Zilliqa's blockchain infrastructure). Testnet ZIL tokens are
+required to pay for gas fees to deploy and run smart contracts. These tokens
+are periodically distributed for free. 
 
 To try out the Blockchain IDE, users need to go through the `Zilliqa testnet
 wallet <https://wallet-scilla.zilliqa.com>`_.
 
-
-Interpreter IDE
-************************
-
-`Scilla Interpreter IDE <https://savant-ide.zilliqa.com>`_ is a simple development
-environment meant for users who would like to get their hands dirty with Scilla
-coding and testing. The Scilla Interpreter IDE is a standalone environment to
-test Scilla contracts. 
-
-It runs a Scilla interpreter in the backend but is not connected to any
-blockchain network. It simulates an in-browser blockchain and maintain
-persistent state of contracts. 
-
-Refer to
-:ref:`interface-label`  to read about the format of the inputs to pass to the
-interpreter. 
-
-In order to user this IDE, users do not need to hold testnet ZIL. To try out the Interpreter IDE, users need to visit `Scilla Interpreter IDE
-<https://savant-ide.zilliqa.com>`_.
-
-Savant IDE
-************************
-
-`Savant IDE <https://savant-ide.zilliqa.com>`_ is an development environment with
-persistent state and accounts stored in the browser. This is also a standalone 
-environment for testing Scilla contracts. It is optimised for use in Chrome Web Browser.
-
-The difference between this IDE and the Interpreter IDE is that all inputs json are
-abstracted away from the Users and Static Type-checker is included. Users are also given
-20 arbitrary accounts with 1,000,000,000 fake ZILs to test their contracts.
-
-This serves as a staging environment, before doing automated script testing with tools
-like `Kaya (TestRPC) <https://github.com/Zilliqa/kaya>`_ and `Javascript library <https://github.com/Zilliqa/Zilliqa-JavaScript-Library>`_.
-
-Users will not need to hold testnet ZIL here too as the blockchain in the browser is
-simulated. To try out the Interpreter IDE, Users need to visit `Savant IDE <https://savant-ide.zilliqa.com>`_.
 
 
 Example Contracts
@@ -100,20 +78,20 @@ Both IDEs come with the following sample smart contracts written in Scilla:
 + **FungibleToken** : Fungible token contract that  mimics an ERC20 style fungible
   token standard. Defacto standard for tokenised utility tokens.
 
-+ **NonFungible Token** : Non fungible token contract that mimics and ERC721 style 
++ **NonFungible Token** : Non fungible token contract that mimics an ERC721 style 
   NFT token standard for unique tokenised assets. Example use case could be in-game 
   items like CryptoKitties.
 
 + **OpenAuction** : A simple open auction contract where bidders can make their
-  bid using ``Bid ()``, and the highest and winning bid amount goes to a
+  bid using ``Bid()``, and the highest and winning bid amount goes to a
   pre-defined account. Bidders who don't win can take back their bid using the
   transition ``Withdraw()``. The organizer of the auction can claim the highest
   bid by invoking the transition ``AuctionEnd()``.
 
 + **BookStore** : A demonstration of a CRUD app. Only ``owner`` of the contract can
-  add ``members``. All ``members`` will have the access read/write capability to
+  add ``members``. All ``members`` will have read/write access capability to
   create OR update books in the inventory with `book title`, `author`, and `bookID`.
 
 + **SchnorrTest** : A sample contract to test the generation of a Schnorr 
-  public/private keypairs, signing of a ``msg`` with the the public and private keys,
-  and verifying of the msg signature, all using the builtin ``Schnorr`` functions.
+  public/private keypairs, signing of a ``msg`` with the private keys,
+  and verification of the signature.

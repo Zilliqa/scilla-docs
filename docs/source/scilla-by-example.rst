@@ -12,7 +12,7 @@ following  specification:
 + It should have an `immutable variable` ``owner`` to be initialized by the
   creator of the contract. The variable is immutable in the sense that once
   initialized, its value cannot be changed. ``owner`` will be of type
-  ``ByStr20`` (representing a hexadecimal Byte String of length 20). 
+  ``ByStr20`` (a hexadecimal Byte String representing 20 bytes). 
 
 + It should have a `mutable variable` ``welcome_msg`` of type ``String``
   initialized to ``""``. Mutability here refers to the possibility of modifying
@@ -27,7 +27,7 @@ following  specification:
   ``welcome_msg``. ``getHello`` will not take any input. 
 
 
-Defining Contract and its (Im)Mutable Fields
+Defining Contract and its (Im)Mutable Variables
 **************************************************
 
 A contract is declared using the ``contract`` keyword that starts the scope of
@@ -180,8 +180,8 @@ Caller is not owner
 In case the caller is different from ``owner``, the transition takes the
 ``False`` branch and the contract sends out a message. Scilla defines a special
 type ``Message`` for outgoing messages. An outgoing message contains
-information about any other contract that needs to be called (as a part of the
-current call) or values that need to be returned. 
+information about any other contract that needs to be called as a part of the
+current call. 
 
 The output message in this case is an error code ``not_owner_code`` included in
 ``msg``.  More concretely, the output message in this case is:
@@ -261,8 +261,8 @@ given below defined using standard ``let x = y in expr`` construct.
 
 .. code-block:: ocaml
 
-	let not_owner_code  = Int32 1
-	let set_hello_code  = Int32 2
+	let not_owner_code  = Uint32 1
+	let set_hello_code  = Uint32 2
 
 The library may also include utility functions, for instance, the function
 ``one_msg`` that creates a list with one entry of type ``Message`` as given
@@ -287,8 +287,8 @@ At this stage, our contract fragment will have the following form:
         let nil_msg = Nil {Message} in
         Cons {Message} msg nil_msg
 
-    let not_owner_code  = Int32 1
-    let set_hello_code  = Int32 2
+    let not_owner_code  = Uint32 1
+    let set_hello_code  = Uint32 2
 
 
     contract HelloWorld
@@ -347,8 +347,8 @@ The complete contract that implements the desired specification is given below:
       let nil_msg = Nil {Message} in
       Cons {Message} msg nil_msg
 
-    let not_owner_code  = Int32 1
-    let set_hello_code  = Int32 2
+    let not_owner_code  = Uint32 1
+    let set_hello_code  = Uint32 2
 
     (***************************************************)
     (*             The contract definition             *)
@@ -455,15 +455,15 @@ The complete contract is given below:
 	    Cons {Message} msg nil_msg
 	    
 	let check_update = 
-	  fun (bs : Map ByStr20 Int) =>
+	  fun (bs : Map ByStr20 Uint128) =>
 	  fun (_sender : ByStr20) =>
-	  fun (_amount : Int) =>
+	  fun (_amount : Uint128) =>
 	    let c = builtin contains bs _sender in
 	    match c with 
 	    | False => 
 	      let bs1 = builtin put bs _sender _amount in
-	      Some {Map ByStr20 Int} bs1 
-	    | True  => None {Map ByStr20 Int}
+	      Some {Map ByStr20 Uint128} bs1 
+	    | True  => None {Map ByStr20 Uint128}
 	    end
 
 	let blk_leq =
@@ -473,15 +473,15 @@ The complete contract is given below:
 	    let bc2 = builtin eq blk1 blk2 in 
 	    orb bc1 bc2
 
-	let accepted_code = 1
-	let missed_deadline_code = 2
-	let already_backed_code  = 3
-	let not_owner_code  = 4
-	let too_early_code  = 5
-	let got_funds_code  = 6
-	let cannot_get_funds  = 7
-	let cannot_reclaim_code = 8
-	let reclaimed_code = 9
+	let accepted_code = Uint32 1
+	let missed_deadline_code = Uint32 2
+	let already_backed_code  = Uint32 3
+	let not_owner_code  = Uint32 4
+	let too_early_code  = Uint32 5
+	let got_funds_code  = Uint32 6
+	let cannot_get_funds  = Uint32 7
+	let cannot_reclaim_code = Uint32 8
+	let reclaimed_code = Uint32 9
 	  
 	(***************************************************)
 	(*             The contract definition             *)
@@ -491,10 +491,10 @@ The complete contract is given below:
 	(*  Parameters *)
 	(owner     : ByStr20,
 	 max_block : BNum,
-	 goal      : Int)
+	 goal      : Uint128)
 
 	(* Mutable fields *)
-	field backers : Map ByStr20 Int = Emp ByStr20 Int
+	field backers : Map ByStr20 Uint128 = Emp ByStr20 Uint128
 	field funded : Bool = False
 
 	transition Donate ()
