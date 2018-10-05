@@ -42,9 +42,25 @@ Refer to
 :ref:`interface-label`  to read about the format of the inputs to pass to the
 interpreter. 
 
-In order to user this IDE, users do not need to hold testnet ZIL. To try out
-the Interpreter IDE, users need to visit `Scilla Interpreter IDE
+In order to user this IDE, users do not need to hold testnet ZIL. To try out the Interpreter IDE, users need to visit `Scilla Interpreter IDE
 <https://savant-ide.zilliqa.com>`_.
+
+Savant IDE
+************************
+
+`Savant IDE <https://savant-ide.zilliqa.com>`_ is an development environment with
+persistent state and accounts stored in the browser. This is also a standalone 
+environment for testing Scilla contracts. It is optimised for use in Chrome Web Browser.
+
+The difference between this IDE and the Interpreter IDE is that all inputs json are
+abstracted away from the Users and Static Type-checker is included. Users are also given
+20 arbitrary accounts with 1,000,000,000 fake ZILs to test their contracts.
+
+This serves as a staging environment, before doing automated script testing with tools
+like `Kaya (TestRPC) <https://github.com/Zilliqa/kaya>`_ and `Javascript library <https://github.com/Zilliqa/Zilliqa-JavaScript-Library>`_.
+
+Users will not need to hold testnet ZIL here too as the blockchain in the browser is
+simulated. To try out the Interpreter IDE, Users need to visit `Savant IDE <https://savant-ide.zilliqa.com>`_.
 
 
 Example Contracts
@@ -52,22 +68,20 @@ Example Contracts
 
 Both IDEs come with the following sample smart contracts written in Scilla:
 
-+ **HelloWorld**: It is a simple contract that allows a specified account
++ **HelloWorld** : It is a simple contract that allows a specified account
   denoted ``owner`` to set a welcome message. Setting the welcome message is
-  done via  ``setHello(msg: String)``. The contract also provides an interface
+  done via  ``setHello (msg: String)``. The contract also provides an interface
   ``getHello()`` to allow any account to be  returned with the welcome message
   when called.
 
-
-+ **Crowdfunding**: Crowdfunding implements a kickstarter campaign where users
++ **CrowdFunding** : Crowdfunding implements a kickstarter campaign where users
   can donate funds to the contract using ``Donate()``. If the campaign is
   successful, i.e., enough money is raised within a given time period, the
   raised money can be sent to a pre-defined account ``owner`` via
   ``GetFunds()``.  Else, if the campaign fails, then contributors can take back
   their donations via the transition ``ClaimBack()``.
 
-
-+ **Zil-game**: It is a two-player game where the goal is to find the closest
++ **ZilGame** : It is a two-player game where the goal is to find the closest
   pre-image of a given SHA256 digest (``puzzle``). More formally, given a
   digest `d`, and two values `x` and `y`, `x` is said to be a closer pre-image
   than `y` of `d` if Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for
@@ -83,8 +97,12 @@ Both IDEs come with the following sample smart contracts written in Scilla:
   provides a transition ``Withdraw ()`` to recover funds and send to a
   specified ``owner`` in case no player plays the game.   
 
-+ **FungibleToken**: Fungible token contract that  mimics an ERC20 style fungible
-  token standard.
++ **FungibleToken** : Fungible token contract that  mimics an ERC20 style fungible
+  token standard. Defacto standard for tokenised utility tokens.
+
++ **NonFungible Token** : Non fungible token contract that mimics and ERC721 style 
+  NFT token standard for unique tokenised assets. Example use case could be in-game 
+  items like CryptoKitties.
 
 + **OpenAuction** : A simple open auction contract where bidders can make their
   bid using ``Bid ()``, and the highest and winning bid amount goes to a
@@ -92,3 +110,10 @@ Both IDEs come with the following sample smart contracts written in Scilla:
   transition ``Withdraw()``. The organizer of the auction can claim the highest
   bid by invoking the transition ``AuctionEnd()``.
 
++ **BookStore** : A demonstration of a CRUD app. Only ``owner`` of the contract can
+  add ``members``. All ``members`` will have the access read/write capability to
+  create OR update books in the inventory with `book title`, `author`, and `bookID`.
+
++ **SchnorrTest** : A sample contract to test the generation of a Schnorr 
+  public/private keypairs, signing of a ``msg`` with the the public and private keys,
+  and verifying of the msg signature, all using the builtin ``Schnorr`` functions.
