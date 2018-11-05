@@ -126,7 +126,6 @@ the first transition ``setHello (msg :  String)`` to set ``welcome_msg`` is
 given below: 
 
 
-
 .. code-block:: ocaml
     :linenos:
 
@@ -314,28 +313,32 @@ At this stage, our contract fragment will have the following form:
 Final Touches
 *********************
 
-We may now add the second transition ``getHello()`` that allows any caller to be greeted by ``welcome_msg``. The declaration is similar to ``setHello (msg : String)`` accept that ``getHello()`` does not take any parameter. 
+We may now add the second transition ``getHello()`` that allows client applications to know what the ``welcome_msg`` is. The declaration is similar to ``setHello (msg : String)`` except that ``getHello()`` does not take any parameter.
 
+In Scilla, there are two ways that transitions can transmit data. One way is through ``send`` messages (covered in ``setHello``), and another way is through events. The difference between the two lies in what you are trying to communicate to.
 
+``send`` is used to send message to another smart contract and is not emitted back to your client application. Meanwhile, events are dispatched signals that smart contracts can use to transmit data to client applications. 
 
 .. code-block:: ocaml
 
     transition getHello ()
         r <- welcome_msg;
-        msg = {_tag : Main; _recipient : _sender; _amount : 0; msg : r};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname: "GetHello"; msg: r};
+        event e
     end
 
 .. note::
 	Reading from a mutable variable is done via the operator ``<-``. In our example, this translates to ``r <- welcome_msg``.
+
+In the ``getHello()`` transition, we will first read from a mutable variable, then we construct an event message. Take note that ``_eventname`` is a compulsory variable which must be added into an event message. You are free to name it whatever you want, but it is a good practice to give it a unique name so you know where your events are being emitted from. 
+
+After constructing the event message, you can emit the event to your client application through ``event e``.
 
 The complete contract that implements the desired specification is given below:
 
 .. code-block:: ocaml
 
     (* HelloWorld contract *)
-
 
     (***************************************************)
     (*               Associated library                *)
@@ -376,9 +379,8 @@ The complete contract that implements the desired specification is given below:
 
     transition getHello ()
         r <- welcome_msg;
-        msg = {_tag : Main; _recipient : _sender; _amount : 0; msg : r};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname: "getHello"; msg: r};
+        event e
     end
 
 

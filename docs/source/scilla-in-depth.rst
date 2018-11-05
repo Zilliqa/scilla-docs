@@ -442,7 +442,7 @@ has two constructors ``None`` and ``Some``.
 
         let x = 
           let ten = Int32 10 in
-          Some {Int32} 10
+          Some {Int32} ten
       
 
    + ``None`` represents the absence of any value. ``None {`A}`` constructs an
