@@ -805,15 +805,15 @@ ListUtils
 
   .. code-block:: ocaml
 
-      (*Library*)
+      (*Library *)
       let f =
-        func (a : Int32) =>
-          sha256hash a
+        fun (a : Int32) =>
+          builtin sha256hash a
       
       (*Contract transition*)
       (*Assume l as a list [1 -> 2 -> 3 -> NIL]*)
       transition
-         hash_list_int32 = @list_map Int32;
+         hash_list_int32 = @list_map Int32 ByStr32;
          hashed_list = hash_list_int32 f l;
       end
 
