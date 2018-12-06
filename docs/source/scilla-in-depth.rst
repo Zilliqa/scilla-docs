@@ -7,11 +7,16 @@ Structure of a Scilla Contract
 
 The general structure of a Scilla contract is given in the code fragment below:
 
-+ It starts with the declaration of a ``library`` that contains purely
-  mathematical functions. For instance, a function to compute the boolean ``AND``
-  of two bits or computing factorial of a given natural number.
++ It starts with the declaration of ``scilla_version``, which
+  indicates which major Scilla version the contract uses.
+  
++ Then follows the declaration of a ``library`` that contains purely
+  mathematical functions. For instance, a function to compute the
+  boolean ``AND`` of two bits or computing factorial of a given
+  natural number.
 
-+ Then, follows the actual contract definition declared using the keyword ``contract``.
++ Then follows the actual contract definition declared using the
+  keyword ``contract``.
 
 + Within a contract, there are then three distinct parts:
 
@@ -24,7 +29,12 @@ The general structure of a Scilla contract is given in the code fragment below:
 
     (* Scilla contract structure *)
 
+    (***************************************************)
+    (*                 Scilla version                  *)
+    (***************************************************)
 
+    scilla_version 1
+    
     (***************************************************)
     (*               Associated library                *)
     (***************************************************)
@@ -967,6 +977,83 @@ ListUtils
         statements...
       end
     end
+
+
+Versioning for Scilla
+#####################
+.. _versions:
+
+Major and Minor versions
+************************
+
+Scilla releases will have a major version, minor version and a patch
+number, denoted as ``X.Y.Z`` where ``X`` is the major version and ``Y`` is
+the minor version and ``Z`` the patch number.
+
+- Patches usually are bug fixes that do not impact any existing
+  behaviour / semantics of a Scilla contract. These are backward
+  compatible.
+
+- Minor versions typically include performance improvements and
+  feature additions that do not affect any existing behaviour /
+  semantics of a Scilla contract. Minor versions are backward
+  compatible till the latest major version.
+
+- Major versions are not backward compatible. It is expected that
+  miners (nodes) have implementations of each major version of Scilla
+  for running a contract set to that major version.
+  
+Within a major version, miners are advised to use the latest minor
+revision.
+
+``$scilla-runner -version`` will print major, minor and patch versions
+of the interpreter being invoked.
+
+
+Syntax
+******
+
+Every Scilla contract must begin with a major version declaration. The
+syntax is shown below:
+
+.. code-block:: ocaml
+
+    (***************************************************)
+    (*                 Scilla version                  *)
+    (***************************************************)
+
+    scilla_version 1
+    
+    (***************************************************)
+    (*               Associated library                *)
+    (***************************************************)
+    
+    library MyContractLib
+
+    ...
+
+    (***************************************************)
+    (*             Contract definition                 *)
+    (***************************************************)
+
+    contract MyContract
+                
+    ...
+
+
+The output of the interpreter when deploying a contract will now
+contain a new field ``scilla_version : X.Y.Z``, to be used by the
+blockchain code to keep track of the version of a contract. Similarly,
+``scilla-checker`` will also now report the version of the contract on a
+successful check.
+
+Chain invocation behaviour
+**************************
+
+Chain invocation of contracts between component contracts of different
+Scilla versions are allowed. Changes to the language are guaranteed to
+ensure monotonicity of changes in the interpreter's treatment of
+messages.
 
 
 
