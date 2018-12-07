@@ -979,8 +979,8 @@ ListUtils
     end
 
 
-Versioning for Scilla
-#####################
+Scilla versions
+###############
 .. _versions:
 
 Major and Minor versions
@@ -1009,7 +1009,7 @@ revision.
 of the interpreter being invoked.
 
 
-Contract syntax
+Contract Syntax
 ***************
 
 Every Scilla contract must begin with a major version declaration. The
@@ -1076,7 +1076,7 @@ An example ``init.json``:
    ]
 
 
-Chain invocation behaviour
+Chain Invocation Behaviour
 **************************
 
 Contracts of different Scilla versions may invoke transitions on each
