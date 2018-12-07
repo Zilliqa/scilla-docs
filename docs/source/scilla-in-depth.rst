@@ -1047,6 +1047,30 @@ blockchain code to keep track of the version of a contract. Similarly,
 ``scilla-checker`` will also now report the version of the contract on a
 successful check.
 
+In addition to the scilla_version specified in the contract source itself,
+it is also required that the contract's init.json also specify the same version.
+This eases the process for the blockhain code to decide which interpreter to invoke
+(and avoid parsing the contract itself). A mismatch in the versions specified in
+init.json and the source itself will lead to a gas-charged error by the interpreter.
+
+An example init.json:
+
+.. code-block:: json
+
+  [
+     {
+        "vname" : "_creation_block",
+        "type" : "BNum",
+        "value" : "1"
+     },
+     {
+        "vname" : "_scilla_version",
+        "type" : "Uint32",
+        "value" : "1",
+     }
+   ]
+
+
 Chain invocation behaviour
 **************************
 
