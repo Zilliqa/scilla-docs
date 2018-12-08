@@ -351,6 +351,10 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns ``ByStr32``.
 
+- ``builtin keccak256hash x``: The Keccak256 hash of a value of x of type ``Any``. Returns ``ByStr32``.
+
+- ``builtin ripemd160hash x``: The RIPEMD-160 hash of a value of x of type ``Any``. Returns ``ByStr16``.
+
 - ``builtin to_byStr x'`` : Converts a hash ``x'`` of finite length, say of type ``ByStr32`` to one 
   of arbitrary length.
 
@@ -367,17 +371,31 @@ Maps
 ``Map`` values provide key-value store. Keys can have types ``IntX``,
 ``UintX``, ``String``, ``ByStr32`` or ``ByStr20``. Values can be of any type.
 
+- ``m[k] := v``: In-place map insert key ``k`` and value ``v`` into ``Map m``.
+  If the intermediate key(s) does not exist in ``Map m``, they are freshly created. To insert a value into a nested map,
+  simply do ``m[k1][k2][...] := v``.
+
+- ``delete m[k]``: In-place map removal of key ``k``. If the intermediate key(s) does not exist, no action is taken.
+  To delete a value in a nested map, simply do ``delete m[k1][k2][...]``.
+
+- ``v <- m[k]``: In-place map fetch of value ``v`` from key ``k``. Returns ``Some value`` after indexing with key(s). 
+  Returns ``None`` if key(s) does not exists. To fetch a value in a nested map, simply do ``v <- m[k1][k2][...]``.
+
+- ``b <- exists m[k1][k2][...]``: In-place existence check to check if all keys have a value mapped. Returns ``Bool``.
+
 - ``put m k v``: Insert key ``k`` and value ``v`` into ``Map m``.
   Returns a new ``Map`` with the newly inserted key/value in addition to
-  the key/value pairs contained earlier.
+  the key/value pairs contained earlier. This is typically used in library functions.
 
 - ``get m k``: In ``Map m``, for key ``k``, return the associated value as
   ``Option v`` (Check below for ``Option`` data type). The returned value is
-  ``None`` if ``k`` is not in the map ``m``. 
+  ``None`` if ``k`` is not in the map ``m``. This is typically used in library functions.
   
 - ``remove m k``: Remove key ``k`` and its associated value from the map ``m``. Returns a new updated ``Map``.
+  This is typically used in library functions.
 
 - ``contains m k``: Is key ``k`` and its associated value  present in the map ``m``.  Returns ``Bool``.
+  This is typically used in library functions.
 
 - ``to_list m``: Convert ``Map m`` into a ``List (Pair ('A) ('B))`` where ``'A`` and ``'B`` are key
   and value types.
