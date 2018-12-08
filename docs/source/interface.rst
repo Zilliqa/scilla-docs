@@ -89,13 +89,23 @@ A sample ``init.json`` for this contract will look like the following:
 
 .. code-block:: json
 
-    [
-        {
-            "vname" : "owner",
-            "type"  : "ByStr20", 
-            "value" : "0x1234567890123456789012345678901234567890"
-        }
-    ]
+  [
+      { 
+          "vname" : "_scilla_version",
+          "type" : "Uint32",
+          "value" : "0"
+      },
+      {
+          "vname" : "owner",
+          "type" : "ByStr20", 
+          "value" : "0x1234567890123456789012345678901234567890"
+      },
+      {
+          "vname" : "_creation_block",
+          "type" : "BNum",
+          "value" : "1"
+      }
+  ]
 
 
 Example 2
@@ -119,23 +129,33 @@ A sample ``init.json`` for this contract will look like the following:
 
 .. code-block:: json
 
-    [
-        {
-            "vname" : "owner",
-            "type"  : "ByStr20", 
-            "value" : "0x1234567890123456789012345678901234567890"
-        },
-        {
-            "vname" : "max_block",
-            "type"  : "BNum" ,
-            "value" : "199"
-        },
-        { 
-            "vname" : "goal",
-            "type"  : "Uint128",
-            "value" : "500"
-        }
-    ]
+  [
+    { 
+        "vname" : "_scilla_version",
+        "type" : "Uint32",
+        "value" : "0"
+    },
+    {
+        "vname" : "owner",
+        "type" : "ByStr20", 
+        "value" : "0x1234567890123456789012345678901234567890"
+    },
+    {
+        "vname" : "max_block",
+        "type" : "BNum" ,
+        "value" : "199"
+    },
+    { 
+        "vname" : "goal",
+        "type" : "Uint128",
+        "value" : "500"
+    },
+    {
+        "vname" : "_creation_block",
+        "type" : "BNum",
+        "value" : "1"
+    }
+  ]
 
 Input Blockchain State
 ########################
@@ -244,35 +264,37 @@ Interpreter Output
 The interpreter will return a JSON object (``output.json``)  with the following
 fields:
 
-=======  ================================================================
-Field      Description
-=======  ================================================================  
-message   The emitted message to another contract/non-contract account. 
-states    An array of objects that form the new contract state
-=======  ================================================================  
+=====================   ====================================================================
+Field                   Description
+=====================   ====================================================================
+scilla_major_version    The major version of the scilla language of this contract.
+gas_remaining           The remaining gas after invoking or deploying a contract.
+_accepted               Whether the contract has accepted ZIL (Either ``true``/``false``)
+message                 The emitted message to another contract/non-contract account.
+states                  An array of objects that form the new contract state
+=====================   ====================================================================
 
-``message`` is a JSON object that will have a similar format to
-``input_message.json``, except that instead of ``_sender`` field, it will have
-a ``_recipient`` field. The fields in ``message`` are given below:
++ ``message`` is a JSON object that will have a similar format to
+  ``input_message.json``, except that instead of ``_sender`` field, it will have
+  a ``_recipient`` field. The fields in ``message`` are given below:
 
-===========       =======================================================
-Field              Description
-===========       =======================================================  
-_tag               Transition to be invoked
-_amount            Number of ZILs to be transferred
-_recipient         Address of the recipient
-_accepted          Whether the contract has accepted ZIL (true/false)
-params             An array of parameter objects to be passed
-===========       =======================================================
+  ===========       =======================================================
+  Field              Description
+  ===========       =======================================================  
+  _tag               Transition to be invoked
+  _amount            Number of ZILs to be transferred
+  _recipient         Address of the recipient
+  params             An array of parameter objects to be passed
+  ===========       =======================================================
 
 
-The ``params`` array is encoded similar to how ``init.json`` is encoded, with
-each parameter specifying the (``vname``, ``type``, ``value``) that has to be
-passed to the transition that is being invoked. 
+  The ``params`` array is encoded similar to how ``init.json`` is encoded, with
+  each parameter specifying the (``vname``, ``type``, ``value``) that has to be
+  passed to the transition that is being invoked. 
 
-``states`` is an array of objects that represents the mutable state of the
-contract. Each entry of the ``states`` array also specifies (``vname``,
-``type``, ``value``). 
++ ``states`` is an array of objects that represents the mutable state of the
+  contract. Each entry of the ``states`` array also specifies (``vname``,
+  ``type``, ``value``). 
 
 
 Example 1
@@ -282,33 +304,36 @@ The example below is an output generated by ``HelloWorld.scilla``.
 
 .. code-block:: json
 
-    {
-      "message": {
-        "_tag"       : "Main",
-        "_amount"    : "0",
-        "_accepted"  : "false",
-        "_recipient" : "0x1234567890123456789012345678901234567890",
-        "params" : [
-          {
-            "vname" : "code",
-            "type"  : "Int32",
-            "value" : "2"
-          }
-        ]
-      },
-      "states": [
-        {
-          "vname" : "_balance",
-          "type"  : "Uint128",
-          "value" : "0"
-        },
-        {
-          "vname" : "welcome_msg",
-          "type"  : "String",
-          "value" : "Hello World"
-        }
+  {
+    "scilla_major_version": "0",
+    "gas_remaining": "7402",
+    "_accepted": "false",
+    "message": {
+      "_tag": "Main",
+      "_amount": "0",
+      "_recipient": "0x1234567890123456789012345678901234567890",
+      "params": [ 
+        { 
+          "vname": "code", 
+          "type": "Int32", 
+          "value": "2" 
+        } 
       ]
-    }
+    },
+    "states": [
+      { 
+        "vname": "_balance", 
+        "type": "Uint128", 
+        "value": "0" 
+      },
+      { 
+        "vname": "welcome_msg", 
+        "type": "String",
+        "value": "Hello World" 
+      }
+    ],
+    "events": []
+  }
 
 
 Example 2
@@ -318,52 +343,55 @@ Another slightly more involved example with ``Map`` in ``states``.
 
 .. code-block:: json
 
-    {
-    "message": {
-      "_tag"       : "",
-      "_amount"    : "0",
-      "_accepted"  : "true",
-      "_recipient" : "0x12345678901234567890123456789012345678ab",
-      "params": [
-        {
-          "vname"  : "code",
-          "type"   : "Int32",
-          "value"  : "1"
-        }
-      ]
-    },
+  {
+    "scilla_major_version": "0",
+    "gas_remaining": "7359",
+    "_accepted": "true",
+    "message": null,
     "states": [
-      {
-        "vname" : "_balance",
-        "type"  : "Uint128",
-        "value" : "100"
+      { 
+        "vname": "_balance", 
+        "type": "Uint128", 
+        "value": "100" 
       },
       {
-        "vname" : "backers",
-        "type"  : "Map",
-        "value" : [
-          {
-            "keyType" : "ByStr20",
-            "valType" : "Uint128"
-          },
-          {
-            "key" : "0x12345678901234567890123456789012345678ab",
-            "val" : "100"
+        "vname": "backers",
+        "type": "Map (ByStr20) (Uint128)",
+        "value": [
+          { 
+            "key": "0x12345678901234567890123456789012345678ab", 
+            "val": "100" 
           }
         ]
       },
       {
-        "vname" : "funded",
-        "type"  : "ADT",
-        "value" : 
-        {
-          "constructor" : "False",
-          "argtypes"    : [],
-          "arguments"   : []
-        }
+        "vname": "funded",
+        "type": "Bool",
+        "value": { "constructor": "False", "argtypes": [], "arguments": [] }
+      }
+    ],
+    "events": [
+      {
+        "_eventname": "DonationSuccess",
+        "params": [
+          {
+            "vname": "donor",
+            "type": "ByStr20",
+            "value": "0x12345678901234567890123456789012345678ab"
+          },
+          { 
+            "vname": "amount", 
+            "type": "Uint128", 
+            "value": "100" 
+          },
+          { "vname": "code", 
+            "type": "Int32", 
+            "value": "1" 
+          }
+        ]
       }
     ]
-    }
+  }
 
 
 
@@ -383,34 +411,34 @@ has the same forms  as the ``states`` field in ``output.json``.  An example of
 
 .. code-block:: json
 
-    [
-      {
-        "vname" : "backers",
-        "type"  : "Map",
-        "value" : [
-          {
-            "keyType" : "ByStr20",
-            "valType" : "Uint128"
-          },
-          {
-            "key" : "0x12345678901234567890123456789012345678ab",
-            "val" : "100"
-          }
-        ]
-      },
-      {
-        "vname" : "funded",
-        "type"  : "ADT",
-        "value" : {
-          "constructor" : "False",
-          "argtypes"    : [],
-          "arguments"   : []
+  [
+    {
+      "vname": "backers",
+      "type": "Map (ByStr20) (Uint128)",
+      "value": [
+        { 
+          "key": "0x12345678901234567890123456789012345678cd", 
+          "val": "200" 
+        },
+        { 
+          "key": "0x12345678901234567890123456789012345678ab", 
+          "val": "100" 
         }
-      },
-      {
-        "vname" : "_balance",
-        "type"  : "Uint128",
-        "value" : "100"
+      ]
+    },
+    {
+      "vname": "funded",
+      "type": "Bool",
+      "value": { 
+        "constructor": "False", 
+        "argtypes": [], 
+        "arguments": [] 
       }
-    ]
+    },
+    {
+      "vname": "_balance",
+      "type": "Uint128",
+      "value": "300"
+    }
+  ]
 
