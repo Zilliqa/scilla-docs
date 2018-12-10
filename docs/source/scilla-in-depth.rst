@@ -996,29 +996,28 @@ ListUtils
     end
 
 
-Versioning for Scilla
-#####################
+Scilla versions
+###############
 .. _versions:
 
 Major and Minor versions
 ************************
 
-Scilla releases will have a major version, minor version and a patch
-number, denoted as ``X.Y.Z`` where ``X`` is the major version and ``Y`` is
-the minor version and ``Z`` the patch number.
+Scilla releases have a major version, minor version and a patch
+number, denoted as ``X.Y.Z`` where ``X`` is the major version and
+``Y`` is the minor version and ``Z`` the patch number.
 
-- Patches usually are bug fixes that do not impact any existing
-  behaviour / semantics of a Scilla contract. These are backward
-  compatible.
+- Patches are usually bug fixes that do not impact the behaviour of
+  existing contracts. Patches are backward compatible.
 
 - Minor versions typically include performance improvements and
-  feature additions that do not affect any existing behaviour /
-  semantics of a Scilla contract. Minor versions are backward
-  compatible till the latest major version.
+  feature additions that do not affect the behaviour of existing
+  contracts. Minor versions are backward compatible till the latest
+  major version.
 
 - Major versions are not backward compatible. It is expected that
-  miners (nodes) have implementations of each major version of Scilla
-  for running a contract set to that major version.
+  miners have access to implementations of each major version of
+  Scilla for running contracts set to that major version.
   
 Within a major version, miners are advised to use the latest minor
 revision.
@@ -1027,8 +1026,8 @@ revision.
 of the interpreter being invoked.
 
 
-Syntax
-******
+Contract Syntax
+***************
 
 Every Scilla contract must begin with a major version declaration. The
 syntax is shown below:
@@ -1058,22 +1057,47 @@ syntax is shown below:
     ...
 
 
-The output of the interpreter when deploying a contract will now
-contain a new field ``scilla_version : X.Y.Z``, to be used by the
-blockchain code to keep track of the version of a contract. Similarly,
-``scilla-checker`` will also now report the version of the contract on a
+When deploying a contract the output of the interpreter contains the
+field ``scilla_version : X.Y.Z``, to be used by the blockchain code to
+keep track of the version of the contract. Similarly,
+``scilla-checker`` also reports the version of the contract on a
 successful check.
 
-Chain invocation behaviour
+The ``init.json`` file
+**********************
+
+In addition to the version specified in the contract source code, it
+is also required that the contract's ``init.json`` specifies the same
+version when the contract is deployed and when the contracts
+transitions are invoked. This eases the process for the blockhain
+code to decide which interpreter to invoke.
+
+A mismatch in the versions specified in ``init.json`` and the source code
+will lead to a gas-charged error by the interpreter.
+
+An example ``init.json``:
+
+.. code-block:: json
+
+  [
+     {
+        "vname" : "_creation_block",
+        "type" : "BNum",
+        "value" : "1"
+     },
+     {
+        "vname" : "_scilla_version",
+        "type" : "Uint32",
+        "value" : "1",
+     }
+   ]
+
+
+Chain Invocation Behaviour
 **************************
 
-Chain invocation of contracts between component contracts of different
-Scilla versions are allowed. Changes to the language are guaranteed to
-ensure monotonicity of changes in the interpreter's treatment of
-messages.
+Contracts of different Scilla versions may invoke transitions on each
+other.
 
-
-
- 
-
-
+The semantics of message passing between contracts is guaranteed to be
+backward compatible between major versions.
