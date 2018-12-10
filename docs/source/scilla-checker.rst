@@ -11,9 +11,9 @@ Phases of the Scilla checker
 ############################
 .. _scilla_checker_phases:
 
-The Scilla checker operates in distinct phases, each of can perform
-checks (and potentially reject programs that do not pass the checks)
-and add annotations to each piece of syntax:
+The Scilla checker operates in distinct phases, each of which can perform
+checks (and potentially reject contracts that do not pass the checks) and add
+annotations to each piece of syntax:
 
 + `Lexing and parsing` reads the contract code and builds an abstract
   syntax tree (AST). Each node in the tree is annotated with a
@@ -30,11 +30,12 @@ and add annotations to each piece of syntax:
   does not inadvertently introduce a pattern branch that can never be
   reached).
 
-+ `Event-info` checks that messages and events in the contain all
-  necessary fields, and that messages and events with the same tag all
-  contain the same fields.
++ `Event-info` checks that messages and events in the contract contain all
+  necessary fields. For events, if a contract emits two events with the same
+  name (``_eventname``), then their structure (the fields and their types) must
+  also be the same.
 
-+ `Sanity-checking` performs a number of minor checks, e.g. that all
++ `Sanity-checking` performs a number of minor checks, e.g., that all
   parameters to a transition have distinct names.
 
 
@@ -56,7 +57,7 @@ specifies the type ``rep``, which is the type of the annotation:
 
                 
 In addition to the type of the annotation, the instantiation of
-``Rep`` can declare helper functions that allows subsequent phases to
+``Rep`` can declare helper functions that allow subsequent phases to
 access the annotations of previous phases. Some of these functions are
 declared in the ``Rep`` signature, because they involve creating new
 abstract syntax nodes, which must be created with annotations from the
