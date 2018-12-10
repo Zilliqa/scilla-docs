@@ -87,6 +87,7 @@ Contents
    scilla-trial
    scilla-by-example
    scilla-in-depth
+   scilla-checker
    interface
    contact
 
