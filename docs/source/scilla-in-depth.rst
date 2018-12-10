@@ -470,7 +470,7 @@ has two constructors ``None`` and ``Some``.
 
         let x = 
           let ten = Int32 10 in
-          Some {Int32} 10
+          Some {Int32} ten
       
 
    + ``None`` represents the absence of any value. ``None {`A}`` constructs an
@@ -632,9 +632,8 @@ to a mutable field ``pp``:
                 Pair {(String) (Uint32)} s1 num
     ...
 
-Note the difference in how we perform a type declaration ``Pair{ (A') (B')}`` 
-and the syntax used to create a pair of values using the constructor ``Pair (A') (B')``.
-In the type declaration, a pair of curly braces surounds the two data types ``A'`` and ``B'``.
+Note the difference in how we perform a type declaration ``Pair( (A') (B'))`` 
+and the syntax used to create a pair of values using the constructor ``Pair { (A') (B') }``.
 
 We now illustrate how pattern matching can be used to extract the
 first element from a ``Pair``. The function ``fst`` shown below
@@ -644,14 +643,14 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
 
   let fst =
     tfun 'A =>
-    fun (p : Pair 'A 'A) =>
+    tfun 'B =>
+    fun (p : Pair 'A 'B) =>
     match p with
-    | Pair {'A 'A} a b =>
-        a
+    | Pair a b => a
     end
 
   let p = Pair {Int32 Int32} one two in
-  let fst_int = @fst Int32 in
+  let fst_int = @fst Int32 Int32 in
   let a = fst_int p in
     ... (* a = one *) ...
 
