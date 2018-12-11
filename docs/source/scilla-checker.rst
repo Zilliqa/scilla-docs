@@ -34,6 +34,11 @@ and add annotations to each piece of syntax:
   necessary fields, and that messages and events with the same tag all
   contain the same fields.
 
++ `Cashflow analysis` analyzes the usage of variables and fields, and
+  attempts to determine which fields are used to represent (native)
+  blockchain money. No checks are performed, but expressions,
+  variables and fields are annotated with tags indicating their usage.
+
 + `Sanity-checking` performs a number of minor checks, e.g. that all
   parameters to a transition have distinct names.
 
@@ -263,3 +268,67 @@ the next phase.
 
 The typechecker finally instantiates helper functors such as
 ``TypeUtilities`` and ``ScillaBuiltIns``.
+
+
+Cashflow Analysis
+#################
+.. _scilla_checker_cashflow:
+
+The cashflow analysis phase analyzes the usage of a contract's
+variables and fields, and attempts to determine which fields are used
+to represent (native) blockchain money. Each contract field is
+annotated with a tag indicating the field's usage.
+
+The resulting tags are an approximation based on the usage of each
+contract field, and the usage of local variables in the contract. The
+tags are not guaranteed to be accurate, but are intended as a tool to
+help the contract developer use her fields in the intended manner.
+
+
+Running the analysis
+********************
+
+The cashflow analysis is activated by running ``scilla-checker`` with
+the option ``-cf``. The analysis is not run by default, since it is
+only intended to be used during contract development.
+
+A contract is never rejected due to the result of the cashflow
+analysis. It is up to the contract developer to determine whether the
+cashflow tags are consistent with the intended use of each contract
+field.
+
+
+The Analysis in Detail
+**********************
+
+The analysis works by continually analyzing the transitions of the
+contract until no further information is gathered.
+
+The starting point for the analysis is the incoming message that
+invokes the contract's transactions, the outgoing messages and events
+that may be sent by the contract, and any field being read from the
+blockchain such as the current blocknumber.
+
+Both incoming and outgoing messages contain a field ``_amount`` whose
+value is the amount of money being transferred between accounts by the
+message. Whenever the value of the ``_amount`` field of the incoming
+message is loaded into a local variable, that local variable is tagged
+as representing money. Similarly, a local variable used to initialise
+the ``_amount`` field of an outgoing message is also tagged as
+representing money.
+
+Conversely, the message fields ``_sender``, ``_recipient``, and
+``_tag``, the event field ``_eventname``, and the blockchain field
+``BLOCKNUMBER`` are known to not represent money, so any variable used
+to initialise those fields or to hold the value read from one of those
+fields is tagged as not representing money.
+
+
+
+
+
+Example
+*******
+
+
+
