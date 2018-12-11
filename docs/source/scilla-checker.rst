@@ -302,7 +302,7 @@ field.
 The Analysis in Detail
 **********************
 
-The analysis works by continually analyzing the transitions of the
+The analysis works by continually analysing the transitions of the
 contract until no further information is gathered.
 
 The starting point for the analysis is the incoming message that
@@ -324,8 +324,58 @@ Conversely, the message fields ``_sender``, ``_recipient``, and
 to initialise those fields or to hold the value read from one of those
 fields is tagged as not representing money.
 
+Once some variables have been tagged, their usage implies how other
+variables can be tagged. For instance, if two variables tagged as
+money are added to each other, the result is also deemed to represent
+money. Conversely, if two variables tagged as non-money are added, the
+result is deemed to represent non-money.
+
+Tagging of contract fields happens when a local variable is used when
+loading or storing a contract field. In these cases, the field is
+deemed to have the same tag as the local variable.
+
+Once the a transition has been analyzed the local variables and their
+tags are saved, and the analysis proceeds to the next transition while
+keeping the tags of the contract fields. The analysis continues until
+all the transitions have been analysed without any existing tags
+having changed.
 
 
+Tags
+****
+
+The analysis uses the following set of tags:
+
+- `No information`: No information has been gathered about the
+  variable. This sometimes (but not always) indicates that the
+  variable is not being used, indicating a potential bug.
+
+- `Money`: The variable represents money.
+
+- `Not money`: The variable represents something other than money.
+
+- `Map t` (where `t` is a tag): The variable represents a map or a
+  function whose co-domain is tagged with `t`. Hence, when performing
+  a lookup in the map, or when applying the function, the result is
+  tagged with `t`. Keys of maps are assumed to always be `Not
+  money`. Parameters to functions are not tagged.
+
+- `Option t` (where `t` is a tag): The variable represents an option
+  value, which, if it does not have the value ``None``, contains the
+  value ``Some x`` where ``x`` has tag `t`.
+
+- `Pair t1 t2` (where `t1` and `t2` are tags): The variable represents
+  a pair of values with tags `t1` and `t2`, respectively.
+
+- `Inconsistent`: The variable has been used to represent both money
+  and not money. Inconsistent usage indicates a bug.
+
+  
+Lists are currently not supported.
+
+Library and local functions are only partially supported, since no
+attempt is made to connect the tags of parameters to the tag of the
+result. Built-in functions are fully supported, however.
 
 
 Example
