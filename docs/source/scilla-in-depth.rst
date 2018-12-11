@@ -361,6 +361,10 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns ``ByStr32``.
 
+- ``builtin keccak256hash x``: The Keccak256 hash of a value of x of type ``Any``. Returns ``ByStr32``.
+
+- ``builtin ripemd160hash x``: The RIPEMD-160 hash of a value of x of type ``Any``. Returns ``ByStr16``.
+
 - ``builtin to_byStr x'`` : Converts a hash ``x'`` of finite length, say of type ``ByStr32`` to one 
   of arbitrary length.
 
@@ -377,17 +381,31 @@ Maps
 ``Map`` values provide key-value store. Keys can have types ``IntX``,
 ``UintX``, ``String``, ``ByStr32`` or ``ByStr20``. Values can be of any type.
 
+- ``m[k] := v``: In-place map insert key ``k`` and value ``v`` into ``Map m``.
+  If the intermediate key(s) does not exist in ``Map m``, they are freshly created. To insert a value into a nested map,
+  simply do ``m[k1][k2][...] := v``.
+
+- ``delete m[k]``: In-place map removal of key ``k``. If the intermediate key(s) does not exist, no action is taken.
+  To delete a value in a nested map, simply do ``delete m[k1][k2][...]``.
+
+- ``v <- m[k]``: In-place map fetch of value ``v`` from key ``k``. Returns ``Some value`` after indexing with key(s). 
+  Returns ``None`` if key(s) does not exists. To fetch a value in a nested map, simply do ``v <- m[k1][k2][...]``.
+
+- ``b <- exists m[k1][k2][...]``: In-place existence check to check if all keys have a value mapped. Returns ``Bool``.
+
 - ``put m k v``: Insert key ``k`` and value ``v`` into ``Map m``.
   Returns a new ``Map`` with the newly inserted key/value in addition to
-  the key/value pairs contained earlier.
+  the key/value pairs contained earlier. This is typically used in library functions.
 
 - ``get m k``: In ``Map m``, for key ``k``, return the associated value as
   ``Option v`` (Check below for ``Option`` data type). The returned value is
-  ``None`` if ``k`` is not in the map ``m``. 
+  ``None`` if ``k`` is not in the map ``m``. This is typically used in library functions.
   
 - ``remove m k``: Remove key ``k`` and its associated value from the map ``m``. Returns a new updated ``Map``.
+  This is typically used in library functions.
 
 - ``contains m k``: Is key ``k`` and its associated value  present in the map ``m``.  Returns ``Bool``.
+  This is typically used in library functions.
 
 - ``to_list m``: Convert ``Map m`` into a ``List (Pair ('A) ('B))`` where ``'A`` and ``'B`` are key
   and value types.
@@ -452,7 +470,7 @@ has two constructors ``None`` and ``Some``.
 
         let x = 
           let ten = Int32 10 in
-          Some {Int32} 10
+          Some {Int32} ten
       
 
    + ``None`` represents the absence of any value. ``None {`A}`` constructs an
@@ -614,9 +632,8 @@ to a mutable field ``pp``:
                 Pair {(String) (Uint32)} s1 num
     ...
 
-Note the difference in how we perform a type declaration ``Pair{ (A') (B')}`` 
-and the syntax used to create a pair of values using the constructor ``Pair (A') (B')``.
-In the type declaration, a pair of curly braces surounds the two data types ``A'`` and ``B'``.
+Note the difference in how we perform a type declaration ``Pair( (A') (B'))`` 
+and the syntax used to create a pair of values using the constructor ``Pair { (A') (B') }``.
 
 We now illustrate how pattern matching can be used to extract the
 first element from a ``Pair``. The function ``fst`` shown below
@@ -626,14 +643,14 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
 
   let fst =
     tfun 'A =>
-    fun (p : Pair 'A 'A) =>
+    tfun 'B =>
+    fun (p : Pair 'A 'B) =>
     match p with
-    | Pair {'A 'A} a b =>
-        a
+    | Pair a b => a
     end
 
   let p = Pair {Int32 Int32} one two in
-  let fst_int = @fst Int32 in
+  let fst_int = @fst Int32 Int32 in
   let a = fst_int p in
     ... (* a = one *) ...
 
@@ -815,15 +832,15 @@ ListUtils
 
   .. code-block:: ocaml
 
-      (*Library*)
+      (*Library *)
       let f =
-        func (a : Int32) =>
-          sha256hash a
+        fun (a : Int32) =>
+          builtin sha256hash a
       
       (*Contract transition*)
       (*Assume l as a list [1 -> 2 -> 3 -> NIL]*)
       transition
-         hash_list_int32 = @list_map Int32;
+         hash_list_int32 = @list_map Int32 ByStr32;
          hashed_list = hash_list_int32 f l;
       end
 
@@ -979,29 +996,28 @@ ListUtils
     end
 
 
-Versioning for Scilla
-#####################
+Scilla versions
+###############
 .. _versions:
 
 Major and Minor versions
 ************************
 
-Scilla releases will have a major version, minor version and a patch
-number, denoted as ``X.Y.Z`` where ``X`` is the major version and ``Y`` is
-the minor version and ``Z`` the patch number.
+Scilla releases have a major version, minor version and a patch
+number, denoted as ``X.Y.Z`` where ``X`` is the major version and
+``Y`` is the minor version and ``Z`` the patch number.
 
-- Patches usually are bug fixes that do not impact any existing
-  behaviour / semantics of a Scilla contract. These are backward
-  compatible.
+- Patches are usually bug fixes that do not impact the behaviour of
+  existing contracts. Patches are backward compatible.
 
 - Minor versions typically include performance improvements and
-  feature additions that do not affect any existing behaviour /
-  semantics of a Scilla contract. Minor versions are backward
-  compatible till the latest major version.
+  feature additions that do not affect the behaviour of existing
+  contracts. Minor versions are backward compatible till the latest
+  major version.
 
 - Major versions are not backward compatible. It is expected that
-  miners (nodes) have implementations of each major version of Scilla
-  for running a contract set to that major version.
+  miners have access to implementations of each major version of
+  Scilla for running contracts set to that major version.
   
 Within a major version, miners are advised to use the latest minor
 revision.
@@ -1010,8 +1026,8 @@ revision.
 of the interpreter being invoked.
 
 
-Syntax
-******
+Contract Syntax
+***************
 
 Every Scilla contract must begin with a major version declaration. The
 syntax is shown below:
@@ -1041,22 +1057,47 @@ syntax is shown below:
     ...
 
 
-The output of the interpreter when deploying a contract will now
-contain a new field ``scilla_version : X.Y.Z``, to be used by the
-blockchain code to keep track of the version of a contract. Similarly,
-``scilla-checker`` will also now report the version of the contract on a
+When deploying a contract the output of the interpreter contains the
+field ``scilla_version : X.Y.Z``, to be used by the blockchain code to
+keep track of the version of the contract. Similarly,
+``scilla-checker`` also reports the version of the contract on a
 successful check.
 
-Chain invocation behaviour
+The ``init.json`` file
+**********************
+
+In addition to the version specified in the contract source code, it
+is also required that the contract's ``init.json`` specifies the same
+version when the contract is deployed and when the contracts
+transitions are invoked. This eases the process for the blockhain
+code to decide which interpreter to invoke.
+
+A mismatch in the versions specified in ``init.json`` and the source code
+will lead to a gas-charged error by the interpreter.
+
+An example ``init.json``:
+
+.. code-block:: json
+
+  [
+     {
+        "vname" : "_creation_block",
+        "type" : "BNum",
+        "value" : "1"
+     },
+     {
+        "vname" : "_scilla_version",
+        "type" : "Uint32",
+        "value" : "1",
+     }
+   ]
+
+
+Chain Invocation Behaviour
 **************************
 
-Chain invocation of contracts between component contracts of different
-Scilla versions are allowed. Changes to the language are guaranteed to
-ensure monotonicity of changes in the interpreter's treatment of
-messages.
+Contracts of different Scilla versions may invoke transitions on each
+other.
 
-
-
- 
-
-
+The semantics of message passing between contracts is guaranteed to be
+backward compatible between major versions.
