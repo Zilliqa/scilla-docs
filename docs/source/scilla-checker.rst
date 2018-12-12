@@ -358,7 +358,8 @@ The analysis uses the following set of tags:
   function whose co-domain is tagged with `t`. Hence, when performing
   a lookup in the map, or when applying the function, the result is
   tagged with `t`. Keys of maps are assumed to always be `Not
-  money`. Parameters to functions are not tagged.
+  money`. Using a variable as a function parameter does not give rise
+  to a tag.
 
 - `Option t` (where `t` is a tag): The variable represents an option
   value, which, if it does not have the value ``None``, contains the
@@ -381,5 +382,42 @@ result. Built-in functions are fully supported, however.
 Example
 *******
 
+As an example, consider a crowdfunding contract written in
+Scilla. Such a contract may declare the following parameters and
+fields:
 
+.. code-block:: ocaml
 
+                contract Crowdfunding
+
+                (*  Parameters *)
+                (owner     : ByStr20,
+                max_block : BNum,
+                goal      : Uint128)
+
+                (* Mutable fields *)
+                field backers : Map ByStr20 Uint128 = ...
+                field funded : Bool = ...
+
+The ``owner`` parameter represents the address of the person deploying
+the contract. The ``goal`` parameter is the amount of money the owner
+is trying to raise, and the ``max_block`` parameter represents the
+deadline by which the goal is to be met.
+
+The field ``backers`` is a map the addresses of contributors to the
+amount of money contributed, and the field ``funded`` represents
+whether the goal has been reached.
+
+Since the field ``goal`` represents an amount of money, ``goal``
+should be tagged as `Money` by the analysis. Similarly, the
+``backers`` field is a map with a co-domain representing `Money`, so
+``backers`` should be tagged with `Map Money`.
+
+Conversely, both ``owner``, ``max_block`` and ``funded`` represent
+something other than money, so they should all be tagged with `Not
+money`.
+
+The cashflow analysis will tag the parameters and fields according to
+how they are used in the contract's transitions, and if the resulting
+tags do not correspond to the expectation then the contract likely
+contains a bug somewhere.
