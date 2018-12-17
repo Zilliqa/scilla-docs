@@ -287,7 +287,7 @@ The following code snippet declares a global ``Uint32`` integer:
 
 The following operations on integers are language built-ins. Each
 operation takes two integers ``IntX``/``UintX`` (of the same type) as
-arguments.
+arguments, except for ``pow`` whose second argument is always ``Uint32``
 
 - ``builtin eq i1 i2`` : Is ``i1`` equal to ``i2`` Returns ``Bool``.
 - ``builtin add i1 i2``: Add integer values ``i1`` and ``i2``.
@@ -300,7 +300,13 @@ arguments.
   Returns an integer of the same type.
 - ``builtin rem i1 i2``: ``i1`` modulo ``i2``. Returns an integer of the same type.
 - ``builtin lt i1 i2``: Is ``i1`` lesser than ``i2``. Returns ``Bool``.
+- ``builtin pow i1 i2``: ``i1`` raised to the power ``i2``. Returns an integer of ``i1``'s type.
+- ``builtin to_nat i1``: Convert ``Uint32 i1`` value to ``Nat``.
+- ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` value to another ``UintX/IntX`` value.
+  Returns ``Some IntX/UintX`` if conversion succeeded, ``None`` otherwise.
 
+Addition, subtraction, multiplication, pow, division and reminder operations
+may raise integer overflow, underflow and division_by_zero errors.
 
 .. note::
 
@@ -333,9 +339,11 @@ The following ``String`` operations are language built-ins.
 - ``builtin substr s1 i1 i2`` : Extract sub-string of ``String s1`` starting
   from position ``Uint32 i1`` with length ``Uint32 i2``.
   Returns ``String``.
+- ``builtin to_string x1``: Convert ``x1`` to a string literal. Valid types of
+  ``x1`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``.
 
-Hashes
-******
+Crypto Built-ins
+****************
 
 A hash in Scilla is declared using the data type ``ByStr32``. A ``ByStr32``
 represents a hexadecimal Byte String of 32 bytes (64 hexadecimal characters)
@@ -375,6 +383,8 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin schnorr_verify pubk msg sig`` : Verify a signed ``sig`` of type ``ByStr64`` against the ``msg`` of 
   type ``ByStr32`` with the ``pubk`` of type ``ByStr33``.
+- ``concat x1 x2``: Concatenate ``x1 : ByStrX1`` and ``x2 : ByStrX2`` to result in a ``ByStr(X1+X2)`` value.
+
 
 Maps
 ****
