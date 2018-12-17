@@ -443,6 +443,7 @@ The following ``BNum`` operations are language built-in.
 - ``eq b1 b2``: Is ``BNum b1`` equal to ``BNum b2``. Returns ``Bool``.
 - ``blt b1 b2``: Is ``BNum b1`` less than ``BNum b2``. Returns ``Bool``.
 - ``badd b1 i1``: Add ``UintX i1`` to ``BNum b1``. Returns ``BNum``.
+- ``bsub b1 b2``: Subtract ``BNum b2`` from ``BNum b1``. Returns ``Int256``.
 
 Algebraic Data Types (ADTs)
 ######################################
