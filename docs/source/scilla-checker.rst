@@ -306,7 +306,7 @@ The analysis works by continually analysing the transitions of the
 contract until no further information is gathered.
 
 The starting point for the analysis is the incoming message that
-invokes the contract's transactions, the outgoing messages and events
+invokes the contract's transition, the outgoing messages and events
 that may be sent by the contract, and any field being read from the
 blockchain such as the current blocknumber.
 
@@ -334,7 +334,7 @@ Tagging of contract fields happens when a local variable is used when
 loading or storing a contract field. In these cases, the field is
 deemed to have the same tag as the local variable.
 
-Once the a transition has been analyzed the local variables and their
+Once a transition has been analyzed the local variables and their
 tags are saved, and the analysis proceeds to the next transition while
 keeping the tags of the contract fields. The analysis continues until
 all the transitions have been analysed without any existing tags
@@ -354,12 +354,11 @@ The analysis uses the following set of tags:
 
 - `Not money`: The variable represents something other than money.
 
-- `Map t` (where `t` is a tag): The variable represents a map or a
-  function whose co-domain is tagged with `t`. Hence, when performing
-  a lookup in the map, or when applying the function, the result is
-  tagged with `t`. Keys of maps are assumed to always be `Not
-  money`. Using a variable as a function parameter does not give rise
-  to a tag.
+- `Map t` (where `t` is a tag): The variable represents a map or a function
+  whose co-domain is tagged with `t`. Hence, when performing a lookup in the
+  map, or when applying a function on the values stored in the map, the result
+  is tagged with `t`. Keys of maps are assumed to always be `Not money`. Using
+  a variable as a function parameter does not give rise to a tag.
 
 - `Option t` (where `t` is a tag): The variable represents an option
   value, which, if it does not have the value ``None``, contains the
@@ -382,9 +381,8 @@ result. Built-in functions are fully supported, however.
 Example
 *******
 
-As an example, consider a crowdfunding contract written in
-Scilla. Such a contract may declare the following parameters and
-fields:
+As an example, consider a crowdfunding contract written in Scilla. Such a
+contract may declare the following immutable parameters and mutable fields:
 
 .. code-block:: ocaml
 
@@ -404,9 +402,9 @@ the contract. The ``goal`` parameter is the amount of money the owner
 is trying to raise, and the ``max_block`` parameter represents the
 deadline by which the goal is to be met.
 
-The field ``backers`` is a map the addresses of contributors to the
-amount of money contributed, and the field ``funded`` represents
-whether the goal has been reached.
+The field ``backers`` is a map from the addresses of contributors to the amount
+of money contributed, and the field ``funded`` represents whether the goal has
+been reached.
 
 Since the field ``goal`` represents an amount of money, ``goal``
 should be tagged as `Money` by the analysis. Similarly, the
@@ -417,7 +415,7 @@ Conversely, both ``owner``, ``max_block`` and ``funded`` represent
 something other than money, so they should all be tagged with `Not
 money`.
 
-The cashflow analysis will tag the parameters and fields according to
-how they are used in the contract's transitions, and if the resulting
-tags do not correspond to the expectation then the contract likely
-contains a bug somewhere.
+The cashflow analysis will tag the parameters and fields according to how they
+are used in the contract's transitions, and if the resulting tags do not
+correspond to the expectation, then the contract likely contains a bug
+somewhere.
