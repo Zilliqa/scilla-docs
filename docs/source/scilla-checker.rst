@@ -35,6 +35,11 @@ annotations to each piece of syntax:
   name (``_eventname``), then their structure (the fields and their types) must
   also be the same.
 
++ `Cashflow analysis` analyzes the usage of variables and fields, and
+  attempts to determine which fields are used to represent (native)
+  blockchain money. No checks are performed, but expressions,
+  variables and fields are annotated with tags indicating their usage.
+
 + `Sanity-checking` performs a number of minor checks, e.g., that all
   parameters to a transition have distinct names.
 
@@ -264,3 +269,153 @@ the next phase.
 
 The typechecker finally instantiates helper functors such as
 ``TypeUtilities`` and ``ScillaBuiltIns``.
+
+
+Cashflow Analysis
+#################
+.. _scilla_checker_cashflow:
+
+The cashflow analysis phase analyzes the usage of a contract's
+variables and fields, and attempts to determine which fields are used
+to represent (native) blockchain money. Each contract field is
+annotated with a tag indicating the field's usage.
+
+The resulting tags are an approximation based on the usage of each
+contract field, and the usage of local variables in the contract. The
+tags are not guaranteed to be accurate, but are intended as a tool to
+help the contract developer use her fields in the intended manner.
+
+
+Running the analysis
+********************
+
+The cashflow analysis is activated by running ``scilla-checker`` with
+the option ``-cf``. The analysis is not run by default, since it is
+only intended to be used during contract development.
+
+A contract is never rejected due to the result of the cashflow
+analysis. It is up to the contract developer to determine whether the
+cashflow tags are consistent with the intended use of each contract
+field.
+
+
+The Analysis in Detail
+**********************
+
+The analysis works by continually analysing the transitions of the
+contract until no further information is gathered.
+
+The starting point for the analysis is the incoming message that
+invokes the contract's transition, the outgoing messages and events
+that may be sent by the contract, and any field being read from the
+blockchain such as the current blocknumber.
+
+Both incoming and outgoing messages contain a field ``_amount`` whose
+value is the amount of money being transferred between accounts by the
+message. Whenever the value of the ``_amount`` field of the incoming
+message is loaded into a local variable, that local variable is tagged
+as representing money. Similarly, a local variable used to initialise
+the ``_amount`` field of an outgoing message is also tagged as
+representing money.
+
+Conversely, the message fields ``_sender``, ``_recipient``, and
+``_tag``, the event field ``_eventname``, and the blockchain field
+``BLOCKNUMBER`` are known to not represent money, so any variable used
+to initialise those fields or to hold the value read from one of those
+fields is tagged as not representing money.
+
+Once some variables have been tagged, their usage implies how other
+variables can be tagged. For instance, if two variables tagged as
+money are added to each other, the result is also deemed to represent
+money. Conversely, if two variables tagged as non-money are added, the
+result is deemed to represent non-money.
+
+Tagging of contract fields happens when a local variable is used when
+loading or storing a contract field. In these cases, the field is
+deemed to have the same tag as the local variable.
+
+Once a transition has been analyzed the local variables and their
+tags are saved, and the analysis proceeds to the next transition while
+keeping the tags of the contract fields. The analysis continues until
+all the transitions have been analysed without any existing tags
+having changed.
+
+
+Tags
+****
+
+The analysis uses the following set of tags:
+
+- `No information`: No information has been gathered about the
+  variable. This sometimes (but not always) indicates that the
+  variable is not being used, indicating a potential bug.
+
+- `Money`: The variable represents money.
+
+- `Not money`: The variable represents something other than money.
+
+- `Map t` (where `t` is a tag): The variable represents a map or a function
+  whose co-domain is tagged with `t`. Hence, when performing a lookup in the
+  map, or when applying a function on the values stored in the map, the result
+  is tagged with `t`. Keys of maps are assumed to always be `Not money`. Using
+  a variable as a function parameter does not give rise to a tag.
+
+- `Option t` (where `t` is a tag): The variable represents an option
+  value, which, if it does not have the value ``None``, contains the
+  value ``Some x`` where ``x`` has tag `t`.
+
+- `Pair t1 t2` (where `t1` and `t2` are tags): The variable represents
+  a pair of values with tags `t1` and `t2`, respectively.
+
+- `Inconsistent`: The variable has been used to represent both money
+  and not money. Inconsistent usage indicates a bug.
+
+  
+Lists are currently not supported.
+
+Library and local functions are only partially supported, since no
+attempt is made to connect the tags of parameters to the tag of the
+result. Built-in functions are fully supported, however.
+
+
+Example
+*******
+
+As an example, consider a crowdfunding contract written in Scilla. Such a
+contract may declare the following immutable parameters and mutable fields:
+
+.. code-block:: ocaml
+
+                contract Crowdfunding
+
+                (*  Parameters *)
+                (owner     : ByStr20,
+                max_block : BNum,
+                goal      : Uint128)
+
+                (* Mutable fields *)
+                field backers : Map ByStr20 Uint128 = ...
+                field funded : Bool = ...
+
+The ``owner`` parameter represents the address of the person deploying
+the contract. The ``goal`` parameter is the amount of money the owner
+is trying to raise, and the ``max_block`` parameter represents the
+deadline by which the goal is to be met.
+
+The field ``backers`` is a map from the addresses of contributors to the amount
+of money contributed, and the field ``funded`` represents whether the goal has
+been reached.
+
+Since the field ``goal`` represents an amount of money, ``goal``
+should be tagged as `Money` by the analysis. Similarly, the
+``backers`` field is a map with a co-domain representing `Money`, so
+``backers`` should be tagged with `Map Money`.
+
+Conversely, both ``owner``, ``max_block`` and ``funded`` represent
+something other than money, so they should all be tagged with `Not
+money`.
+
+The cashflow analysis will tag the parameters and fields according to how they
+are used in the contract's transitions, and if the resulting tags do not
+correspond to the expectation, then the contract likely contains a bug
+somewhere.
