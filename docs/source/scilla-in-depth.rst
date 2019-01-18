@@ -434,9 +434,9 @@ The following operations on addresses are language built-in.
 
 Block Numbers
 *************
-Block numbers have a dedicated type in Scilla. Variables of this type are
-specified with the keyword ``BNum``. A ``BNum`` literal is a sequence of
-digits with the keyword ``block`` prefixed (example ``block 101``).
+Block numbers have a dedicated type in Scilla. Variables of this type
+are specified with the keyword ``BNum`` followed by a integer value
+(for example ``BNum 101``).
 
 The following ``BNum`` operations are language built-in.
 
