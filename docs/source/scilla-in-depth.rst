@@ -364,9 +364,6 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns ``Bool``.
 
-- ``builtin dist h1 h2``: The distance between ``ByStr32 h1`` and ``ByStr32 h2``.
-  Returns ``Uint256``.
-
 - ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns ``ByStr32``.
 
 - ``builtin keccak256hash x``: The Keccak256 hash of a value of x of type ``Any``. Returns ``ByStr32``.
