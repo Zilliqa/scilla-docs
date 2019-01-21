@@ -86,11 +86,21 @@ that includes the contract name and its (im)mutable variables:
     
 
 .. note::
-        In addition to these fields, any contract in Scilla has an implicitly
-        declared mutable field ``_balance`` (initialised upon the contract’s
-        creation), which keeps the amount of funds held by the contract.  This
-        field can be freely read within the implementation, but can only
-        modified by explicitly transferring funds to other accounts.
+        In addition to these fields, every contract in Scilla has two implicitly
+        declared fields:
+
+        - ``_balance`` : A mutable field of type ``Uint128`` which
+          keeps the amount of funds held by the contract. This field
+          can be freely read from the contract code, but can only be
+          modified by accepting funds within the code (using
+          ``accept``), or by explicitly transferring funds to other
+          accounts (using ``send``). ``_balance`` is initialised to 0
+          when deploying a contract.
+
+        - ``_this_address`` : An immutable field of type ``ByStr20``
+          holding the blockchain address of the contract. This field
+          can be freely read from the contract code, but cannot be
+          modified.
 
 
 
