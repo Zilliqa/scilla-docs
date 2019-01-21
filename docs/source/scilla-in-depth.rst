@@ -373,6 +373,9 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 - ``builtin to_byStr x'`` : Converts a hash ``x'`` of finite length, say of type ``ByStr32`` to one 
   of arbitrary length.
 
+- ``builtin to_uint256 b`` : Converts a hash ``b`` of type ``ByStrX``
+  for any ``X`` less than or equal to 32, to ``Uint256``.
+
 - ``builtin schnorr_gen_key_pair`` : Create a key pair of form ``Pair {ByStr32 BySt33}`` that 
   consist of both private key of type ``ByStr32`` and public key of type ``ByStr33`` respectively.
 
