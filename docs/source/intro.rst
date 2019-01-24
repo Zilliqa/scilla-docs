@@ -35,7 +35,7 @@ possible to produce rigorous guarantees about the behavior of a contract.
 Applying formal verification tools with existing languages such as Solidity
 however is not an easy task because of the extreme expressivity typical of a
 Turing-complete language. Indeed, there is a trade-off between making a
-language simpler to understand and amenable to formal verification and making
+language simpler to understand and amenable to formal verification, and making
 it more expressive. For instance, Bitcoin's scripting language occupies the
 `simpler` end of the spectrum and does not handle stateful-objects. On the
 `expressive` side of the spectrum is a Turing-complete language such as
@@ -66,9 +66,9 @@ composition and invariants.
 Any in-contract computation happening within a transition has to terminate, and
 have a predictable effect on the state of the contract and the execution.  In
 order to achieve this, Scilla draws inspiration from functional programming
-with effects, drawing a distinction between pure expressions (e.g., expressions
+with effects in distinguishing between pure expressions (e.g., expressions
 with primitive data types and maps), impure local state manipulations (i.e.,
-reading/writing into contract fields) and blockchain reflection (e.g., reading
+reading/writing into contract fields), and blockchain reflection (e.g., reading
 current block number). By carefully designing semantics of interaction between
 pure and impure language aspects, Scilla ensures a number of foundational
 properties about contract transitions, such as progress and type preservation,
