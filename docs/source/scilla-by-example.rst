@@ -28,7 +28,7 @@ following  specification:
   ``welcome_msg``. ``getHello`` will not take any input. 
 
 
-Defining contract and its (im)mutable variables
+Defining a Contract and its (Im)Mutable Variables
 **************************************************
 
 A contract is declared using the ``contract`` keyword that starts the scope of
@@ -87,15 +87,19 @@ that includes the contract name and its (im)mutable variables:
     
 
 .. note::
-        In addition to these fields, any contract in Scilla has an implicitly
-        declared mutable field ``_balance`` (initialised upon the contract’s
-        creation), which keeps the amount of funds held by the contract.  This
-        field can be freely read within the implementation, but can only
-        modified by explicitly transferring funds to other accounts.
+
+   In addition to the explicitly declared mutable fields, any contract
+   in Scilla has an implicitly declared mutable field ``_balance`` of
+   type ``Uint128``, which is initialised to 0 when the contract is
+   deployed. The ``_balance`` field keeps the amount of funds held by
+   the contract.  This field can be freely read within the
+   implementation, but can only modified by explicitly transferring
+   funds to other accounts (using ``send``), or by accepting money
+   from incoming messages (using ``accept``).
 
 
 
-Defining interfaces `aka` transitions
+Defining Interfaces `aka` Transitions
 ***************************************
 
 Interfaces like ``setHello`` are referred to as `transitions` in Scilla.
@@ -183,11 +187,17 @@ Hence, the following code block implements an ``if-then-else`` instruction:
                 end
 
   
-The caller is not the owner
+The Caller is Not the Owner
 """""""""""""""""""""""""""""
 
 In case the caller is different from ``owner``, the transition takes
-the ``False`` branch and the contract issues an event using the instruction ``event``. 
+the ``False`` branch and the contract issues an event using the
+instruction ``event``.
+
+An event is a signal that gets stored on the blockchain for everyone
+to see. If a users using a client application to access the blockchain
+in order to invoke a transition on a contract, the client application
+can listen for events that the contract may issue, and alert the user.
 
 More concretely, the output event in this case is:
 
@@ -198,12 +208,7 @@ More concretely, the output event in this case is:
 An event is comprised of a number of ``vname : value`` pairs delimited
 by ``;`` inside a pair of curly braces ``{}``. An event must contain
 the compulsory field ``_eventname``, and may contain other fields such
-as the ``code`` field in the example above. The fields may occur in
-any order, though two events with the same name must contain the same
-fields of the same respective types.
-
-Once an event has been issued (using the instruction ``event e``), the
-event gets stored on the blockchain for everyone to see.
+as the ``code`` field in the example above. 
 
 .. note::
 
@@ -215,7 +220,7 @@ event gets stored on the blockchain for everyone to see.
 
 
 
-The caller is the owner
+The Caller is the Owner
 """"""""""""""""""""""""
 
 In case the caller is ``owner``, the contract allows the caller to set the
@@ -289,8 +294,8 @@ At this stage, our contract fragment will have the following form:
     end
 
 
-The second transition
-*********************
+Adding Another Transition
+***************************
 
 We may now add the second transition ``getHello()`` that allows client
 applications to know what the ``welcome_msg`` is. The declaration is
@@ -312,7 +317,7 @@ In the ``getHello()`` transition, we will first read from a mutable
 variable, and then we construct and issue the event.
 
 
-Scilla version
+Scilla Version
 ***************
 
 Once a contract has been deployed on the network, it cannot be
@@ -332,7 +337,7 @@ The version declaration must appear before any library or contract
 code.
 
 
-Putting it all together
+Putting it All Together
 *************************
 
 The complete contract that implements the desired specification is
@@ -387,7 +392,7 @@ construct:
 
 
 
-A second example: Crowdfunding
+A Second Example: Crowdfunding
 #################################
 
 In this section, we present a slightly more involved contract that runs a
@@ -417,7 +422,7 @@ owner** to claim the donated amount and transfer it to ``owner`` and
 the campaign is not successful.
 
 
-Sending messages
+Sending Messages
 **********************
 
 In Scilla, there are two ways that transitions can transmit data. One
@@ -483,7 +488,7 @@ a list, and send it:
    argument to ``send`` must therefore contain only one message.
 
 
-Putting it all together
+Putting it All Together
 *************************
 
 The complete crowdfunding contract is given below:

@@ -11,9 +11,9 @@ The general structure of a Scilla contract is given in the code fragment below:
   indicates which major Scilla version the contract uses.
   
 + Then follows the declaration of a ``library`` that contains purely
-  mathematical functions. For instance, a function to compute the
-  boolean ``AND`` of two bits or computing factorial of a given
-  natural number.
+  mathematical functions, e.g., a function to compute the boolean
+  ``AND`` of two bits, or a function computing the factorial of a
+  given natural number.
 
 + Then follows the actual contract definition declared using the
   keyword ``contract``.
@@ -81,8 +81,9 @@ The general structure of a Scilla contract is given in the code fragment below:
 Immutable Variables
 *******************
 
-`Immutable variables`, are the contract's initial parameters, whose values 
-are defined at the time of contract creation and cannot be modified after.
+`Immutable variables` are the contract's initial parameters whose
+values are defined when the contract is deployed, and cannot be
+modified afterwards.
 
 Declaration of immutable variables has the following format:
 
@@ -92,10 +93,18 @@ Declaration of immutable variables has the following format:
    vname_2 : vtype_2,
     ...  )
 
-Each declaration consists of a variable name (an identifier) and followed by its type,
-separated by ``:``. Multiple variable declarations are separated by ``,``. The
-initialization values for variables are to be specified at the time of contract
-creation.
+Each declaration consists of a variable name (an identifier) and
+followed by its type, separated by ``:``. Multiple variable
+declarations are separated by ``,``. The initialization values for
+variables are to be specified when the contract is deployed.
+
+.. note::
+
+   In addition to the explicitly declared immutable fields, a Scilla
+   contract has an implicitly declared mutable field ``_this_address``
+   of type ``ByStr20``, which is initialised to the address of the
+   contract when the contract is deployed. This field can be
+   freely read within the implementation, but cannot be modified.
 
 Mutable Variables
 *****************
@@ -110,11 +119,21 @@ declaration prefixed with the keyword ``field``.
   field vname_2 : vtype_2 = expr_2
   ...
 
-Each expression here is an initializer for that value. The definitions complete
-the initial state of the contract, at the time of creation.  As the contract
-goes through transitions, the values of these fields get modified.
+Each expression here is an initializer for the field in question. The
+definitions complete the initial state of the contract, at the time of
+creation.  As the contract goes through transitions, the values of
+these fields get modified.
 
-.. are obtained from the input state (``input_state.json``) on each transition invocation.
+.. note::
+
+   In addition to the explicitly declared mutable fields, a Scilla contract
+   has an implicitly declared mutable field ``_balance`` of
+   type ``Uint128``, which is initialised to 0 when the contract is
+   deployed. The ``_balance`` field keeps the amount of funds held by
+   the contract.  This field can be freely read within the
+   implementation, but can only modified by explicitly transferring
+   funds to other accounts (using ``send``), or by accepting money
+   from incoming messages (using ``accept``).
 
 Transitions
 ************
@@ -138,13 +157,16 @@ multiple parameters are separated by ``,``.
     In addition to parameters that are explicitly declared in the definition, each
     ``transition`` has available to it, the following implicit parameters:
 
-    - ``_sender : ByStr20`` : The account address that triggered
-      this transition. In case, the transition was called by a contract account instead of a
-      user account, then ``_sender`` is the contract address.
+    - ``_sender : ByStr20`` : The account address that triggered this
+      transition. If the transition was called by a contract account
+      instead of a user account, then ``_sender`` is the address of
+      the contract that called the transition.
 
-    - ``_amount : Uint128`` : Incoming amount (ZILs) sent by the sender. This amount must be explicitly
-      accepted using the ``accept`` statement within the transition. The money transfer does not happen
-      if the transition does not execute ``accept``.
+    - ``_amount : Uint128`` : Incoming amount (ZILs) sent by the
+      sender. To transfer the money from the sender to the contract,
+      the transition must explicitly accept the money using the
+      ``accept`` instruction. The money transfer does not happen if
+      the transition does not execute an ``accept``.
 
 
 Expressions 
@@ -181,15 +203,15 @@ Expressions
 - ``fun (x : T) => expr`` : A function that takes an input ``x`` of type ``T`` and
   returns the value to which expression ``expr`` evaluates.
 
+- ``f x`` : Apply the function ``f`` to the parameter ``x``.
+
 - ``tfun T => expr`` : A type function that takes ``T`` as a parametric type and
   returns the value to which expression ``expr`` evaluates. These are typically used
   to build library functions. See the section on Pairs_ below for an example.
 
-- ``@x T``: Instantiate a variable ``x`` with type ``T``.
+- ``@x T``: Apply the type function ``x`` to the type ``T``.
 
-- ``f x`` : Apply ``f`` on ``x``.
-
-- ``builtin f x``: Apply the ``builtin`` function ``f`` on ``x``.
+- ``builtin f x``: Apply the built-in function ``f`` on ``x``.
 
 - ``match`` expression: Matches a bound variable with patterns and executes
   the statements in that clause. The ``match`` expression is similar to the
@@ -212,9 +234,9 @@ Expressions
 Statements 
 ***********
 
-Statements in Scilla are operations with effect, i.e., these operations are
-impure and hence not purely mathematical. Such operations including reading or
-writing from/to a mutable smart contract variable. 
+Statements in Scilla are operations with effect, and hence not purely
+mathematical. Statements typically read from or write to a contract
+variable.
 
 - ``x <- f`` : Read from a mutable field ``f`` into ``x``.
 - ``f := x`` : Update mutable field  ``f`` with value ``x``.
@@ -234,24 +256,43 @@ Communication
 ***************
 
 A contract can communicate with other contracts (or non-contract) accounts
-through ``send`` statement:
+through the ``send`` instruction:
 
 - ``send msgs`` : send a list of messages ``msgs``.
 
-  The following code defines a ``msg`` with four entries ``_tag``,
-  ``_recipient``, ``_amount`` and ``param``.  ``_tag`` identifier entry is used
-  to identify the name of the next transition to be executed in ``_recipient``,
-  while ``_amount`` is the number of ZILs to be transferred to ``_recipient``,
-  where, ``param`` is any parameter to be passed to the transition.   
-  
+  The following code snippet defines a ``msg`` with four entries ``_tag``,
+  ``_recipient``, ``_amount`` and ``param``.
+
   .. code-block:: ocaml
 
     (*Assume contractAddress is the address of the contract being called and the contract contains the transition setHello*)
     msg = { _tag : "setHello"; _recipient : contractAddress; _amount : Uint128 0; param : Uint32 0 };
 
- Every message must have ``_tag``, ``_recipient`` and ``_amount`` entries.
+Every message must have ``_tag``, ``_recipient`` and ``_amount``.
 
-A contract can also communicate to the client (off-chain) by emitting events:
+The ``_recipient`` field (of type ``ByStr20``) is the blockchain
+address that the message is to be sent to, and the ``_amount`` field
+(of type ``Uint128``) is the number of ZIL to be transferred to that
+account.
+
+The ``_tag`` field (of type ``String``) is only used when the value of
+the ``_recipient`` field is the address of a contract. In this case,
+the value of the ``_tag`` field is the name of the transition that is
+to be invoked on the recipient contract.
+
+In addition to the compulsory fields the message may contain other
+fields (of any type), such as ``param`` above. However, if the message
+recipient is a contract, the additional fields must have the same
+names and types as the parameters of the transition being invoked on
+the recipient contract.
+
+.. note::
+
+   The Zilliqa blockchain does not yet support sending multiple
+   messages in the same ``send`` instruction. The list given as an
+   argument to ``send`` must therefore contain only one message.
+
+A contract can also communicate to the client by emitting events:
 
 - ``event e``: emit an event ``e``. The following code emits an event with name
   ``eventName``. 
@@ -264,7 +305,9 @@ A contract can also communicate to the client (off-chain) by emitting events:
     identifier.*)
     event e;
 
-Note that the first entry is always ``_eventname`` and is compulsory.
+Every event must contain the entry ``_eventname`` (of type
+``String``), and all events with the same ``_eventname`` in the
+contract must contain the same entry names and types of entries.
 
 
 Primitive Data Types & Operations
@@ -289,7 +332,7 @@ The following operations on integers are language built-ins. Each
 operation takes two integers ``IntX``/``UintX`` (of the same type) as
 arguments, except for ``pow`` whose second argument is always ``Uint32``
 
-- ``builtin eq i1 i2`` : Is ``i1`` equal to ``i2`` Returns ``Bool``.
+- ``builtin eq i1 i2`` : Is ``i1`` equal to ``i2`` Returns a ``Bool``.
 - ``builtin add i1 i2``: Add integer values ``i1`` and ``i2``.
   Returns an integer of the same type.
 - ``builtin sub i1 i2``: Subtract ``i2`` from ``i1``.
@@ -298,10 +341,11 @@ arguments, except for ``pow`` whose second argument is always ``Uint32``
   Returns an integer of the same type.
 - ``builtin div i1 i2``: Integer division of ``i1`` by ``i2``.
   Returns an integer of the same type.
-- ``builtin rem i1 i2``: ``i1`` modulo ``i2``. Returns an integer of the same type.
-- ``builtin lt i1 i2``: Is ``i1`` lesser than ``i2``. Returns ``Bool``.
-- ``builtin pow i1 i2``: ``i1`` raised to the power ``i2``. Returns an integer of ``i1``'s type.
-- ``builtin to_nat i1``: Convert ``Uint32 i1`` value to ``Nat``.
+- ``builtin rem i1 i2``: The remainder of integer division of ``i1``
+  by ``i2``. Returns an integer of the same type.
+- ``builtin lt i1 i2``: Is ``i1`` lesser than ``i2``. Returns a ``Bool``.
+- ``builtin pow i1 i2``: ``i1`` raised to the power of ``i2``. Returns an integer of ``i1``'s type.
+- ``builtin to_nat i1``: Convert a ``Uint32 i1`` value to a ``Nat``.
 - ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` value to another ``UintX/IntX`` value.
   Returns ``Some IntX/UintX`` if conversion succeeded, ``None`` otherwise.
 
@@ -310,8 +354,8 @@ may raise integer overflow, underflow and division_by_zero errors.
 
 .. note::
 
-  Values related to money (such as amount transferred or the balance of
-  an account) are ``Uint128``.
+  Values related to money, such as the ``_amount`` entry of a message
+  or the ``_balance`` field of a contract, are of type ``Uint128``.
 
 
 
@@ -333,14 +377,14 @@ The following code snippet declares a global ``String`` constant:
 The following ``String`` operations are language built-ins.
 
 - ``builtin eq s1 s2`` : Is ``String s1`` equal to ``String s2``.
-  Returns ``Bool``.
+  Returns a ``Bool``.
 - ``builtin concat s1 s2`` : Concatenate ``String s1`` with ``String s2``.
-  Returns ``String``.
+  Returns a ``String``.
 - ``builtin substr s1 i1 i2`` : Extract sub-string of ``String s1`` starting
   from position ``Uint32 i1`` with length ``Uint32 i2``.
-  Returns ``String``.
+  Returns a ``String``.
 - ``builtin to_string x1``: Convert ``x1`` to a string literal. Valid types of
-  ``x1`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``.
+  ``x1`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``. Returns a ``String``.
 
 Crypto Built-ins
 ****************
@@ -362,70 +406,102 @@ The following operations on hashes are language built-ins. In the description
 below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 ``ByStr32``.
 
-- ``builtin eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns ``Bool``.
+- ``builtin eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns a ``Bool``.
 
 - ``builtin dist h1 h2``: The distance between ``ByStr32 h1`` and ``ByStr32 h2``.
-  Returns ``Uint256``.
+  Returns a ``Uint256``.
 
-- ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns ``ByStr32``.
+- ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns a ``ByStr32``.
 
-- ``builtin keccak256hash x``: The Keccak256 hash of a value of x of type ``Any``. Returns ``ByStr32``.
+- ``builtin keccak256hash x``: The Keccak256 hash of a value of x of type ``Any``. Returns a ``ByStr32``.
 
-- ``builtin ripemd160hash x``: The RIPEMD-160 hash of a value of x of type ``Any``. Returns ``ByStr16``.
+- ``builtin ripemd160hash x``: The RIPEMD-160 hash of a value of x of type ``Any``. Returns a ``ByStr16``.
 
 - ``builtin to_byStr x'`` : Converts a hash ``x'`` of finite length, say of type ``ByStr32`` to one 
-  of arbitrary length.
+  of arbitrary length of type ``ByStrX``.
 
-- ``builtin schnorr_gen_key_pair`` : Create a key pair of form ``Pair {ByStr32 BySt33}`` that 
-  consist of both private key of type ``ByStr32`` and public key of type ``ByStr33`` respectively.
+- ``builtin schnorr_gen_key_pair`` : Create a key pair of type ``Pair {ByStr32 BySt33}`` that 
+  consist of a private key of type ``ByStr32`` and a public key of type ``ByStr33``.
 
-- ``builtin schnorr_sign privk msg`` : Sign a ``msg`` of type ``ByStr`` with the ``privk`` of type ``ByStr32``.
+- ``builtin schnorr_sign privk msg`` : Sign a ``msg`` of type
+  ``ByStr`` with the private key ``privk`` of type ``ByStr32``.
 
-- ``builtin schnorr_verify pubk msg sig`` : Verify a signed ``sig`` of type ``ByStr64`` against the ``msg`` of 
-  type ``ByStr32`` with the ``pubk`` of type ``ByStr33``.
+- ``builtin schnorr_verify pubk msg sig`` : Verify a signed signature
+  ``sig`` of type ``ByStr64`` against the ``msg`` of type ``ByStr32``
+  with the public key ``pubk`` of type ``ByStr33``.
 - ``concat x1 x2``: Concatenate ``x1 : ByStrX1`` and ``x2 : ByStrX2`` to result in a ``ByStr(X1+X2)`` value.
 
 
 Maps
 ****
-``Map`` values provide key-value store. Keys can have types ``IntX``,
+Map values provide key-value store. Keys can have types ``IntX``,
 ``UintX``, ``String``, ``ByStr32`` or ``ByStr20``. Values can be of any type.
 
-- ``m[k] := v``: In-place map insert key ``k`` and value ``v`` into ``Map m``.
-  If the intermediate key(s) does not exist in ``Map m``, they are freshly created. To insert a value into a nested map,
-  simply do ``m[k1][k2][...] := v``.
+- ``put m k v``: Insert a key ``k`` and a value ``v`` into a map
+  ``m``. Returns a new map which is a copy of the ``m`` but with ``k``
+  associated with ``v``. The value of ``m`` is unchanged. The ``put``
+  function is typically used in library functions. Note that ``put``
+  makes a copy of ``m`` before inserting the key-value pair.
 
-- ``delete m[k]``: In-place map removal of key ``k``. If the intermediate key(s) does not exist, no action is taken.
-  To delete a value in a nested map, simply do ``delete m[k1][k2][...]``.
-
-- ``v <- m[k]``: In-place map fetch of value ``v`` from key ``k``. Returns ``Some value`` after indexing with key(s). 
-  Returns ``None`` if key(s) does not exists. To fetch a value in a nested map, simply do ``v <- m[k1][k2][...]``.
-
-- ``b <- exists m[k1][k2][...]``: In-place existence check to check if all keys have a value mapped. Returns ``Bool``.
-
-- ``put m k v``: Insert key ``k`` and value ``v`` into ``Map m``.
-  Returns a new ``Map`` with the newly inserted key/value in addition to
-  the key/value pairs contained earlier. This is typically used in library functions.
-
-- ``get m k``: In ``Map m``, for key ``k``, return the associated value as
-  ``Option v`` (Check below for ``Option`` data type). The returned value is
-  ``None`` if ``k`` is not in the map ``m``. This is typically used in library functions.
+- ``m[k] := v``: Insert a key ``k`` and a value ``v`` into a map ``m``
+  in-place, i.e., without making a copy of ``m``. ``m`` must refer to
+  a contract field.  Insertion into nested maps is supported with the
+  syntax ``m[k1][k2][...] := v``. If the intermediate key(s) does not
+  exist in ``m``, they are freshly created.
   
-- ``remove m k``: Remove key ``k`` and its associated value from the map ``m``. Returns a new updated ``Map``.
-  This is typically used in library functions.
+- ``get m k``: Fetch the value associated with a key ``k`` in the map
+  ``m``. Returns an optional value (see the ``Option`` type below) --
+  if ``k`` has an associated value ``v`` in ``m``, then the result is
+  ``Some v``, otherwise the result is ``None``. The ``get`` function
+  is typically used in library functions.
+  
+- ``v <- m[k]``: Fetch the value associated with a key ``k`` in the
+  map ``m``. ``m`` must refer to a contract field. Returns an optional
+  value (see the ``Option`` type below) -- if ``k`` has an associated
+  value ``v`` in ``m``, then the result is ``Some v``, otherwise the
+  result is ``None``. Fetching from nested maps is supported with the
+  syntax ``v <- m[k1][k2][...]``. If one or more of the intermediate
+  key(s) do not exist in the corresponding map, the result is
+  ``None``.
 
-- ``contains m k``: Is key ``k`` and its associated value  present in the map ``m``.  Returns ``Bool``.
-  This is typically used in library functions.
+- ``contains m k``: Is the key ``k`` associated with a value in the map
+  ``m``.  Returns a ``Bool``. The ``contains`` function is typically
+  used in library functions.
 
-- ``to_list m``: Convert ``Map m`` into a ``List (Pair ('A) ('B))`` where ``'A`` and ``'B`` are key
-  and value types.
+- ``b <- exists m[k]``: Is the key ``k`` associated with a value in the
+  map ``m``. ``m`` must refer to a contract field. Returns a
+  ``Bool``. Existence checks through nested maps is supported with the
+  syntax ``v <- exists m[k1][k2][...]``. If one or more of the
+  intermediate key(s) do not exist in the corresponding map, the
+  result is ``False``.
+
+- ``remove m k``: Remove a key ``k`` and its associated value from the
+  map ``m``. Returns a new map which is a copy of ``m`` but with ``k``
+  being unassociated with a value. The value of ``m`` is
+  unchanged. The ``remove`` function is typically used in library
+  functions. Note that ``remove`` makes a copy of ``m`` before
+  removing the key-value pair.
+
+- ``delete m[k]``: Remove a key ``k`` and its associated value from
+  the map ``m`` in-place, i.e., without making a copy of ``m``. ``m``
+  must refer to a contract field. Removal from nested maps is
+  supported with the syntax ``delete m[k1][k2][...]``. If any of the
+  specified keys do not exist in the corresponding map, no action is
+  taken. Note that in the case of a nested removal ``delete
+  m[k1][...][kn-1][kn]``, only the key-value association of ``kn`` is
+  removed. The key-value bindings of ``k`` to ``kn-1`` will still
+  exist.
+
+- ``to_list m``: Convert a map ``m`` to a ``List (Pair ('A) ('B))``
+  where ``'A`` and ``'B`` are key and value types, respectively (see
+  the ``List`` type below).
 
 
 Addresses
 *********
 
 Addresses are declared using the data type  ``ByStr20`` data type. ``ByStr20``
-literals being with ``0x`` and contain 20 bytes (40 hexadecimal characters).
+literals begin with ``0x``, and contain 20 bytes (40 hexadecimal characters).
 
 The following operations on addresses are language built-in.
 
@@ -440,10 +516,10 @@ digits with the keyword ``block`` prefixed (example ``block 101``).
 
 The following ``BNum`` operations are language built-in.
 
-- ``eq b1 b2``: Is ``BNum b1`` equal to ``BNum b2``. Returns ``Bool``.
-- ``blt b1 b2``: Is ``BNum b1`` less than ``BNum b2``. Returns ``Bool``.
-- ``badd b1 i1``: Add ``UintX i1`` to ``BNum b1``. Returns ``BNum``.
-- ``bsub b1 b2``: Subtract ``BNum b2`` from ``BNum b1``. Returns ``Int256``.
+- ``eq b1 b2``: Is ``BNum b1`` equal to ``BNum b2``. Returns a ``Bool``.
+- ``blt b1 b2``: Is ``BNum b1`` less than ``BNum b2``. Returns a ``Bool``.
+- ``badd b1 i1``: Add ``UintX i1`` to ``BNum b1``. Returns a ``BNum``.
+- ``bsub b1 b2``: Subtract ``BNum b2`` from ``BNum b1``. Returns an ``Int256``.
 
 Algebraic Data Types (ADTs)
 ######################################
@@ -457,9 +533,10 @@ types.
 Boolean
 *******
 
-Boolean values are specified using the keyword ``Bool``. ``Bool`` ADT has two
-constructors: ``True`` and ``False`` that do not take any argument. Thus the
-following code fragment constructs a ``Bool`` ADT that represents ``True``:
+Boolean values are specified using the keyword ``Bool``. ``Bool`` ADT
+has two constructors: ``True`` and ``False`` that do not take any
+argument. Thus the following code fragment constructs a ``Bool`` ADT
+value that represents ``True``:
 
 .. code-block:: ocaml
 
@@ -473,8 +550,8 @@ represent the presence of a value ``x`` or the absence of any value. ``Option``
 has two constructors ``None`` and ``Some``.
 
    + ``Some`` represents the presence of a value. ``Some {`A} x`` constructs an
-     ADT that represents the presence of a value ``x`` of type ``'A``. The
-     following code fragment constructs an ``Option`` using the ``Some``
+     ADT value that represents the presence of a value ``x`` of type ``'A``. The
+     following code fragment constructs an ``Option`` value using the ``Some``
      constructor with an argument of type ``Int32``:
 
     .. code-block:: ocaml
@@ -484,69 +561,57 @@ has two constructors ``None`` and ``Some``.
           Some {Int32} ten
       
 
-   + ``None`` represents the absence of any value. ``None {`A}`` constructs an
-     ADT that represents the absence of any value of type ``'A``. The following
-     code fragment constructs an ``Option`` using the ``None`` constructor with
-     an argument of type ``ByStr20``:
+   + ``None`` represents the absence of a value. ``None {`A}``
+     constructs an ADT value that represents the absence of any value
+     of type ``'A``. The following code fragment constructs an
+     ``Option`` value using the ``None`` constructor with an argument of
+     type ``ByStr20``:
 
   
     .. code-block:: ocaml
 
         x = None {ByStr20}
 
-    They are extremely useful for initialising a mutable variable with no value.
+    Optional values are useful for initialising fields where the value is not yet known:
 
     .. code-block:: ocaml
 
         field empty_bool : Option Bool : None {Bool}
     
-    Note that constructing ``Some {(ADT)}`` or ``None {(ADT)}`` will require the 
-    ``( )`` parentheses:
-
-
-    .. code-block:: ocaml
-
-        let one = Int32 1 in
-        x = Some {(Pair Int32 Int32)} one one
-        
-
-    Some constructor is also frequently used in extracting values from a Map:
-    
+    Optional values are also useful for functions that might not have a
+    result:
 
     .. code-block:: ocaml
 
-        (*Assume m = Map ByStr20 Int32 that contains a key value pair of _sender data*)
         getValue = builtin get m _sender;
         match getValue with
         | Some v =>
+          (* _sender was associated with v in m *)
           v = v + v;
           statements...
         | None =>
+          (* _sender was not associated with a value in m *)
           statements...
         end
 
+       
 List
 ****
 
-The ``List`` ADT, similar to Lists in other functional languages provides a
-structure to contain a list of values of the same type.  A ``List`` is
-specified using the ``List`` keyword and has two constructors:
+The ``List`` ADT, similar to list types in functional languages,
+provides a structure to contain a list of values of the same type.
+``List`` has two constructors:
 
-   + ``Nil`` creates an empty ``List``. It takes the following form: ``Nil
-     {'A}``, and creates an empty list of entries of type ``'A``.
+   + ``Nil {'A}`` creates an empty list of entries of type ``'A``.
 
-   + ``Cons`` adds an element to an existing list. It takes the following form:
-     ``Cons {'A} h l``, where ``'A`` is a type variable that can be
-     instantiated with any type and ``h`` is an element of type ``'A`` that is
-     inserted at the head of list ``l`` (of type ``List 'A``).
+   + ``Cons {'A} h t`` adds an element ``h`` to the front of an
+     existing list ``t``. The type of ``h`` must be ``'A``, and so
+     must the type of the elements of ``t``.
 
-
-The following code example demonstrates building a list of ``Int32`` values.
-To do this, we start with  an empty list ``Nil {Int32}``.  The rest of the list
-is built by inserting items into the list.  The final list built in this
-example is ``[11 -> 10 -> 2 -> 1 -> NIL]``.
-
-
+The following example demonstrates building a list of ``Int32``
+values.  To do this, we start with an empty list ``Nil {Int32}``.  The
+rest of the list is built by adding elements to the beginning of the
+list.  The final list built in this example is ``[11; 10; 2; 1]``.
 
 .. code-block:: ocaml
 
@@ -562,22 +627,46 @@ example is ``[11 -> 10 -> 2 -> 1 -> NIL]``.
     Cons {Int32} eleven l3
 
 
-
-The following two structural recursion primitives are provided for any
-``List``.
+Scilla provides two structural recursion primitives for lists, which can be used to traverse all the elements of any list:
 
 - ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  For any types ``'A`` and ``'B``, ``list_foldl`` recursively processes
-  the input list (``List 'A``) from left to right, by applying an 
-  iterator function (``'B -> 'A -> 'B``) to the element being processed
-  and an accumulator (``'B``). The initial value of this accumulator is
-  provided as argument to ``list_foldl``.
-- ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  Same as ``list_foldl`` but process the list elements from right to left.
+  Recursively process the elements in a list from front to
+  back. ``list_foldl`` takes three arguments, which all depend on the
+  two type variables ``'A`` and ``'B``:
+
+  - The function processing the elements. This function takes two
+    arguments. The first argument is the current value of the
+    accumulator (of type ``'B``). The second argument is the list
+    element being processed (of type ``'A``). The result of the
+    function is the next value of the accumulator (of type ``'B``).
+
+  - The initial value of the accumulator (of type ``'B``).
+
+  - The list of elements to be processed (of type ``(List 'A)``).
+
+  The result of applying ``list_foldl`` is the final value of the
+  accumulator (of type ``'B``).
+
+- ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` : Similar
+  to ``list_foldl``, except the list elements are processed from back
+  to front. Notice also that the processing function takes the list
+  element and the accumulator in the opposite order from the order in
+  ``list_foldl``.
+
+.. note::
+
+   When an ADT takes type arguments (such as ``List 'A``), and occurs
+   inside a bigger type (such as the type of ``list_foldl``), the ADT
+   and its arguments must be grouped using parentheses ``( )``. This
+   is the case even when the ADT occurs as the only argument to
+   another ADT. For instance, when constructing a list of optional
+   values of type ``Int32``, one must instantiate the list type using
+   the syntax ``List {(Option Int32)}``.
 
 
-To further illustrate ``List`` in Scilla, we show a small example using
-``list_foldl`` to count the number of elements in a list.
+To further illustrate the ``List`` type in Scilla, we show a small
+example using ``list_foldl`` to count the number of elements in a
+list.
 
 .. code-block:: ocaml
   :linenos:
@@ -596,18 +685,20 @@ To further illustrate ``List`` in Scilla, we show a small example using
          folder iter init l
 
 ``list_length`` defines a function that takes one argument ``l`` of
-type ``List 'A``, where ``'A`` is a parametric type (type variable),
-specified in ``line 2``. We instantiate ``list_foldl`` in ``line 4``
-for a list of type ``'A`` with the accumulator type being ``Int32``.
-An initial value of ``0`` is used for the accumulator. The iterator
-function ``iter`` increments the accumulator as it is invoked by
-the folder for each element of the list ``l``. The final value of
-the accumulator will be the number of increments or in other words,
-the number of elements in the list.
+type ``List 'A``, where ``'A`` is a type variable that can be
+instantiate to any type by the code that uses ``list_length``. The
+type varible is specified in line 2. We instantiate ``list_foldl`` in
+line 4 for a list of type ``'A`` with the accumulator type being
+``Int32``.  0 is used for the initial value of the accumulator, and to
+match the accumulator type we must use the literal ``Int32 0``. The
+processing function ``iter`` increments the accumulator as it is
+invoked by ``folder`` for each element of the list ``l``. The final
+value of the accumulator will be the number of increments or in other
+words, the number of elements in the list.
 
-Common ``List`` utilities (including ``list_length``) are provided
-in the ``ListUtils`` library, as part of the standard library distribution
-for Scilla.
+Common utilities for the ``List`` type (including ``list_length``) are
+provided in the ``ListUtils`` library, as part of the standard library
+distribution for Scilla.
 
 
 
@@ -615,13 +706,21 @@ Pair
 ****
 .. _Pairs:
 
-``Pair`` ADTs are used to contain a pair of values of possibly different
-types. ``Pair`` variables are specified using the ``Pair`` keyword and
-can be constructed using the constructor ``Pair {'A 'B} a b`` where
-``'A`` and ``'B`` are type variables that can be instantiated to any type,
-and ``a`` and ``b`` are variables of type ``'A`` and ``'B`` respectively.
+The ``Pair`` ADT is used to group a pair of values of possibly
+different types. Values of type ``Pair`` are constructed using the
+constructor using the constructor ``Pair {'A 'B} a b`` where ``'A``
+and ``'B`` are type variables that can be instantiated to any type,
+and ``a`` and ``b`` are variables of type ``'A`` and ``'B``
+respectively.
 
-Below is an example to construct a ``Pair`` of ``Int32`` values.
+.. note::
+
+   ``Pair`` is both the name of a type and the name of a constructor
+   of that type. An ADT and a constructor typically only share their
+   names when the constructor is the only constructor of the ADT.
+   
+
+Below is an example of how to construct a pair of ``Int32`` values.
 
 .. code-block:: ocaml
 
@@ -631,9 +730,10 @@ Below is an example to construct a ``Pair`` of ``Int32`` values.
     Pair {Int32 Int32} one two
     ...
 
-Pair can be used to contain a pair of values with different types. 
-For example, to declare a pair of types ``String`` ``Uint32`` and initialize it 
-to a mutable field ``pp``:
+Pair can be used to contain a pair of values with different types.
+For example, the following code snippet declares a mutable field
+``pp``, which is initialised to a pair consisting of the value
+"Hello" (of type ``String``) and the value 2 (of type ``Uint32``):
 
 .. code-block:: ocaml
 
@@ -643,8 +743,9 @@ to a mutable field ``pp``:
                 Pair {(String) (Uint32)} s1 num
     ...
 
-Note the difference in how we perform a type declaration ``Pair( (A') (B'))`` 
-and the syntax used to create a pair of values using the constructor ``Pair { (A') (B') }``.
+Note the difference in how we specify the type of a field ``Pair (A')
+(B')`` and the syntax used to apply a constructor to two values using
+the constructor ``Pair { (A') (B') }``.
 
 We now illustrate how pattern matching can be used to extract the
 first element from a ``Pair``. The function ``fst`` shown below
@@ -667,10 +768,12 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
 
 Nat
 ***
-Scilla provides an ADT to work with natural numbers. A natural
-number ``Nat`` is constructed using ``Zero`` or ``Succ Nat``,
-i.e., the successor of a natural number. The following code shows
-the build up of ``Nat`` three:
+
+Scilla provides the ADT ``Nat`` to work with Peano numbers. A Peano
+number is constructed using the constructors ``Zero`` and ``Succ
+Nat``. ``Zero`` represens the integer value 0, and ``Succ`` represents
+the successor of another Peano number. The following code shows how to
+build the Peano number corresponding to the integer 3:
 
 .. code-block:: ocaml
 
@@ -680,33 +783,35 @@ the build up of ``Nat`` three:
     let two  = Succ one in
     Succ two
 
-The following folding (structural recursion) is defined for ``Nat``
-in Scilla, where ``'T`` is a parametric type variable.
+Scilla provides one structural recursion primitive for Peano numbers,
+which traverses all the Peano numbers from 0 to a given ``Nat``:
 
 .. code-block:: ocaml
 
   nat_fold : ('T -> Nat -> 'T) -> 'T -> Nat -> 'T
 
-Similar in spirit to the ``List`` folds described earlier, the ``Nat``
-fold takes an initial accumulator (of type ``'T``) and a function that
-takes as arguments a ``Nat`` and the intermediate accumulator (``'T``)
-and returns a new accumulator value. This iterator function has type
-``'T -> Nat -> 'T``. The fold iterates through all natural numbers,
-applying the iterator function and returns a final accumulator.
+Similar in spirit to the ``List`` folds described earlier,
+``nat_fold`` takes a processing function that takes an intermediate
+accumulator (of type ``'T``) and a Peano number (of type ``Nat``), an
+initial accumulator (of type ``'T``), and a Peano number (of type
+``Nat``) to be processed. The result is the final value of the
+accumulator.
 
 More ADT examples
 #################
-To make it easier to understand how ADTs can be used, we provide two
-more examples and describe them in detail. Both the functions described
-below are distributed as ``ListUtils`` in the Scilla standard library_.
+
+To further illustrate how ADTs can be used, we provide two more
+examples and describe them in detail. Both the functions described
+below can be found in the ``ListUtils`` part of the Scilla standard
+library_.
 
 List: Head
 **********
 
-The code below extracts the first item of a ``List`` and returns it as an
-``Option``, i.e., ``Some`` element is returned if the list has at least one
-element, ``None`` otherwise. The given test case takes ``[ 1 -> 2 -> 3 ->
-NIL]`` as an input and returns ``1``.
+The code below extracts the first item of a list, and returns it as an
+``Option``. If the list has at least one element ``h``, then ``Some
+h`` is returned. If the list is empty, ``None`` is returned.. The
+given test case takes ``[1; 2; 3]`` as an input and returns ``1``.
 
 .. code-block:: ocaml
   :linenos:
@@ -734,27 +839,32 @@ NIL]`` as an input and returns ``1``.
   let l3 = Cons {Int32} one l2 in
   int_head l3
 
-In ``lines 14-21`` we build a list that can be used as input to the
-``list_head`` function. ``Line 12`` instantiates the ``list_head``
-function for ``Int32`` and the last line invokes the instantiated
-``list_head`` function.
+Line 12 instantiates the ``list_head`` function for ``Int32``. Lines
+14-21 build a list that can be used as input to the ``list_head``
+function, and line 22 invokes the instantiated ``list_head``
+function on the list that was built.
 
-``tfun 'A`` in ``line 2`` specifies that ``'A`` is a parametric type
-/ variable to the function, while ``fun`` in ``line 3`` specifies that
-``l`` is a parameter of type ``List 'A``. In other words, in
-``lines 1-3``, we are specifying a function ``list_head`` that can
-be instantiated for any type ``'A`` and takes as argument, a variable
-of type ``List 'A``. The pattern matching in ``line 5`` matches for a
-``List`` which is constructed as ``Cons h t`` where ``h`` is the head
-and ``t`` is the tail and returns the head as ``Some h``. If the list
-is empty, then it matches the pattern match for ``Nil`` in ``line 7``
-and returns ``None``, indicating that the list has no head.
+In line 2, ``tfun 'A`` specifies that ``'A`` is a type parameter to
+the function, while ``fun`` in line 3 specifies that ``l`` is a
+parameter of type ``List 'A``. In other words, lines 1-3 specify a
+function ``list_head`` which can be instantiated for any type ``'A``,
+and which takes as argument a variable of type ``List 'A``.
+
+The pattern matching in lines 4-9 matches on the contents of the input
+list. In line 5 we match on the list constructor ``Cons h t``, where
+``h`` is the first element of the list, and ``t`` is the rest of the
+list. If the list is not empty then the match is successful, and we
+return the front element as an optional value ``Some h``. In line 7 we
+match on the list constructor ``Nil``. If the list is empty then the
+match is successful, and we return the optional value ``None``
+indicating that there was no head element of the list.
 
 List: Exists
 ************
-We now describe a function, which given a list and a predicate function,
-returns ``True`` if the predicate holds for at least one element of
-the list.
+
+We now describe a function which, given a list and a predicate
+function, returns ``True`` if the predicate holds for at least one
+element of the list, and returns ``False`` otherwise:
 
 .. code-block:: ocaml
   :linenos:
@@ -791,22 +901,26 @@ the list.
   (* check if l3 has at least one element satisfying f *)
   int_exists f l3
 
- 
-Similar to the previous example, ``'A`` is a type variable to
-the function. The function takes two arguments (1) a list ``l``
-of type ``List 'A`` and a predicate, i.e., a function that takes
-an element of the list (of type ``'A``) and returns ``True`` or
-``False``, indicating satisfaction of the predicate.
 
-To iterate through all elements of the input list ``l``, we use
-``list_foldl``. An instantiation of ``list_foldl`` for list type
-``'A`` and accummulator type ``Bool`` is done in ``line 5``. The
-initial accummulator value is ``False`` (to indicate that no element
-that satisfies the predicate is seen yet). The iterator function
-``iter`` defined in ``line 6`` tests the current list element
-provided as argument ``h`` for the predicate and returns an updated
-accummulator. If the accummulator is found ``True`` at some point,
-that value remains unchanged for the rest of the fold.
+Similar to the previous example ``'A`` is a type variable to
+the function. The function takes two arguments:
+
+- A predicate ``f``, i.e., a function that returns a ``Bool``. In this
+  case, ``f`` will be applied to elements of the list, so the argument
+  type of the predicate should be ``'A``.
+
+- A list of elements ``l`` of type ``List 'A``.
+
+To traverse the elements of the input list ``l`` we use
+``list_foldl``. In line 5 we instantiate ``list_foldl`` for lists with
+elements of type ``'A`` and for the accummulator type ``Bool``. In
+line 6 we set the initial accummulator value to ``False`` to indicate
+that no element satisfying the predicate has yet been seen. The
+processing function ``iter`` defined in lines 7-16 tests the predicate
+on the current list element, and returns an updated accummulator. If
+an element has been found which satisfies the predicate, the
+accummulator is set to ``True`` and remains so for the rest of the
+traversal.
 
 
 Standard Libraries
