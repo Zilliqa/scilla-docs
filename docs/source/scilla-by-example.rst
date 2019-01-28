@@ -442,10 +442,10 @@ and ``_amount``. The ``_recipient`` field is the blockchain address
 ``_amount`` field is the number of ZIL to be transferred to that
 account.
 
-The ``_tag`` field is only used when the value of the ``_recipient``
-field is the address of a contract. In this case, the value of
-the ``_tag`` field is the name (of type ``String``) of the transition
-that is to be invoked on the recipient contract.
+The value of the ``_tag`` field is the name (of type ``String``) of the transition
+that is to be invoked on the ``_recipient` contract. If ``_recipient`` 
+is a user account, then the value of ``_tag` can be set to be ``""`` (the empty string).
+In fact, if the `_recipient` is a user account, then the value of ``_tag`` is ignored.
 
 In addition to the compulsory fields the message may contain other
 fields, such as ``code`` above. However, if the message recipient is a
