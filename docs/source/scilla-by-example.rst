@@ -134,11 +134,11 @@ given below:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        e = {_eventname : "setHello()"; code : not_owner_code};
+        e = {_eventname : "setHello"; code : not_owner_code};
         event e
       | True =>
         welcome_msg := msg;
-        e = {_eventname : "setHello()"; code : set_hello_code};
+        e = {_eventname : "setHello"; code : set_hello_code};
         event e
       end
     end
@@ -193,7 +193,7 @@ More concretely, the output event in this case is:
 
 .. code-block:: ocaml
 
-        e = {_eventname : "setHello()"; code : not_owner_code};
+        e = {_eventname : "setHello"; code : not_owner_code};
 
 An event is comprised of a number of ``vname : value`` pairs delimited
 by ``;`` inside a pair of curly braces ``{}``. An event must contain
@@ -279,11 +279,11 @@ At this stage, our contract fragment will have the following form:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        e = {_eventname : "setHello()"; code : not_owner_code};
+        e = {_eventname : "setHello"; code : not_owner_code};
         event e
       | True =>
         welcome_msg := msg;
-        e = {_eventname : "setHello()"; code : set_hello_code};
+        e = {_eventname : "setHello"; code : set_hello_code};
         event e
       end
     end
@@ -301,7 +301,7 @@ not take a parameter.
 
     transition getHello ()
         r <- welcome_msg;
-        e = {_eventname: "GetHello"; msg: r};
+        e = {_eventname: "getHello"; msg: r};
         event e
     end
 
