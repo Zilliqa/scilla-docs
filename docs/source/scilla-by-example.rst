@@ -210,7 +210,7 @@ event gets stored on the blockchain for everyone to see.
    In our example we have chosen to name the event after the
    transition that issues the event, but any name can be
    chosen. However, it is recommended that you name the events in a
-   way makes it easy to see which part of the code issued the event.
+   way that makes it easy to see which part of the code issued the event.
 
 
 
