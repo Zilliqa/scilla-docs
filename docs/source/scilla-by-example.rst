@@ -13,7 +13,7 @@ following  specification:
   by the creator of the contract. The variable is immutable in the
   sense that once initialized, its value cannot be changed. ``owner``
   will be of type ``ByStr20`` (a hexadecimal Byte String representing
-  a 20 byte blockchain address).
+  a 20 byte address).
 
 + It should have a `mutable variable` ``welcome_msg`` of type ``String``
   initialized to ``""``. Mutability here refers to the possibility of modifying
