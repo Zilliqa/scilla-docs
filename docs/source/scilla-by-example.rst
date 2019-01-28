@@ -309,7 +309,7 @@ not take a parameter.
 	Reading from a mutable variable is done via the operator ``<-``.
 
 In the ``getHello()`` transition, we will first read from a mutable
-variable, and then we construct and issue the event.
+variable, and then we construct and emit the event.
 
 
 Scilla version
@@ -370,11 +370,11 @@ construct:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        e = {_eventname : "setHello()"; code : not_owner_code};
+        e = {_eventname : "setHello"; code : not_owner_code};
         event e
       | True =>
         welcome_msg := msg;
-        e = {_eventname : "setHello()"; code : set_hello_code};
+        e = {_eventname : "setHello"; code : set_hello_code};
         event e
       end
     end
