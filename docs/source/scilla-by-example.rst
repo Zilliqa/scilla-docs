@@ -233,7 +233,7 @@ This is done through the following instruction:
     Writing to a mutable variable is done via the operator ``:=``.
 
 
-And as in the previous case, the contract then issues an event with
+And as in the previous case, the contract then emits an event with
 the code ``set_hello_code``.
 
 
