@@ -408,9 +408,6 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns a ``Bool``.
 
-- ``builtin dist h1 h2``: The distance between ``ByStr32 h1`` and ``ByStr32 h2``.
-  Returns a ``Uint256``.
-
 - ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns a ``ByStr32``.
 
 - ``builtin keccak256hash x``: The Keccak256 hash of a value of x of type ``Any``. Returns a ``ByStr32``.
@@ -420,8 +417,11 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 - ``builtin to_byStr x'`` : Converts a hash ``x'`` of finite length, say of type ``ByStr32`` to one 
   of arbitrary length of type ``ByStrX``.
 
+- ``builtin to_uint256 b`` : Converts a hash ``b`` of type ``ByStrX``
+  for any ``X`` less than or equal to 32, to ``Uint256``.
+
 - ``builtin schnorr_gen_key_pair`` : Create a key pair of type ``Pair {ByStr32 BySt33}`` that 
-  consist of a private key of type ``ByStr32`` and a public key of type ``ByStr33``.
+  consist of both private key of type ``ByStr32`` and public key of type ``ByStr33`` respectively.
 
 - ``builtin schnorr_sign privk msg`` : Sign a ``msg`` of type
   ``ByStr`` with the private key ``privk`` of type ``ByStr32``.
@@ -510,9 +510,9 @@ The following operations on addresses are language built-in.
 
 Block Numbers
 *************
-Block numbers have a dedicated type in Scilla. Variables of this type are
-specified with the keyword ``BNum``. A ``BNum`` literal is a sequence of
-digits with the keyword ``block`` prefixed (example ``block 101``).
+Block numbers have a dedicated type in Scilla. Variables of this type
+are specified with the keyword ``BNum`` followed by an integer value
+(for example ``BNum 101``).
 
 The following ``BNum`` operations are language built-in.
 
@@ -525,10 +525,15 @@ Algebraic Data Types (ADTs)
 ######################################
 .. _ADTs:
 
-`Algebraic data types` are composite types, used commonly in functional
-programming. The following ADTs are featured in Scilla. Each ADT is defined as
-a set of **constructors**. Each constructor takes a set of arguments of certain
+`Algebraic data types` are composite types, used commonly in
+functional programming. Each ADT is defined as a set of
+**constructors**. Each constructor takes a set of arguments of certain
 types.
+
+Scilla is equipped with a number of built-in ADTs, which are described
+below. Additionally, Scilla allows the user to define her own, user-defined
+ADTs.
+
 
 Boolean
 *******
@@ -766,6 +771,14 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
   let a = fst_int p in
     ... (* a = one *) ...
 
+.. note::
+   
+   Using ``Pair`` is generally discouraged. Instead, the programmer
+   should define an ADT which is specialised to the particular
+   type of pairs that is needed in the particular use case. See the
+   section on `User-defined ADTs`_ below.
+   
+
 Nat
 ***
 
@@ -796,6 +809,130 @@ accumulator (of type ``'T``) and a Peano number (of type ``Nat``), an
 initial accumulator (of type ``'T``), and a Peano number (of type
 ``Nat``) to be processed. The result is the final value of the
 accumulator.
+
+
+User-defined ADTs
+*****************
+
+In addition to the built-in ADTs described above, Scilla supports
+user-defined ADTs.
+
+ADT definitions may only occur in the library parts of a program,
+either in the library part of the contract, or in an imported
+library. An ADT definiton is in scope in the entire library in which
+it is defined, except that an ADT definition may only refer to other
+ADT definitions defined earlier in the same library, or in imported
+libraries. In particular, an ADT definition may not refer to itself in
+an inductive/recursive manner.
+
+Each ADT is defined as a set of **constructors**. Each constructor
+takes a set of arguments of certain types. The set of arguments may be
+empty. The ADTs of a contract must have distinct names, and the set of
+all constructors of all ADTs in a contract must also have distinct
+names. However, a constructor and an ADT may have the same name, as is
+the case with the ``Pair`` type whose only constructor is also called
+``Pair``.
+
+As an example of user-defined ADTs, consider the following type
+declarations from a contract implementing a chess-like game called
+Shogi or Japanese Chess (https://en.wikipedia.org/wiki/Shogi). When in
+turn, a player can choose to either move one of his pieces, place a
+previously captured piece on the board, or resign.
+
+The pieces of the game can be defined using the following type:
+
+.. code-block:: ocaml
+
+   type Piece =
+   | King
+   | GoldGeneral
+   | SilverGeneral
+   | Knight
+   | Lance
+   | Pawn
+   | Rook
+   | Bishop
+
+Each type of piece (king, gold general, etc.) is represented as a
+constructor of the type ``Piece``. Neither of the constructors take
+any arguments.
+
+The board is represented as a set of squares, where each square has
+two coordinates:
+
+.. code-block:: ocaml
+
+   type Square =
+   | Square of Uint32 Uint32
+
+The type ``Square`` is an example of a type where a constructor has
+the same name as the type. This usually happens when a type has only
+one constructor. The constructor ``Square`` takes two arguments, both
+of type ``Uint32``, which are the coordinates of the square on the board.
+
+Similar to the definition of the type ``Piece``, we can define the
+type of direction of movement using a constructor for each of the
+legal directions as follows:
+
+.. code-block:: ocaml
+
+   type Direction =
+   | East
+   | SouthEast
+   | South
+   | SouthWest
+   | West
+   | NorthWest
+   | North
+   | NorthEast
+
+We are now in a position to define the type of possible actions that a
+user may choose to perform when in turn:
+
+.. code-block:: ocaml
+
+   type Action =
+   | Move of Square Direction Uint32 Bool
+   | Place of Piece Square
+   | Resign
+
+If a player chooses to move a piece, she should use the constructor
+``Move``, and provide an argument of type ``Square`` (indicating the
+current position of the piece she wants to move), an argument of type
+``Direction`` (indicating the direction of movement), an argument of
+type ``Uint32`` (indicating the distance the piece should move), and an
+argument of type ``Bool`` (indicating whether the moved piece should be
+promoted after being moved).
+
+If instead the player chooses to place a previously captured piece on
+the board, she should use the constructor ``Place``, and provide an
+argument of type ``Piece`` (indicating which piece to place on the
+board), and an argument of type ``Square`` (indicating the position
+the piece should be placed in).
+
+Finally, if the player chooses to resign and award the game to her
+opponent, she should use the constructor ``Resign``. Since ``Resign``
+does not take any arguments, no arguments should be provided.
+
+To check which action a player has chosen we use a match statement or
+a match expression:
+
+.. code-block:: ocaml
+
+   transition PlayerAction (action : Action)
+   ...
+   match action with
+   | Resign => ...
+   | Place piece square => ...
+   | Move square direction distance promote => ...
+   end
+
+The typechecker will make sure that only the constructors of the
+``Action`` type can occur in each pattern of the match statement or
+match expression, and the pattern-match checker will ensure that all
+combinations of constructors can be matched by the given patterns.
+
+
 
 More ADT examples
 #################
