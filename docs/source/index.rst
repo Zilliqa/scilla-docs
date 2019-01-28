@@ -33,7 +33,7 @@ verified) compilers, concurrent and distributed applications, including
 blockchains among others.
 
 `Zilliqa` --- the underlying blockchain platform on which Scilla contracts are
-run has been  designed to be scalable. It employs the idea of sharding to
+run --- has been designed to be scalable. It employs the idea of sharding to
 validate transactions in parallel. Zilliqa has an intrinsic token named
 `Zilling`, ZIL for short that are required to run smart contracts on Zilliqa.
 
@@ -46,9 +46,6 @@ specification described in this document are subject to change. Scilla
 currently comes with an interpreter binary that has been integrated into two
 Scilla-specific web-based IDEs. :ref:`trial-label` presents the features of the
 two IDEs.  
-
-Note that Scilla does not have a type checker implemented yet and hence type
-safety of contracts written in Scilla is not guaranteed.
 
 Resources
 *********
