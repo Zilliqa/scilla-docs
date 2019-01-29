@@ -7,8 +7,8 @@ Structure of a Scilla Contract
 
 The general structure of a Scilla contract is given in the code fragment below:
 
-+ It starts with the declaration of ``scilla_version``, which
-  indicates which major Scilla version the contract uses.
++ The contract starts with the declaration of ``scilla_version``,
+  which indicates which major Scilla version the contract uses.
   
 + Then follows the declaration of a ``library`` that contains purely
   mathematical functions, e.g., a function to compute the boolean
@@ -135,6 +135,27 @@ these fields get modified.
    funds to other accounts (using ``send``), or by accepting money
    from incoming messages (using ``accept``).
 
+.. note::
+
+   Both mutable and immutable variables must be of a *storable*
+   type:
+
+   - Messages, events and the special ``Unit`` type are not
+     storable. All other primitive types like integers and strings are
+     storable.
+
+   - Function types are not storable.
+
+   - Complex types involving uninstantiated type variables are not
+     storable.
+
+   - Maps and ADT are storable if the types of their subvalues are
+     storable. For maps this means that the key type and the value
+     type must both be storable, and for ADTs this means that the type
+     of every constructor argument must be storable.
+
+
+
 Transitions
 ************
 
@@ -154,25 +175,42 @@ multiple parameters are separated by ``,``.
 
 .. note::
 
-    In addition to parameters that are explicitly declared in the definition, each
-    ``transition`` has available to it, the following implicit parameters:
+    In addition to the parameters that are explicitly declared in the
+    definition, each transition has the following implicit parameters:
 
     - ``_sender : ByStr20`` : The account address that triggered this
       transition. If the transition was called by a contract account
       instead of a user account, then ``_sender`` is the address of
-      the contract that called the transition.
+      the contract that called this transition.
 
-    - ``_amount : Uint128`` : Incoming amount (ZILs) sent by the
+    - ``_amount : Uint128`` : Incoming amount of ZILs sent by the
       sender. To transfer the money from the sender to the contract,
       the transition must explicitly accept the money using the
       ``accept`` instruction. The money transfer does not happen if
       the transition does not execute an ``accept``.
 
+.. note::
+
+   Transition parameters must be of a *serialisable* type:
+
+   - Messages, events and the special ``Unit`` type are not
+     serialisable. All other primitive types like integers and strings
+     are serialisable.
+
+   - Function types and map types are not serialisable.
+
+   - Complex types involving uninstantiated type variables are not
+     serialisable.
+
+   - ADT are serialisable if the types of their subvalues are
+     serialisable. This means that the type of every constructor
+     argument must be serialisable.
+
 
 Expressions 
 ************
 
-`Expressions` handle pure operations. The supported expressions in Scilla are:
+`Expressions` handle pure operations. Scilla contains the following types of expressions:
 
 - ``let x = f`` : Give  ``f`` the name ``x`` in the contract. The binding of
   ``x`` to ``f`` is **global** and extends to the end of the contract. The following code 
@@ -196,9 +234,10 @@ Expressions
       let two = Int32 2 in 
       builtin add one two
 
-- ``{ <entry>_1 ; <entry>_2 ... }``: Message expression, where each entry has the following form: ``b : x``. Here
-  ``b`` is an identifier and ``x`` a variable, whose value is bound to the
-  identifier in the message. 
+- ``{ <entry>_1 ; <entry>_2 ... }``: Message or event expression,
+  where each entry has the following form: ``b : x``. Here ``b`` is an
+  identifier and ``x`` a variable, whose value is bound to the
+  identifier in the message.
   
 - ``fun (x : T) => expr`` : A function that takes an input ``x`` of type ``T`` and
   returns the value to which expression ``expr`` evaluates.
@@ -213,52 +252,107 @@ Expressions
 
 - ``builtin f x``: Apply the built-in function ``f`` on ``x``.
 
-- ``match`` expression: Matches a bound variable with patterns and executes
-  the statements in that clause. The ``match`` expression is similar to the
-  ``match`` in OCaml. The pattern to be matched can be a variable binding, 
-  an ADT constructor (see ADTs_) or the wildcard ``_`` symbol to match anything.
+- ``match`` expression: Matches a bound variable with patterns and
+  evaluates the expression in that clause. The ``match`` expression is
+  similar to the ``match`` expression in OCaml. The pattern to be
+  matched can be an ADT constructor (see ADTs_) with subpatterns, a
+  variable, or a wildcard ``_``. An ADT constructor pattern matches
+  values constructed with the same constructor if the subpatterns
+  match the corresponding subvalues. A variable matches anything, and
+  binds the variable to the value it matches in the expression of that
+  clause. A wildcard matches anything, but the value is then ignored.
 
   .. code-block:: ocaml
 
     match x with
     | pattern_1 =>
-      statements ...
+      expression_1 ...
     | pattern_2 =>
-      statements ...
+      expression_2 ...
     | _ => (*Wildcard*)
-      statements ...
+      expression ...
     end
 
+  .. note::
 
-
+     A pattern-match must be exhaustive, i.e., every legal (type-safe)
+     value of ``x`` must be matched by a pattern. Additionally, every
+     pattern must be reachable, i.e., for each pattern there must be a
+     legal (type-safe) value of ``x`` that matches that pattern, and
+     which does not match any pattern preceeding it.
+    
 Statements 
 ***********
 
 Statements in Scilla are operations with effect, and hence not purely
-mathematical. Statements typically read from or write to a contract
-variable.
+mathematical. Scilla contains the following types of statements:
 
-- ``x <- f`` : Read from a mutable field ``f`` into ``x``.
-- ``f := x`` : Update mutable field  ``f`` with value ``x``.
+- ``x <- f`` : Fetch the value of the contract field ``f``, and store
+  it into the local variable ``x``.
+  
+- ``f := x`` : Update the mutable contract field ``f`` with the value
+  of ``x``. ``x`` may be a local variable, or another contract field.
 
-One can also read from the blockchain state. A blockchain state consists of
-certain values associated with a block, for instance, the ``BLOCKNUMBER``. 
+- ``x <- & BLOCKNUMBER`` : Fetch the value of the blockchain state
+  variable ``BLOCKNUMBER``, and store it into the local variable
+  ``x``.
 
-- ``x <- & BLOCKNUMBER`` reads from the blockchain state variable ``BLOCKNUMBER`` into ``x``.
+- ``v = e`` : Evaluate the expression ``e``, and assign the value to
+  the local variable ``v``.
 
-Whenever ZIL tokens are sent via a transition, the transition has to explicitly
-accept the transfer. This is done through the ``accept`` statement.
+- ``match`` : Pattern-matching at statement level:
 
-- ``accept`` : Accept incoming payment.
+  .. code-block:: ocaml
 
+     match x with
+     | pattern_1 =>
+       statement_11;
+       statement_12;
+       ...
+     | pattern_2 =>
+       statement_21;
+       statement_22;
+       ...
+     | _ => (*Wildcard*)
+       statement_n1;
+       statement_n2;
+       ...
+     end
 
+- ``accept`` : Accept the ZILs of the message that invoked the
+  transition. The amount is automatically added to the ``_balance``
+  field of the contract. If a message contains ZILs, but the invoked
+  transition does not accept the money, the money is transferred back
+  to the sender of the message.
+
+- ``send`` and ``event`` : Communication with the blockchain. See the
+  next section for details.
+
+- In-place map operations : Operations on contract fields of type
+  ``Map``. See the Maps_ section for details.
+
+A sequence of statements must be separated by semicolons ``;``:
+
+.. code-block:: ocaml
+
+   transition T ()
+     statement_1;
+     statement_2;
+     ...
+     statement_n
+   end
+
+Notice that the final statement does not have a trailing ``;``, since
+``;`` is used to separate statements rather than terminate them.
+
+  
 Communication
 ***************
 
-A contract can communicate with other contracts (or non-contract) accounts
+A contract can communicate with other contract and user accounts
 through the ``send`` instruction:
 
-- ``send msgs`` : send a list of messages ``msgs``.
+- ``send msgs`` : Send a list of messages ``msgs``.
 
   The following code snippet defines a ``msg`` with four entries ``_tag``,
   ``_recipient``, ``_amount`` and ``param``.
@@ -268,7 +362,8 @@ through the ``send`` instruction:
     (*Assume contractAddress is the address of the contract being called and the contract contains the transition setHello*)
     msg = { _tag : "setHello"; _recipient : contractAddress; _amount : Uint128 0; param : Uint32 0 };
 
-Every message must have ``_tag``, ``_recipient`` and ``_amount``.
+A message passed to ``send`` must contain the compulsory fields
+``_tag``, ``_recipient`` and ``_amount``.
 
 The ``_recipient`` field (of type ``ByStr20``) is the blockchain
 address that the message is to be sent to, and the ``_amount`` field
@@ -278,7 +373,8 @@ account.
 The ``_tag`` field (of type ``String``) is only used when the value of
 the ``_recipient`` field is the address of a contract. In this case,
 the value of the ``_tag`` field is the name of the transition that is
-to be invoked on the recipient contract.
+to be invoked on the recipient contract. If the recipient is a user
+account, the ``_tag`` field is ignored.
 
 In addition to the compulsory fields the message may contain other
 fields (of any type), such as ``param`` above. However, if the message
@@ -289,25 +385,29 @@ the recipient contract.
 .. note::
 
    The Zilliqa blockchain does not yet support sending multiple
-   messages in the same ``send`` instruction. The list given as an
-   argument to ``send`` must therefore contain only one message.
+   messages in the same transition. This means that the list given as
+   an argument to ``send`` must contain only one message, and that a
+   transition may perform at most one ``send`` instruction each time
+   the transition is called.
 
-A contract can also communicate to the client by emitting events:
+A contract can also communicate to the outside world by emitting
+events. An event is a signal that gets stored on the blockchain for
+everyone to see. If a user uses a client application invoke a
+transition on a contract, the client application can listen for events
+that the contract may emit, and alert the user.
 
-- ``event e``: emit an event ``e``. The following code emits an event with name
-  ``eventName``. 
+- ``event e``: Emit a message ``e`` as an event. The following code
+  emits an event with name ``e_name``.
 
  .. code-block:: ocaml
 
-    e = { _eventname : "eventName"; <entry>_2 ; <entry>_3 };
-    (*where <entry> is of the form: b : x as in a message expression.*)
-    (*Here b is the identifier, and x the variable, whose value is bound to the
-    identifier.*)
-    event e;
+    e = { _eventname : "e_name"; <entry>_2 ; <entry>_3 };
+    event e
 
-Every event must contain the entry ``_eventname`` (of type
-``String``), and all events with the same ``_eventname`` in the
-contract must contain the same entry names and types of entries.
+An emitted event must contain the compulsory field ``_eventname`` (of
+type ``String``), and may contain other entries as well. The value of
+the ``_eventname`` entry must be a string literal. All events with the
+same name must have the same entry names and types.
 
 
 Primitive Data Types & Operations
@@ -315,24 +415,25 @@ Primitive Data Types & Operations
 
 Integer Types
 *************
-Scilla defines signed and unsigned integer types of 32, 64, 128, and 256 bits. 
-These integer types can be specified with the keywords ``IntX`` and ``UintX`` where
-``X`` can be 32, 64, 128, or 256. For example, an unsigned integer of 32 bits
-can be specified as ``Uint32``. 
 
+Scilla defines signed and unsigned integer types of 32, 64, 128, and
+256 bits.  These integer types can be specified with the keywords
+``IntX`` and ``UintX`` where ``X`` can be 32, 64, 128, or 256. For
+example, the type of an unsigned integer of 32 bits is ``Uint32``.
 
-The following code snippet declares a global ``Uint32`` integer:
+The following code snippet declares a variable of type ``Uint32``:
 
 .. code-block:: ocaml
         
     let x = Uint32 43 
 
 
-The following operations on integers are language built-ins. Each
+Scilla supports the following built-in operations on integers. Each
 operation takes two integers ``IntX``/``UintX`` (of the same type) as
-arguments, except for ``pow`` whose second argument is always ``Uint32``
+arguments, except for ``pow`` whose second argument is always
+``Uint32``
 
-- ``builtin eq i1 i2`` : Is ``i1`` equal to ``i2`` Returns a ``Bool``.
+- ``builtin eq i1 i2`` : Is ``i1`` equal to ``i2``? Returns a ``Bool``.
 - ``builtin add i1 i2``: Add integer values ``i1`` and ``i2``.
   Returns an integer of the same type.
 - ``builtin sub i1 i2``: Subtract ``i2`` from ``i1``.
@@ -343,99 +444,101 @@ arguments, except for ``pow`` whose second argument is always ``Uint32``
   Returns an integer of the same type.
 - ``builtin rem i1 i2``: The remainder of integer division of ``i1``
   by ``i2``. Returns an integer of the same type.
-- ``builtin lt i1 i2``: Is ``i1`` lesser than ``i2``. Returns a ``Bool``.
-- ``builtin pow i1 i2``: ``i1`` raised to the power of ``i2``. Returns an integer of ``i1``'s type.
-- ``builtin to_nat i1``: Convert a ``Uint32 i1`` value to a ``Nat``.
-- ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` value to another ``UintX/IntX`` value.
-  Returns ``Some IntX/UintX`` if conversion succeeded, ``None`` otherwise.
+- ``builtin lt i1 i2``: Is ``i1`` less than ``i2``? Returns a ``Bool``.
+- ``builtin pow i1 i2``: ``i1`` raised to the power of ``i2``. Returns an integer of the same type as ``i1``.
+- ``builtin to_nat i1``: Convert a value of type ``Uint32`` to the equivalent value of type ``Nat``.
+- ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` value to the equivalent ``UintX/IntX`` value.
+  Returns ``Some IntX/UintX`` if the conversion succeeded, ``None`` otherwise.
 
 Addition, subtraction, multiplication, pow, division and reminder operations
 may raise integer overflow, underflow and division_by_zero errors.
 
 .. note::
 
-  Values related to money, such as the ``_amount`` entry of a message
-  or the ``_balance`` field of a contract, are of type ``Uint128``.
+  Variables related to blockchain money, such as the ``_amount`` entry
+  of a message or the ``_balance`` field of a contract, are of type
+  ``Uint128``.
 
 
 
 Strings
 *******
-As with most languages, ``String`` literals in Scilla are expressed using
-a sequence of characters enclosed in double quotes. Variables can be
-declared by specifying using keyword ``String``. 
 
-The following code snippet declares a global ``String`` constant:
+``String`` literals in Scilla are expressed using a sequence of
+characters enclosed in double quotes. Variables can be declared by
+specifying using keyword ``String``.
+
+The following code snippet declares a variable of type ``String``:
 
 .. code-block:: ocaml
         
     let x = "Hello" 
 
+Scilla supports the following built-in operations on strings:
 
-
-
-The following ``String`` operations are language built-ins.
-
-- ``builtin eq s1 s2`` : Is ``String s1`` equal to ``String s2``.
+- ``builtin eq s1 s2`` : Is ``s1`` equal to ``s2``?
   Returns a ``Bool``.
-- ``builtin concat s1 s2`` : Concatenate ``String s1`` with ``String s2``.
+- ``builtin concat s1 s2`` : Concatenate ``s1`` with ``s2``.
   Returns a ``String``.
-- ``builtin substr s1 i1 i2`` : Extract sub-string of ``String s1`` starting
-  from position ``Uint32 i1`` with length ``Uint32 i2``.
-  Returns a ``String``.
+- ``builtin substr s1 i1 i2`` : Extract the substring of ``s1`` of
+  length ``i2`` starting from position ``i1`` with length. ``i1`` and
+  ``i2`` must be of type ``Uint32``. Character indices in strings
+  start from 0.  Returns a ``String``.
 - ``builtin to_string x1``: Convert ``x1`` to a string literal. Valid types of
   ``x1`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``. Returns a ``String``.
 
 Crypto Built-ins
 ****************
 
-A hash in Scilla is declared using the data type ``ByStr32``. A ``ByStr32``
-represents a hexadecimal Byte String of 32 bytes (64 hexadecimal characters)
-prefixed with ``0x``.
+A hash in Scilla is declared using the data type ``ByStr32``. A
+``ByStr32`` represents a hexadecimal byte string of 32 bytes (64
+hexadecimal characters). A ``ByStr32`` literal is prefixed with
+``0x``.
 
-The following code snippet declares a global ``ByStr32`` constant:
+The following code snippet declares a variable of type ``ByStr32``:
 
 .. code-block:: ocaml
         
     let x = 0x123456789012345678901234567890123456789012345678901234567890abff 
 
-
-
-
-The following operations on hashes are language built-ins. In the description
+Scilla supports the following built-in operations on hashes. In the description
 below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 ``ByStr32``.
 
-- ``builtin eq h1 h2``: Is ``ByStr32 h1`` equal to ``ByStr32 h2``. Returns a ``Bool``.
+- ``builtin eq h1 h2``: Is ``h1`` equal to ``h2``? Returns a ``Bool``.
 
-- ``builtin sha256hash x`` : The SHA256 hash of value of x of type ``Any``. Returns a ``ByStr32``.
+- ``builtin sha256hash x`` : Convert ``x`` of ``Any`` type to its SHA256 hash. Returns a ``ByStr32``.
 
-- ``builtin keccak256hash x``: The Keccak256 hash of a value of x of type ``Any``. Returns a ``ByStr32``.
+- ``builtin keccak256hash x``: Convert ``x`` of ``Any`` type to its Keccak256 hash. Returns a ``ByStr32``.
 
-- ``builtin ripemd160hash x``: The RIPEMD-160 hash of a value of x of type ``Any``. Returns a ``ByStr16``.
+- ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr16``.
 
-- ``builtin to_byStr x'`` : Converts a hash ``x'`` of finite length, say of type ``ByStr32`` to one 
-  of arbitrary length of type ``ByStrX``.
+- ``builtin to_byStr x`` : Convert a hash ``x`` of type ``ByStrX`` (for
+  some known ``X``) to one of arbitrary length of type ``ByStr``.
 
-- ``builtin to_uint256 b`` : Converts a hash ``b`` of type ``ByStrX``
-  for any ``X`` less than or equal to 32, to ``Uint256``.
+- ``builtin to_uint256 x`` : Convert a hash ``x`` to the equivalent
+  value of type ``Uint256``. ``x`` must be of type ``ByStrX`` for some
+  known ``X`` less than or equal to 32.
 
-- ``builtin schnorr_gen_key_pair`` : Create a key pair of type ``Pair {ByStr32 BySt33}`` that 
-  consist of both private key of type ``ByStr32`` and public key of type ``ByStr33`` respectively.
-
-- ``builtin schnorr_sign privk msg`` : Sign a ``msg`` of type
-  ``ByStr`` with the private key ``privk`` of type ``ByStr32``.
-
-- ``builtin schnorr_verify pubk msg sig`` : Verify a signed signature
-  ``sig`` of type ``ByStr64`` against the ``msg`` of type ``ByStr32``
-  with the public key ``pubk`` of type ``ByStr33``.
-- ``concat x1 x2``: Concatenate ``x1 : ByStrX1`` and ``x2 : ByStrX2`` to result in a ``ByStr(X1+X2)`` value.
+- ``builtin schnorr_verify pubk x sig`` : Verify a signature ``sig``
+  of type ``ByStr64`` against a hash ``x`` of type ``ByStr32`` with the
+  Schnorr public key ``pubk`` of type ``ByStr33``.
+  
+- ``concat x1 x2``: Concatenate the hashes ``x1`` and ``x2``. If
+  ``x1`` has type ``ByStrX`` and ``x2`` has type ``ByStrY``, then the
+  result will have type ``ByStr(X+Y)``.
 
 
 Maps
 ****
-Map values provide key-value store. Keys can have types ``IntX``,
-``UintX``, ``String``, ``ByStr32`` or ``ByStr20``. Values can be of any type.
+.. _Maps:
+
+A value of type ``Map kt vt`` provides a key-value store where ``kt``
+is the type of keys and ``vt`` is the type of values. ``kt`` may be
+any primitive type except ``Message`` and ``Event``. ``vt`` may be any
+type.
+
+Scilla supports the following built-in operations on maps:
 
 - ``put m k v``: Insert a key ``k`` and a value ``v`` into a map
   ``m``. Returns a new map which is a copy of the ``m`` but with ``k``
@@ -447,29 +550,29 @@ Map values provide key-value store. Keys can have types ``IntX``,
   in-place, i.e., without making a copy of ``m``. ``m`` must refer to
   a contract field.  Insertion into nested maps is supported with the
   syntax ``m[k1][k2][...] := v``. If the intermediate key(s) does not
-  exist in ``m``, they are freshly created.
+  exist in the nested maps, they are freshly created.
   
-- ``get m k``: Fetch the value associated with a key ``k`` in the map
-  ``m``. Returns an optional value (see the ``Option`` type below) --
-  if ``k`` has an associated value ``v`` in ``m``, then the result is
-  ``Some v``, otherwise the result is ``None``. The ``get`` function
-  is typically used in library functions.
+- ``get m k``: Fetch the value associated with the key ``k`` in the
+  map ``m``. Returns an optional value (see the ``Option`` type below)
+  -- if ``k`` has an associated value ``v`` in ``m``, then the result
+  is ``Some v``, otherwise the result is ``None``. The ``get``
+  function is typically used in library functions.
   
 - ``v <- m[k]``: Fetch the value associated with a key ``k`` in the
-  map ``m``. ``m`` must refer to a contract field. Returns an optional
-  value (see the ``Option`` type below) -- if ``k`` has an associated
-  value ``v`` in ``m``, then the result is ``Some v``, otherwise the
-  result is ``None``. Fetching from nested maps is supported with the
-  syntax ``v <- m[k1][k2][...]``. If one or more of the intermediate
-  key(s) do not exist in the corresponding map, the result is
-  ``None``.
+  map ``m`` in-place. ``m`` must refer to a contract field. Returns an
+  optional value (see the ``Option`` type below) -- if ``k`` has an
+  associated value ``v`` in ``m``, then the result is ``Some v``,
+  otherwise the result is ``None``. Fetching from nested maps is
+  supported with the syntax ``v <- m[k1][k2][...]``. If one or more of
+  the intermediate key(s) do not exist in the corresponding map, the
+  result is ``None``.
 
 - ``contains m k``: Is the key ``k`` associated with a value in the map
-  ``m``.  Returns a ``Bool``. The ``contains`` function is typically
+  ``m``?  Returns a ``Bool``. The ``contains`` function is typically
   used in library functions.
 
 - ``b <- exists m[k]``: Is the key ``k`` associated with a value in the
-  map ``m``. ``m`` must refer to a contract field. Returns a
+  map ``m`` (in-place)? ``m`` must refer to a contract field. Returns a
   ``Bool``. Existence checks through nested maps is supported with the
   syntax ``v <- exists m[k1][k2][...]``. If one or more of the
   intermediate key(s) do not exist in the corresponding map, the
@@ -492,34 +595,38 @@ Map values provide key-value store. Keys can have types ``IntX``,
   removed. The key-value bindings of ``k`` to ``kn-1`` will still
   exist.
 
-- ``to_list m``: Convert a map ``m`` to a ``List (Pair ('A) ('B))``
-  where ``'A`` and ``'B`` are key and value types, respectively (see
-  the ``List`` type below).
+- ``to_list m``: Convert a map ``m`` to a ``List (Pair kt vt)`` where
+  ``kt`` and ``vt`` are key and value types, respectively (see the
+  ``List`` type below).
 
 
 Addresses
 *********
 
-Addresses are declared using the data type  ``ByStr20`` data type. ``ByStr20``
-literals begin with ``0x``, and contain 20 bytes (40 hexadecimal characters).
+An address in Scilla is declared using the data type
+``ByStr20``. ``ByStr20`` represents a hexadecimal byte string of 20
+bytes (40 hexadecimal characters). A ``ByStr20`` literal is prefixed
+with ``0x``.
 
-The following operations on addresses are language built-in.
+Scilla supports the following built-in operations on addresses:
 
-- ``eq a1 a2``: Is ``ByStr20`` equal to ``ByStr20``.
-  Returns ``Bool``.
+- ``eq a1 a2``: Is ``a1`` equal to ``a2``? Returns a ``Bool``.
 
 Block Numbers
 *************
-Block numbers have a dedicated type in Scilla. Variables of this type
-are specified with the keyword ``BNum`` followed by an integer value
-(for example ``BNum 101``).
 
-The following ``BNum`` operations are language built-in.
+Block numbers have a dedicated type ``BNum`` in Scilla. Variables of
+this type are specified with the keyword ``BNum`` followed by an
+integer value (for example ``BNum 101``).
 
-- ``eq b1 b2``: Is ``BNum b1`` equal to ``BNum b2``. Returns a ``Bool``.
-- ``blt b1 b2``: Is ``BNum b1`` less than ``BNum b2``. Returns a ``Bool``.
-- ``badd b1 i1``: Add ``UintX i1`` to ``BNum b1``. Returns a ``BNum``.
-- ``bsub b1 b2``: Subtract ``BNum b2`` from ``BNum b1``. Returns an ``Int256``.
+Scilla supports the following built-in operations on block numbers:
+
+- ``eq b1 b2``: Is ``b1`` equal to ``b2``? Returns a ``Bool``.
+- ``blt b1 b2``: Is ``b1`` less than ``b2``? Returns a ``Bool``.
+- ``badd b1 i1``: Add ``i1`` of type ``UintX`` to ``b1`` of type
+  ``BNum``. Returns a ``BNum``.
+- ``bsub b1 b2``: Subtract ``b2`` from ``b1``, both of type
+  ``BNum``. Returns an ``Int256``.
 
 Algebraic Data Types (ADTs)
 ######################################

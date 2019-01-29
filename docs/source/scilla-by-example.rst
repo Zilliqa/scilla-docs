@@ -179,13 +179,13 @@ The Caller is Not the Owner
 """""""""""""""""""""""""""""
 
 In case the caller is different from ``owner``, the transition takes
-the ``False`` branch and the contract issues an event using the
+the ``False`` branch and the contract emits an event using the
 instruction ``event``.
 
 An event is a signal that gets stored on the blockchain for everyone
-to see. If a users using a client application to access the blockchain
-in order to invoke a transition on a contract, the client application
-can listen for events that the contract may issue, and alert the user.
+to see. If a user uses a client application to invoke a transition on
+a contract, the client application can listen for events that the
+contract may emit, and alert the user.
 
 More concretely, the output event in this case is:
 
@@ -201,9 +201,10 @@ as the ``code`` field in the example above.
 .. note::
 
    In our example we have chosen to name the event after the
-   transition that issues the event, but any name can be
+   transition that emits the event, but any name can be
    chosen. However, it is recommended that you name the events in a
-   way that makes it easy to see which part of the code issued the event.
+   way that makes it easy to see which part of the code emitted the
+   event.
 
 
 
