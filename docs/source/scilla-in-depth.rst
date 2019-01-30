@@ -535,8 +535,8 @@ Maps
 
 A value of type ``Map kt vt`` provides a key-value store where ``kt``
 is the type of keys and ``vt`` is the type of values. ``kt`` may be
-any primitive type except ``Message`` and ``Event``. ``vt`` may be any
-type.
+any one of ``String``, ``IntX``, ``UintX``, ``ByStrX`` or
+``ByStr``. ``vt`` may be any type except a function type.
 
 Scilla supports the following built-in operations on maps:
 
@@ -546,11 +546,12 @@ Scilla supports the following built-in operations on maps:
   function is typically used in library functions. Note that ``put``
   makes a copy of ``m`` before inserting the key-value pair.
 
-- ``m[k] := v``: Insert a key ``k`` and a value ``v`` into a map ``m``
-  in-place, i.e., without making a copy of ``m``. ``m`` must refer to
-  a contract field.  Insertion into nested maps is supported with the
+- ``m[k] := v``: *In-place* insert operation, i.e., identical to
+  ``put``, but without making a copy of ``m``. ``m`` must refer to a
+  contract field.  Insertion into nested maps is supported with the
   syntax ``m[k1][k2][...] := v``. If the intermediate key(s) does not
-  exist in the nested maps, they are freshly created.
+  exist in the nested maps, they are freshly created along with the
+  map values they are associated with.
   
 - ``get m k``: Fetch the value associated with the key ``k`` in the
   map ``m``. Returns an optional value (see the ``Option`` type below)
@@ -558,21 +559,21 @@ Scilla supports the following built-in operations on maps:
   is ``Some v``, otherwise the result is ``None``. The ``get``
   function is typically used in library functions.
   
-- ``v <- m[k]``: Fetch the value associated with a key ``k`` in the
-  map ``m`` in-place. ``m`` must refer to a contract field. Returns an
-  optional value (see the ``Option`` type below) -- if ``k`` has an
-  associated value ``v`` in ``m``, then the result is ``Some v``,
-  otherwise the result is ``None``. Fetching from nested maps is
-  supported with the syntax ``v <- m[k1][k2][...]``. If one or more of
-  the intermediate key(s) do not exist in the corresponding map, the
-  result is ``None``.
+- ``v <- m[k]``: *In-place* fetch operation, i.e, identical to
+  ``get``. ``m`` must refer to a contract field. Returns an optional
+  value (see the ``Option`` type below) -- if ``k`` has an associated
+  value ``v`` in ``m``, then the result is ``Some v``, otherwise the
+  result is ``None``. Fetching from nested maps is supported with the
+  syntax ``v <- m[k1][k2][...]``. If one or more of the intermediate
+  key(s) do not exist in the corresponding map, the result is
+  ``None``.
 
 - ``contains m k``: Is the key ``k`` associated with a value in the map
   ``m``?  Returns a ``Bool``. The ``contains`` function is typically
   used in library functions.
 
-- ``b <- exists m[k]``: Is the key ``k`` associated with a value in the
-  map ``m`` (in-place)? ``m`` must refer to a contract field. Returns a
+- ``b <- exists m[k]``: *In-place* existence check, i.e., identical to
+  ``contains``. ``m`` must refer to a contract field. Returns a
   ``Bool``. Existence checks through nested maps is supported with the
   syntax ``v <- exists m[k1][k2][...]``. If one or more of the
   intermediate key(s) do not exist in the corresponding map, the
@@ -585,15 +586,14 @@ Scilla supports the following built-in operations on maps:
   functions. Note that ``remove`` makes a copy of ``m`` before
   removing the key-value pair.
 
-- ``delete m[k]``: Remove a key ``k`` and its associated value from
-  the map ``m`` in-place, i.e., without making a copy of ``m``. ``m``
-  must refer to a contract field. Removal from nested maps is
-  supported with the syntax ``delete m[k1][k2][...]``. If any of the
-  specified keys do not exist in the corresponding map, no action is
-  taken. Note that in the case of a nested removal ``delete
-  m[k1][...][kn-1][kn]``, only the key-value association of ``kn`` is
-  removed. The key-value bindings of ``k`` to ``kn-1`` will still
-  exist.
+- ``delete m[k]``: *In-place* remove operation, i.e., identical to
+  ``remove``, but without making a copy of ``m``. ``m`` must refer to
+  a contract field. Removal from nested maps is supported with the
+  syntax ``delete m[k1][k2][...]``. If any of the specified keys do
+  not exist in the corresponding map, no action is taken. Note that in
+  the case of a nested removal ``delete m[k1][...][kn-1][kn]``, only
+  the key-value association of ``kn`` is removed. The key-value
+  bindings of ``k`` to ``kn-1`` will still exist.
 
 - ``to_list m``: Convert a map ``m`` to a ``List (Pair kt vt)`` where
   ``kt`` and ``vt`` are key and value types, respectively (see the
@@ -628,27 +628,26 @@ Scilla supports the following built-in operations on block numbers:
 - ``bsub b1 b2``: Subtract ``b2`` from ``b1``, both of type
   ``BNum``. Returns an ``Int256``.
 
-Algebraic Data Types (ADTs)
+Algebraic Datatypes
 ######################################
 .. _ADTs:
 
-`Algebraic data types` are composite types, used commonly in
+An `algebraic datatype` (ADT) is a composite type used commonly in
 functional programming. Each ADT is defined as a set of
 **constructors**. Each constructor takes a set of arguments of certain
 types.
 
 Scilla is equipped with a number of built-in ADTs, which are described
-below. Additionally, Scilla allows the user to define her own, user-defined
-ADTs.
+below. Additionally, Scilla allows users to define their own ADTs.
 
 
 Boolean
 *******
 
-Boolean values are specified using the keyword ``Bool``. ``Bool`` ADT
-has two constructors: ``True`` and ``False`` that do not take any
-argument. Thus the following code fragment constructs a ``Bool`` ADT
-value that represents ``True``:
+Boolean values are specified using the type ``Bool``. The ``Bool`` ADT
+has two constructors ``True`` and ``False``, neither of which take any
+arguments. Thus the following code fragment constructs a value of type
+``Bool`` by using the constructor ``True``:
 
 .. code-block:: ocaml
 
@@ -657,73 +656,77 @@ value that represents ``True``:
 
 Option
 *******
-Similar to ``Option`` in OCaml, the ``Option`` ADT in Scilla provides means to
-represent the presence of a value ``x`` or the absence of any value. ``Option``
-has two constructors ``None`` and ``Some``.
 
-   + ``Some`` represents the presence of a value. ``Some {`A} x`` constructs an
-     ADT value that represents the presence of a value ``x`` of type ``'A``. The
-     following code fragment constructs an ``Option`` value using the ``Some``
-     constructor with an argument of type ``Int32``:
+Optional values are specified using the type ``Option t``, where ``t``
+is some type. The ``Option`` ADT has two constructors:
 
-    .. code-block:: ocaml
+   + ``Some`` represents the presence of a value. The ``Some``
+     constructor takes one argument (the value, of type ``t``).
 
-        let x = 
-          let ten = Int32 10 in
-          Some {Int32} ten
+   + ``None`` represents the absence of a value. The ``None``
+     constructor takes no arguments.
+
+The following code snippet constructs two optional values. The first
+value is an absent string value, constructed using ``None``. The
+second value is the ``Int32`` value 10, which, because the value is
+present, is constructed using ``Some``:
+
+
+.. code-block:: ocaml
+
+   let none_value = None {String}
+   
+   let some_value = 
+     let ten = Int32 10 in
+     Some {Int32} ten
       
+Optional values are useful for initialising fields where the value is
+not yet known:
 
-   + ``None`` represents the absence of a value. ``None {`A}``
-     constructs an ADT value that represents the absence of any value
-     of type ``'A``. The following code fragment constructs an
-     ``Option`` value using the ``None`` constructor with an argument of
-     type ``ByStr20``:
+.. code-block:: ocaml
 
-  
-    .. code-block:: ocaml
-
-        x = None {ByStr20}
-
-    Optional values are useful for initialising fields where the value is not yet known:
-
-    .. code-block:: ocaml
-
-        field empty_bool : Option Bool : None {Bool}
+   field empty_bool : Option Bool = None {Bool}
     
-    Optional values are also useful for functions that might not have a
-    result:
+Optional values are also useful for functions that might not have a
+result, such as the ``get`` function for maps:
 
-    .. code-block:: ocaml
+.. code-block:: ocaml
 
-        getValue = builtin get m _sender;
-        match getValue with
-        | Some v =>
-          (* _sender was associated with v in m *)
-          v = v + v;
-          statements...
-        | None =>
-          (* _sender was not associated with a value in m *)
-          statements...
-        end
+   getValue = builtin get m _sender;
+   match getValue with
+   | Some v =>
+     (* _sender was associated with v in m *)
+     v = v + v;
+     ...
+   | None =>
+     (* _sender was not associated with a value in m *)
+     ...
+   end
 
        
 List
 ****
 
-The ``List`` ADT, similar to list types in functional languages,
-provides a structure to contain a list of values of the same type.
-``List`` has two constructors:
+Lists of values are specified using the type ``List t``, where ``t``
+is some type. The ``List`` ADT has two constructors:
 
-   + ``Nil {'A}`` creates an empty list of entries of type ``'A``.
+   + ``Nil`` represents an empty list. The ``Nil`` constructor takes
+     no arguments.
 
-   + ``Cons {'A} h t`` adds an element ``h`` to the front of an
-     existing list ``t``. The type of ``h`` must be ``'A``, and so
-     must the type of the elements of ``t``.
+   + ``Cons`` represents a non-empty list. The ``Cons`` constructor
+     takes two arguments: The first element of the list (of type
+     ``t``), and another list (of type ``List t``) representing the
+     rest of the list.
 
-The following example demonstrates building a list of ``Int32``
-values.  To do this, we start with an empty list ``Nil {Int32}``.  The
-rest of the list is built by adding elements to the beginning of the
-list.  The final list built in this example is ``[11; 10; 2; 1]``.
+All elements in a list must be of the same type ``t``. In other
+words, two values of different types cannot be added to the same list.
+     
+The following example shows how to build a list of ``Int32``
+values. First we create an empty list using the ``Nil``
+constructor. We then add four other values one by one using the
+``Cons`` constructor. Notice how the list is constructed backwards by
+adding the last element, then the second-to-last element, and so on,
+so that the final list is ``[11; 10; 2; 1]``:
 
 .. code-block:: ocaml
 
@@ -738,26 +741,28 @@ list.  The final list built in this example is ``[11; 10; 2; 1]``.
   let l3 = Cons {Int32} ten l2 in
     Cons {Int32} eleven l3
 
-
-Scilla provides two structural recursion primitives for lists, which can be used to traverse all the elements of any list:
+Scilla provides two structural recursion primitives for lists, which
+can be used to traverse all the elements of any list:
 
 - ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  Recursively process the elements in a list from front to
-  back. ``list_foldl`` takes three arguments, which all depend on the
-  two type variables ``'A`` and ``'B``:
+  Recursively process the elements in a list from front to back, while
+  keeping track of an *accumulator* (which can be though of as a
+  running total). ``list_foldl`` takes three arguments, which all
+  depend on the two type variables ``'A`` and ``'B``:
 
   - The function processing the elements. This function takes two
     arguments. The first argument is the current value of the
-    accumulator (of type ``'B``). The second argument is the list
-    element being processed (of type ``'A``). The result of the
+    accumulator (of type ``'B``). The second argument is the next list
+    element to be processed (of type ``'A``). The result of the
     function is the next value of the accumulator (of type ``'B``).
 
   - The initial value of the accumulator (of type ``'B``).
 
   - The list of elements to be processed (of type ``(List 'A)``).
 
-  The result of applying ``list_foldl`` is the final value of the
-  accumulator (of type ``'B``).
+  The result of applying ``list_foldl`` is the value of the
+  accumulator (of type ``'B``) when all list elements have been
+  processed.
 
 - ``list_foldr: ('A -> 'B -> 'B) -> 'B -> (List 'A) -> 'B`` : Similar
   to ``list_foldl``, except the list elements are processed from back
@@ -771,9 +776,9 @@ Scilla provides two structural recursion primitives for lists, which can be used
    inside a bigger type (such as the type of ``list_foldl``), the ADT
    and its arguments must be grouped using parentheses ``( )``. This
    is the case even when the ADT occurs as the only argument to
-   another ADT. For instance, when constructing a list of optional
-   values of type ``Int32``, one must instantiate the list type using
-   the syntax ``List {(Option Int32)}``.
+   another ADT. For instance, when constructing an empty list of
+   optional values of type ``Int32``, one must instantiate the list
+   type using the syntax ``Nil {(Option Int32)}``.
 
 
 To further illustrate the ``List`` type in Scilla, we show a small
@@ -784,32 +789,49 @@ list.
   :linenos:
 
   let list_length =
-    tfun 'A =>
-    fun (l : List 'A) =>
-      let folder = @list_foldl 'A Int32 in
-      let init = Int32 0 in
-      let iter =
-        fun (h : 'A) =>
-        fun (z : Int32) =>
-          let one = Int32 1 in
-            builtin add one z
-       in
-         folder iter init l
+     tfun 'A =>
+     fun (l : List 'A) =>
+     let folder = @list_foldl 'A Uint32 in
+     let init = Uint32 0 in
+     let iter =
+       fun (z : Uint32) =>
+       fun (h : 'A) =>
+         let one = Uint32 1 in
+         builtin add one z
+     in
+       folder iter init l
 
-``list_length`` defines a function that takes one argument ``l`` of
-type ``List 'A``, where ``'A`` is a type variable that can be
-instantiate to any type by the code that uses ``list_length``. The
-type varible is specified in line 2. We instantiate ``list_foldl`` in
-line 4 for a list of type ``'A`` with the accumulator type being
-``Int32``.  0 is used for the initial value of the accumulator, and to
-match the accumulator type we must use the literal ``Int32 0``. The
-processing function ``iter`` increments the accumulator as it is
-invoked by ``folder`` for each element of the list ``l``. The final
-value of the accumulator will be the number of increments or in other
-words, the number of elements in the list.
+``list_length`` defines a function that takes a type argument ``'A``,
+and a normal (value) argument ``l`` of type ``List 'A``.
+
+``'A`` is a *type variable* which must be instantiated by the code
+that intends to use ``list_length``. The type varible is specified in
+line 2.
+
+In line 4 we instantiate the types for ``list_foldl``. Since we are
+traversing a list of values of type ``'A``, we pass ``'A`` as the
+first type argument to ``list_foldl``, and since we are calculating
+the length of the list (a non-negative integer), we pass ``Uint32`` as
+the accumulator type.
+
+In line 5 we define the initial value of the accumulator. Since an
+empty list has length 0, the initial value of the accumulator is 0 (of
+type ``Uint32``, to match the accumulator type).
+
+In lines 6-10 we specify the processing function ``iter``, which takes
+the current accumulator value ``z`` and the current list element
+``h``. In this case the processing function ignores the list element,
+and increments the accumulator by 1. When all elements in the list
+have been processed, the accumulator will have been incremented as
+many times as there are elements in the list, and hence the final
+value of the accumulator will be equal to the length of the list.
+
+In line 12 we apply the type-instantiated version of ``list_foldl``
+from line 4 to the processing function, the initial accumulator, and
+the list of values.
 
 Common utilities for the ``List`` type (including ``list_length``) are
-provided in the ``ListUtils`` library, as part of the standard library
+provided in the ``ListUtils`` library as part of the standard library
 distribution for Scilla.
 
 
@@ -818,12 +840,12 @@ Pair
 ****
 .. _Pairs:
 
-The ``Pair`` ADT is used to group a pair of values of possibly
-different types. Values of type ``Pair`` are constructed using the
-constructor using the constructor ``Pair {'A 'B} a b`` where ``'A``
-and ``'B`` are type variables that can be instantiated to any type,
-and ``a`` and ``b`` are variables of type ``'A`` and ``'B``
-respectively.
+Pairs of values are specified using the type ``Pair t1 t2``, where
+``t1`` and ``t2`` are types. The ``Pair`` ADT has one constructor:
+
+   + ``Pair`` represents a pair of values. The ``Pair`` constructor
+     takes two arguments, namely the two values of the pair, of types
+     ``t1`` and ``t2``, respectively.
 
 .. note::
 
@@ -831,33 +853,24 @@ respectively.
    of that type. An ADT and a constructor typically only share their
    names when the constructor is the only constructor of the ADT.
    
+A ``Pair`` value may contain values of different types. In other
+words, ``t1`` and ``t2`` need not be the same type.
 
-Below is an example of how to construct a pair of ``Int32`` values.
-
-.. code-block:: ocaml
-
-  let p = 
-    let one = 1 in
-    let two = 2 in
-    Pair {Int32 Int32} one two
-    ...
-
-Pair can be used to contain a pair of values with different types.
-For example, the following code snippet declares a mutable field
-``pp``, which is initialised to a pair consisting of the value
-"Hello" (of type ``String``) and the value 2 (of type ``Uint32``):
+Below is an example where we declare a field ``pp`` of type ``Pair
+String Uint32``, which we then initialise by constructing a pair
+consisting of a value of type ``String`` and a value of type
+``Uint32``:
 
 .. code-block:: ocaml
 
-  field pp: Pair (String) (Uint32) =
+  field pp: Pair String Uint32 =
                 let s1 = "Hello" in
                 let num = Uint32 2 in
-                Pair {(String) (Uint32)} s1 num
-    ...
+                Pair {String Uint32} s1 num
 
-Note the difference in how we specify the type of a field ``Pair (A')
-(B')`` and the syntax used to apply a constructor to two values using
-the constructor ``Pair { (A') (B') }``.
+Notice the difference in how we specify the type of the field as
+``Pair A' B'``, and how we specify the types of values given to the
+constructor as ``Pair { A' B' }``.
 
 We now illustrate how pattern matching can be used to extract the
 first element from a ``Pair``. The function ``fst`` shown below
@@ -868,15 +881,10 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
   let fst =
     tfun 'A =>
     tfun 'B =>
-    fun (p : Pair 'A 'B) =>
-    match p with
-    | Pair a b => a
-    end
-
-  let p = Pair {Int32 Int32} one two in
-  let fst_int = @fst Int32 Int32 in
-  let a = fst_int p in
-    ... (* a = one *) ...
+    fun (p : Pair ('A) ('B)) =>
+      match p with
+      | Pair a b => a
+      end
 
 .. note::
    
@@ -889,11 +897,19 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
 Nat
 ***
 
-Scilla provides the ADT ``Nat`` to work with Peano numbers. A Peano
-number is constructed using the constructors ``Zero`` and ``Succ
-Nat``. ``Zero`` represens the integer value 0, and ``Succ`` represents
-the successor of another Peano number. The following code shows how to
-build the Peano number corresponding to the integer 3:
+Peano numbers are specified using the type ``Nat``. The ``Nat`` ADT
+has two constructors:
+
+   + ``Zero`` represents the number 0. The ``Zero`` constructor takes
+     no arguments.
+
+   + ``Succ`` represents the successor of another Peano number. The
+     ``Succ`` constructor takes one argument (of type ``Nat``) which
+     represents the Peano number that is one less than the current
+     number.
+
+The following code shows how to build the Peano number corresponding
+to the integer 3:
 
 .. code-block:: ocaml
 
@@ -904,18 +920,28 @@ build the Peano number corresponding to the integer 3:
     Succ two
 
 Scilla provides one structural recursion primitive for Peano numbers,
-which traverses all the Peano numbers from 0 to a given ``Nat``:
+which can be used to traverse all the Peano numbers from a given
+``Nat`` down to ``Zero``:
 
-.. code-block:: ocaml
+- ``nat_fold: ('A -> Nat -> 'A) -> 'A -> Nat -> 'A``: Recursively
+  process the succession of numbers from a ``Nat`` down to ``Zero``,
+  while keeping track of an accumulator. ``nat_fold`` takes three
+  arguments, two of which depend on the type variable ``'A``:
 
-  nat_fold : ('T -> Nat -> 'T) -> 'T -> Nat -> 'T
+  - The function processing the numbers. This function takes two
+    arguments. The first argument is the current value of the
+    accumulator (of type ``'A``). The second argument is the next
+    Peano number to be processed (of type ``Nat``). The result of the
+    function is the next value of the accumulator (of type ``'A``).
 
-Similar in spirit to the ``List`` folds described earlier,
-``nat_fold`` takes a processing function that takes an intermediate
-accumulator (of type ``'T``) and a Peano number (of type ``Nat``), an
-initial accumulator (of type ``'T``), and a Peano number (of type
-``Nat``) to be processed. The result is the final value of the
-accumulator.
+  - The initial value of the accumulator (of type ``'A``).
+
+  - The first Peano number to be processed (of type ``Nat``).
+
+  The result of applying ``nat_fold`` is the value of the accumulator
+  (of type ``'A``) when all Peano numbers down to ``Zero`` have been
+  processed.
+
 
 
 User-defined ADTs
@@ -932,10 +958,13 @@ ADT definitions defined earlier in the same library, or in imported
 libraries. In particular, an ADT definition may not refer to itself in
 an inductive/recursive manner.
 
-Each ADT is defined as a set of **constructors**. Each constructor
-takes a set of arguments of certain types. The set of arguments may be
-empty. The ADTs of a contract must have distinct names, and the set of
-all constructors of all ADTs in a contract must also have distinct
+Each ADT defines a set of constructors. Each constructor specifies a
+number of types which corresponds to the number and types of arguments
+that the constructor takes. A constructor may be specified as taking
+no arguments.
+
+The ADTs of a contract must have distinct names, and the set of all
+constructors of all ADTs in a contract must also have distinct
 names. However, a constructor and an ADT may have the same name, as is
 the case with the ``Pair`` type whose only constructor is also called
 ``Pair``.
@@ -944,9 +973,11 @@ As an example of user-defined ADTs, consider the following type
 declarations from a contract implementing a chess-like game called
 Shogi or Japanese Chess (https://en.wikipedia.org/wiki/Shogi). When in
 turn, a player can choose to either move one of his pieces, place a
-previously captured piece on the board, or resign.
+previously captured piece back onto the board, or resign and award the
+victory to the opponent.
 
-The pieces of the game can be defined using the following type:
+The pieces of the game can be defined using the following type
+``Piece``:
 
 .. code-block:: ocaml
 
@@ -960,9 +991,8 @@ The pieces of the game can be defined using the following type:
    | Rook
    | Bishop
 
-Each type of piece (king, gold general, etc.) is represented as a
-constructor of the type ``Piece``. Neither of the constructors take
-any arguments.
+Each of the constructors represents a type of piece in the games. None
+of the constructors take any arguments.
 
 The board is represented as a set of squares, where each square has
 two coordinates:
@@ -975,7 +1005,8 @@ two coordinates:
 The type ``Square`` is an example of a type where a constructor has
 the same name as the type. This usually happens when a type has only
 one constructor. The constructor ``Square`` takes two arguments, both
-of type ``Uint32``, which are the coordinates of the square on the board.
+of type ``Uint32``, which are the coordinates (the row and the column)
+of the square on the board.
 
 Similar to the definition of the type ``Piece``, we can define the
 type of direction of movement using a constructor for each of the
@@ -1004,20 +1035,31 @@ user may choose to perform when in turn:
    | Resign
 
 If a player chooses to move a piece, she should use the constructor
-``Move``, and provide an argument of type ``Square`` (indicating the
-current position of the piece she wants to move), an argument of type
-``Direction`` (indicating the direction of movement), an argument of
-type ``Uint32`` (indicating the distance the piece should move), and an
-argument of type ``Bool`` (indicating whether the moved piece should be
-promoted after being moved).
+``Move``, and provide four arguments:
 
-If instead the player chooses to place a previously captured piece on
-the board, she should use the constructor ``Place``, and provide an
-argument of type ``Piece`` (indicating which piece to place on the
-board), and an argument of type ``Square`` (indicating the position
-the piece should be placed in).
+- An argument of type ``Square``, indicating the current position of
+  the piece she wants to move.
 
-Finally, if the player chooses to resign and award the game to her
+- An argument of type ``Direction``, indicating the direction of
+  movement.
+
+- An argument of type ``Uint32``, indicating the distance the piece
+  should move.
+
+- An argument of type ``Bool``, indicating whether the moved piece
+  should be promoted after being moved.
+
+If instead the player chooses to place a previously captured piece
+back onto the board, she should use the constructor ``Place``, and
+provide two arguments:
+
+- An argument of type ``Piece``, indicating which piece to place on
+  the board.
+
+- An argument of type ``Square``, indicating the position the piece
+  should be placed in.
+
+Finally, if the player chooses to resign and award the victory to her
 opponent, she should use the constructor ``Resign``. Since ``Resign``
 does not take any arguments, no arguments should be provided.
 
@@ -1027,18 +1069,17 @@ a match expression:
 .. code-block:: ocaml
 
    transition PlayerAction (action : Action)
-   ...
-   match action with
-   | Resign => ...
-   | Place piece square => ...
-   | Move square direction distance promote => ...
+     ...
+     match action with
+     | Resign =>
+       ...
+     | Place piece square =>
+       ...
+     | Move square direction distance promote =>
+       ...
+     end;
+     ...
    end
-
-The typechecker will make sure that only the constructors of the
-``Action`` type can occur in each pattern of the match statement or
-match expression, and the pattern-match checker will ensure that all
-combinations of constructors can be matched by the given patterns.
-
 
 
 More ADT examples
@@ -1049,13 +1090,19 @@ examples and describe them in detail. Both the functions described
 below can be found in the ``ListUtils`` part of the Scilla standard
 library_.
 
-List: Head
-**********
+Computing the Head of a List
+******************************
 
-The code below extracts the first item of a list, and returns it as an
-``Option``. If the list has at least one element ``h``, then ``Some
-h`` is returned. If the list is empty, ``None`` is returned.. The
-given test case takes ``[1; 2; 3]`` as an input and returns ``1``.
+The function ``list_head`` returns the first element of a list.
+
+Since a list may be empty, ``list_head`` may not always be able to
+compute a result, and thus should return a value of the ``Option``
+type. If the list is non-empty, and the first element is ``h``, then
+``list_head`` should return ``Some h``. Otherwise, if the list is
+empty, ``list_head`` should return ``None``.
+
+The following code snippet shows the implementation of ``list_head``,
+and how to apply it:
 
 .. code-block:: ocaml
   :linenos:
@@ -1065,11 +1112,10 @@ given test case takes ``[1; 2; 3]`` as an input and returns ``1``.
     fun (l : List 'A) =>
       match l with
       | Cons h t =>
-        Some h
+        Some {'A} h
       | Nil =>
-        None
+        None {'A}
       end
-  in
 
   let int_head = @list_head Int32 in
 
@@ -1083,32 +1129,46 @@ given test case takes ``[1; 2; 3]`` as an input and returns ``1``.
   let l3 = Cons {Int32} one l2 in
   int_head l3
 
-Line 12 instantiates the ``list_head`` function for ``Int32``. Lines
-14-21 build a list that can be used as input to the ``list_head``
-function, and line 22 invokes the instantiated ``list_head``
-function on the list that was built.
+Line 2 specifies that ``'A`` is a type parameter to the function,
+while line 3 specifies that ``l`` is a (value) parameter of type
+``List 'A``. In other words, lines 1-3 specify a function
+``list_head`` which can be instantiated for any type ``'A``, and which
+takes as an argument a value of type ``List 'A``.
 
-In line 2, ``tfun 'A`` specifies that ``'A`` is a type parameter to
-the function, while ``fun`` in line 3 specifies that ``l`` is a
-parameter of type ``List 'A``. In other words, lines 1-3 specify a
-function ``list_head`` which can be instantiated for any type ``'A``,
-and which takes as argument a variable of type ``List 'A``.
+The pattern-match in lines 4-9 matches on the value of ``l``. In line
+5 we match on the list constructor ``Cons h t``, where ``h`` is the
+first element of the list, and ``t`` is the rest of the list. If the
+list is not empty then the match is successful, and we return the
+first element as an optional value ``Some h``. In line 7 we match on
+the list constructor ``Nil``. If the list is empty then the match is
+successful, and we return the optional value ``None`` indicating that
+there was no head element of the list.
 
-The pattern matching in lines 4-9 matches on the contents of the input
-list. In line 5 we match on the list constructor ``Cons h t``, where
-``h`` is the first element of the list, and ``t`` is the rest of the
-list. If the list is not empty then the match is successful, and we
-return the front element as an optional value ``Some h``. In line 7 we
-match on the list constructor ``Nil``. If the list is empty then the
-match is successful, and we return the optional value ``None``
-indicating that there was no head element of the list.
+Line 11 instantiates the ``list_head`` function for the type
+``Int32``, so that ``list_head`` can be applied to values of type
+``List Int32``. Lines 13-20 build a list of type ``List Int32``, and
+line 21 invokes the instantiated ``list_head`` function on the list
+that was built.
 
-List: Exists
-************
 
-We now describe a function which, given a list and a predicate
-function, returns ``True`` if the predicate holds for at least one
-element of the list, and returns ``False`` otherwise:
+Checking for Existence in a List
+*********************************
+
+The function ``list_exists`` takes a predicate function and a list,
+and returns a value indicating whether the predicate holds for at
+least one element in the list.
+
+A predicate function is a function returning a boolean value, and
+since we want to apply it to elements in the list, the argument type
+of the function should be the same as the element type of the list.
+
+``list_exists`` should return either ``True`` (if the predicate holds
+for at least one element) or ``False`` (if the predicate does not hold
+for any element in the list), so the return type of ``list_exists``
+should be ``Bool``.
+
+The following code snippet shows the implementation of
+``list_exists``, and how to apply it:
 
 .. code-block:: ocaml
   :linenos:
@@ -1138,33 +1198,49 @@ element of the list, and returns ``False`` otherwise:
       let three = Int128 3 in
       builtin lt a three
 
-  ...
-  (* build list l3 similar to previous example *)
+  (* build list l3 similar to the previous example *)
   ...
 
   (* check if l3 has at least one element satisfying f *)
   int_exists f l3
 
 
-Similar to the previous example ``'A`` is a type variable to
-the function. The function takes two arguments:
+As in the previous example ``'A`` is a type variable to the
+function. The function takes two arguments:
 
 - A predicate ``f``, i.e., a function that returns a ``Bool``. In this
   case, ``f`` will be applied to elements of the list, so the argument
-  type of the predicate should be ``'A``.
+  type of the predicate should be ``'A``. Hence, ``f`` should have the
+  type ``'A -> Bool``.
 
-- A list of elements ``l`` of type ``List 'A``.
+- A list of elements ``l`` of type ``List 'A``, so that the type of
+  the elements in the list matches the argument type of ``f``.
 
 To traverse the elements of the input list ``l`` we use
 ``list_foldl``. In line 5 we instantiate ``list_foldl`` for lists with
 elements of type ``'A`` and for the accummulator type ``Bool``. In
 line 6 we set the initial accummulator value to ``False`` to indicate
-that no element satisfying the predicate has yet been seen. The
-processing function ``iter`` defined in lines 7-16 tests the predicate
-on the current list element, and returns an updated accummulator. If
-an element has been found which satisfies the predicate, the
-accummulator is set to ``True`` and remains so for the rest of the
-traversal.
+that no element satisfying the predicate has yet been seen.
+
+The processing function ``iter`` defined in lines 7-16 tests the
+predicate on the current list element, and returns an updated
+accummulator. If an element has been found which satisfies the
+predicate, the accummulator is set to ``True`` and remains so for the
+rest of the traversal.
+
+The final value of the accumulator is either ``True``, indicating that
+``f`` returned ``True`` for at least one element in the list, or
+``False``, indicating that ``f`` returned ``False`` for all elements
+in the list.
+
+In line 20 we instantiate ``list_exists`` to work on lists of type
+``Int128``. In lines 21-24 we define the predicate, which returns
+``True`` if its argument is less than 3, and returns ``False``
+otherwise.
+
+Omitted in line 27 is building the same list ``l3`` as in the previous
+example. In line 30 we apply the instantiated ``list_exists`` to the
+predicate and the list.
 
 
 Standard Libraries
