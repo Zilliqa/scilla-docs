@@ -409,6 +409,13 @@ type ``String``), and may contain other entries as well. The value of
 the ``_eventname`` entry must be a string literal. All events with the
 same name must have the same entry names and types.
 
+.. note::
+
+   A transition may send a message at any point during execution, but
+   the recipient account will not receive the message until after the
+   transition has completed. Similarly, a transition may emit events
+   at any point during execution, but the event will not be visible on
+   the blockchain before the transition has completed.
 
 Primitive Data Types & Operations
 #################################
