@@ -1288,18 +1288,49 @@ Below, we present the functions defined in each of the library.
 BoolUtils
 ************
 
-- ``andb``: Computes the logical AND of two ``Bool`` values.
-- ``orb``: Computes the logical OR of two ``Bool`` values.
-- ``negb``: Computes the logical negation of a ``Bool`` value.
-- ``bool_to_string``: Transforms a ``Bool`` value into a ``String``
+- ``andb : Bool -> Bool -> Bool``: Computes the logical AND of two ``Bool`` values.
+  
+- ``orb  : Bool -> Bool -> Bool``: Computes the logical OR of two ``Bool`` values.
+  
+- ``negb : Bool -> Bool``: Computes the logical negation of a ``Bool`` value.
+  
+- ``bool_to_string : Bool -> String``: Transforms a ``Bool`` value into a ``String``
   value. ``True`` is transformed into ``"True"``, and ``False`` is
   transformed into ``"False"``.
 
-PairUtils
+IntUtils
 ************
 
-- ``fst``: Extract the first element of a Pair.
-- ``snd``: Extract the second element of a Pair.
+- ``intX_eq : IntX -> IntX -> Bool``: Equality operator specialised
+  for each ``IntX`` type.
+- ``uintX_eq : UintX -> UintX -> Bool``: Equality operator specialised
+  for each ``UintX`` type.
+
+- ``intX_lt : IntX -> IntX -> Bool``: Less-than operator specialised
+  for each ``IntX`` type.
+- ``uintX_lt : UintX -> UintX -> Bool``: Less-than operator specialised
+  for each ``UintX`` type.
+
+- ``intX_neq : IntX -> IntX -> Bool``: Not-equal operator specialised
+  for each ``IntX`` type.
+- ``uintX_neq : UintX -> UintX -> Bool``: Not-equal operator specialised
+  for each ``UintX`` type.
+
+- ``intX_le : IntX -> IntX -> Bool``: Less-than-or-equal operator specialised
+  for each ``IntX`` type.
+- ``uintX_le : UintX -> UintX -> Bool``: Less-than-or-equal operator specialised
+  for each ``UintX`` type.
+
+- ``intX_gt : IntX -> IntX -> Bool``: Greater-than operator specialised
+  for each ``IntX`` type.
+- ``uintX_gt : UintX -> UintX -> Bool``: Greater-than operator specialised
+  for each ``UintX`` type.
+
+- ``intX_ge : IntX -> IntX -> Bool``: Greater-than-or-equal operator specialised
+  for each ``IntX`` type.
+- ``uintX_ge : UintX -> UintX -> Bool``: Greater-than-or-equal operator specialised
+  for each ``UintX`` type.
+
 
 ListUtils
 ************
@@ -1504,7 +1535,42 @@ ListUtils
     ``list_nth`` returns ``Some x``. If the list has fewer than ``n``
     elements, or if ``n`` is negative, ``list_nth`` returns ``None``.
 
+NatUtils
+************
 
+- ``nat_prev : Nat -> Option Nat``: Return the Peano number one less
+  than the current one. If the current number is ``Zero``, the result
+  is ``None``. If the current number is ``Succ x``, then the result is
+  ``Some x``.
+
+- ``is_some_zero : Nat -> Bool``: Zero check for Peano numbers.
+
+- ``nat_eq : Nat -> Nat -> Bool``: Equality check specialised for the
+  ``Nat`` type.
+
+- ``nat_to_int : Nat -> Uint32``: Convert a Peano number to its
+  equivalent ``Uint32`` integer.
+
+- ``uintX_to_nat : UintX -> Nat``: Convert a ``UintX`` integer to its
+  equivalent Peano number. The integer must be small enough to fit
+  into a ``Uint32``. If it is not, then an overflow error will occur.
+
+- ``intX_to_nat : IntX -> Nat``: Convert an ``IntX`` integer to its
+  equivalent Peano number. The integer must be non-negative, and must
+  be small enough to fit into a ``Uint32``. If it is not, then an
+  underflow or overflow error will occur.
+
+  
+PairUtils
+************
+
+- ``fst : Pair 'A 'B -> 'A``: Extract the first element of a Pair.
+- ``snd : Pair 'A 'B -> 'B``: Extract the second element of a Pair.
+
+
+
+
+  
 Scilla versions
 ###############
 .. _versions:
