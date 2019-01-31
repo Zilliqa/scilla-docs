@@ -1247,11 +1247,34 @@ Standard Libraries
 #####################
 .. _library:
 
-Scilla comes with four standard library contracts ``BoolUtils.scilla``, ``ListUtils.scilla``, ``NatUtils.scilla`` 
-and ``PairUtils.scilla``. As the name suggests these contracts respecively implement operations on ``Bool``, ``List``, 
-``Nat`` and ``Pair`` data types. In order to use the functions defined in these contracts, an ``import`` utility is provided. 
-So, if one wants to use all the operations defined on ``List``, one has to add ``import ListUtils`` just before the declaration 
-of any contract-specific library, or add ``import ListUtils PairUtils`` if one wants to use operations in both libraries.
+The Scilla standard library contains five libraries:
+``BoolUtils.scilla``, ``IntUtils.scilla``, ``ListUtils.scilla``,
+``NatUtils.scilla`` and ``PairUtils.scilla``. As the names suggests
+these contracts implement utility operations for the ``Bool``,
+``IntX``, ``List``, ``Nat`` and ``Pair`` types, respectively.
+
+To use functions from the standard library in a contract, the relevant
+library file must be imported using the ``import`` declaration. The
+following code snippet shows how to import the functions from the
+``ListUtils`` and ``IntUtils`` libraries:
+
+.. code-block:: ocaml
+
+   import ListUtils IntUtils
+
+The ``import`` declaration must occur immediately before the
+contract's own library declaration, e.g.:
+
+.. code-block:: ocaml
+
+   import ListUtils IntUtils
+
+   library WalletLib
+   ... (* The declarations of the contract's own library values and functions *)
+
+   contract Wallet ( ... )
+   ... (* The transitions of the contract *)
+
 
 Below, we present the functions defined in each of the library.
 
@@ -1261,6 +1284,9 @@ BoolUtils
 - ``andb``: Computes the logical AND of two ``Bool`` values.
 - ``orb``: Computes the logical OR of two ``Bool`` values.
 - ``negb``: Computes the logical negation of a ``Bool`` value.
+- ``bool_to_string``: Transforms a ``Bool`` value into a ``String``
+  value. ``True`` is transformed into ``"True"``, and ``False`` is
+  transformed into ``"False"``.
 
 PairUtils
 ************
@@ -1273,25 +1299,29 @@ ListUtils
 
 - ``list_map : ('A -> 'B) -> List 'A -> : List 'B``. 
     
-  | Apply ``f : 'A -> 'B`` to every element of ``l : List 'A``.
+  | Apply ``f : 'A -> 'B`` to every element of ``l : List 'A``,
+    constructing a list (of type ``List 'B``) of the results.
 
   .. code-block:: ocaml
 
-      (*Library *)
+      (* Library *)
       let f =
         fun (a : Int32) =>
           builtin sha256hash a
       
-      (*Contract transition*)
-      (*Assume l as a list [1 -> 2 -> 3 -> NIL]*)
-      transition
-         hash_list_int32 = @list_map Int32 ByStr32;
-         hashed_list = hash_list_int32 f l;
-      end
+      (* Contract transition *)
+      (* Assume input is the list [ 1 ; 2 ; 3 ] *)
+      (* Apply f to all values in input *)
+      hash_list_int32 = @list_map Int32 ByStr32;
+      hashed_list = hash_list_int32 f input;
+      (* hashed_list is now [ sha256hash 1 ; sha256hash 2 ; sha256hash 3 ] *)
 
 - ``list_filter : ('A -> Bool) -> List 'A -> List 'A``.
 
-  | Preserving the order of elements in ``l : List 'A``, return new list containing only those elements that satisfy the predicate ``f : 'A -> Bool``. Linear complexity.
+  | Filter out elements on the list based on the predicate
+    ``f : 'A -> Bool``. If an element satisfies ``f``, it will be in the
+    resultant list, otherwise it is removed. The order of the elements is
+    preserved.
 
   .. code-block:: ocaml
 
@@ -1301,78 +1331,103 @@ ListUtils
         let ten = Int32 10 in
         builtin lt a ten
 
-    (*Contract transition*)
-    (*Assume l as a list [1 -> 2 -> 3 -> 11 -> NIL]*)
-    transition
-      less_ten_int32 = @list_filter Int32;
-      less_ten_list = less_ten_int32 f l
-      (*Returns a list [1 -> 2 -> 3 -> NIL]*)
-    end
+    (* Contract transition *)
+    (* Assume input is the list [ 1 ; 42 ; 2 ; 11 ; 12 ] *)
+    less_ten_int32 = @list_filter Int32;
+    less_ten_list = less_ten_int32 f l
+    (* less_ten_list is now  [ 1 ; 2 ]*)
 
 - ``list_head : (List 'A) -> (Option 'A)``.
 
-  | Return the head element of a list ``l : List 'A`` as ``Some 'A``, ``None`` if ``l`` is ``Nil`` (the empty list).
+  | Return the head element of a list ``l : List 'A`` as an optional
+    value. If ``l`` is not empty with the first element ``h``, the
+    result is ``Some h``. If ``l`` is empty, then the result is
+    ``None``.
 
 - ``list_tail : (List 'A) -> (Option List 'A)``.
 
-  | For input list ``l : List 'A``, returns ``Some l'``, where ``l'`` is ``l`` except for it's head; returns ``Some Nil`` if ``l`` has only one element; returns ``None`` if ``l`` is empty.
+  | Return the tail of a list ``l : List 'A`` as an optional value. If
+    ``l`` is a non-empty list of the form ``Cons h t``, then the
+    result is ``Some t``. If ``l`` is empty, then the result is
+    ``None``.
 
 - ``list_append : (List 'A -> List 'A ->  List 'A)``.
 
-  | Append the second list to the first one and return a new List. Linear complexity (on first list).
+  | Append the first list to the front of the second list, keeping the
+    order of the elements in both lists. Note that ``list_append`` has
+    linear time complexity in the length of the first argument list.
 
 - ``list_reverse : (List 'A -> List 'A)``.
 
-  | Return the reverse of the input list. Linear complexity.
+  | Return the reverse of the input list. Note that ``list_reverse``
+    has linear time complexity in the length of the argument list.
 
 - ``list_flatten : (List List 'A) -> List 'A``.
 
-  | Concatenate a list of lists. Each element (``List 'A``) of the input (``List List 'A``) are all concatenated together (in the same order) to give the result. linear complexity over the total number of elements in all of the lists.
+  | Construct a list of all the elements in a list of lists. Each
+    element (which has type ``List 'A``) of the input list (which has
+    type ``List List 'A``) are all concatenated together, keeping the
+    order of the input list. Note that ``list_flatten`` has linear
+    time complexity in the total number of elements in all of the
+    lists.
 
 - ``list_length : List 'A -> Int32``
 
-  | Number of elements in list. Linear complexity.
+  | Count the number of elements in a list. Note that ``list_length``
+    has linear time complexity in the number of elements in the list.
 
 - ``list_eq : ('A -> 'A -> Bool) -> List 'A -> List 'A -> Bool``.
 
-  | Takes a function ``f : 'A -> 'A -> Bool`` to compare elements of lists ``l1 : List 'A`` and ``l2 : List 'A`` and returns True if all elements of the lists compare equal. Linear complexity.
+  | Compare two lists element by element, using a predicate function
+    ``f : 'A -> 'A -> Bool``. If ``f`` returns ``True`` for every pair
+    of elements, then ``list_eq`` returns ``True``. If ``f`` returns
+    ``False`` for at least one pair of elements, or if the lists have
+    different lengths, then ``list_eq`` returns ``False``.
 
 - ``list_mem : ('A -> 'A -> Bool) -> 'A -> List 'A -> Bool``.
 
-  | Checks whether an element ``a : 'A`` is in the list ``l : List'A`. `f : 'A -> 'A -> Bool`` should be provided for equality comparison. Linear complexity.
+  | Checks whether an element ``a : 'A`` is an element in the list
+    ``l : List'A``. ``f : 'A -> 'A -> Bool`` should be provided for
+    equality comparison.
  
   .. code-block:: ocaml
 
-    (*Library*)
+    (* Library *)
     let f =
       fun (a : Int32) =>
       fun (b : Int32) =>
         builtin eq a b
 
-    (*transition*)
-    transition search (keynumber : Int32)
-
-      (*Assume l is a list of Int32, say [1 -> 2 -> 3 -> 4 -> NIL]*)
-      list_mem_int32 = @list_mem Int32;
-      check_result = list_mem_int32 f keynumber l (*Return Bool*)
-      
-    end
+    (* Contract transition *)
+    (* Assume input is the list [ 1 ; 2 ; 3 ; 4 ] *)
+    keynumber = Int32 5;
+    list_mem_int32 = @list_mem Int32;
+    check_result = list_mem_int32 f keynumber input;
+    (* check_result is now False *)
 
 - ``list_forall : ('A -> Bool) -> List 'A -> Bool``.
 
-  | Return True if all elements of list ``l : List 'A`` satisfy predicate ``f : 'A -> Bool``. Linear complexity.
+  | Check whether all elements of list ``l : List 'A`` satisfy the
+    predicate ``f : 'A -> Bool``. ``list_forall`` returns ``True`` if
+    all elements satisfy ``f``, and ``False`` if at least one element
+    does not satisfy ``f``.
 
 - ``list_exists : ('A -> Bool) -> List 'A -> Bool``.
 
-  | Return True if at least one element of list ``l : List 'A`` satisfies predicate ``f : 'A -> Bool``.  Linear complexity.
+  | Check whether at least one element of list ``l : List 'A``
+    satisfies the predicate ``f : 'A -> Bool``. ``list_exists``
+    returns ``True`` if at least one element satisfies ``f``, and
+    ``False`` if none of the elements satisfy ``f``.
 
 - ``list_sort : ('A -> 'A -> Bool) -> List 'A -> List 'A``.
 
-  | Stable sort the input list ``l : List 'A``. Function ``flt : 'A -> 'A -> Bool`` provided must return True if its first argument is lesser-than its second argument. Linear complexity.
+  | Sort the input list ``l : List 'A`` using insertion sort. The
+    comparison function ``flt : 'A -> 'A -> Bool`` provided must
+    return ``True`` if its first argument is less than its second
+    argument. ``list_sort`` has quadratic time complexity.
 
   .. code-block:: ocaml
 
-    (*Library*)
     let int_sort = @list_sort Uint64 in
 
     let flt =
@@ -1386,8 +1441,8 @@ ListUtils
     let three = Uint64 3 in
     let four = Uint64 4 in
 
-    (* l6 = 2 4 3 2 1 2 3 *)
-      let l6 =
+    (* l6 = [ 3 ; 2 ; 1 ; 2 ; 3 ; 4 ; 2 ] *)
+    let l6 =
       let nil = Nil {Uint64} in
       let l0 = Cons {Uint64} two nil in
       let l1 = Cons {Uint64} four l0 in
@@ -1397,48 +1452,50 @@ ListUtils
       let l5 = Cons {Uint64} two l4 in
       Cons {Uint64} three l5
 
-    (*transition*)
-    transition sortList ()
+    (* res1 = [ 1 ; 2 ; 2 ; 2 ; 3 ; 3 ; 4 ] *)
+    let res1 = int_sort flt l6
 
-      (* res1 = 1 2 2 2 3 3 4 *)
-      res1 = int_sort flt l6
+- ``list_find : ('A -> Bool) -> List 'A -> Option 'A``.
 
-    end
-
-- ``list_find : ('A -> Bool) -> 'A -> 'A``.
-
-  | Return ``Some a``, where ``a`` is the first element of ``l : List 'A`` that satisfies the predicate ``f : 'A -> Bool``. Returns ``None`` if none of the elements in ``l`` satisfy ``f``. Linear complexity.
+  | Return the first element in a list ``l : List 'A`` satisfying the
+    predicate ``f : 'A -> Bool``. If at least one element in the list
+    satisfies the predicate, and the first one of those elements is
+    ``x``, then the result is ``Some x``. If no element satisfies the
+    predicate, the result is ``None``.
 
 - ``list_zip : List 'A -> List 'B -> List (Pair 'A 'B)``.
 
-  | Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` into a ``Pair`` and return the resulting list. In case of different number of elements in the lists, the extra elements are ignored.
+  | Combine two lists element by element, resulting in a list of
+    pairs. If the lists have different lengths, the trailing elements
+    of the longest list are ignored.
 
-- ``list_zip_with : ('A -> 'B -> 'C) -> List 'A -> List 'B -> List 'C )``. Linear complexity.
+- ``list_zip_with : ('A -> 'B -> 'C) -> List 'A -> List 'B -> List 'C )``.
 
-  | Combine corresponding elements of ``m1 : List 'A`` and ``m2 : List 'B`` using ``f : 'A -> 'B -> 'C`` and return the resulting list of ``'C``. In case of different number of elements in the lists, the extra elements are ignored.
+  | Combine two lists element by element using a combining function
+    ``f : 'A -> 'B -> 'C``. The result of ``list_zip_with`` is a list
+    of the results of applying ``f`` to the elements of the two
+    lists. If the lists have different lengths, the trailing elements
+    of the longest list are ignored.
 
 - ``list_unzip : List (Pair 'A 'B) -> Pair (List 'A) (List 'B)``.
 
-  | Convert a list ``l : Pair 'A 'B`` of ``Pair`` s into a ``Pair`` of lists. Linear complexity.
+  | Split a list of pairs into a pair of lists consisting of the
+    elements of the pairs of the original list.
+
+- ``list_to_map : List (Pair 'A 'B) -> Map 'A 'B``.
+
+  | Convert a list of key-value pairs into a map of the key-value
+    associations of the pairs in the list. In case of duplicate keys,
+    the last occurrence of the key overwrites any other
+    occurrence. Note that ``list_to_map`` has quadratic time
+    complexity.
 
 - ``list_nth : Int32 -> List 'A -> Option 'A``.
 
-  | Returns ``Some 'A`` if n'th element exists in list. ``None`` otherwise. Linear complexity.
-
-  .. code-block:: ocaml
-
-    (*transition*)
-    (*Assume l as a list of Int32 [1 -> 2 -> 3 -> NIL]*)
-    transition search_nth (nth : Int32)
-      list_nth_int32 = @list_nth Int32;
-      search_nth = list_nth_int32 nth l;
-      match search_nth with
-      | Some v =>
-        statements...
-      | None =>
-        statements...
-      end
-    end
+  | Return the element number ``n`` from a list. If the list has at
+    least ``n`` elements, and the element number ``n`` is ``x``,
+    ``list_nth`` returns ``Some x``. If the list has fewer than ``n``
+    elements, or if ``n`` is negative, ``list_nth`` returns ``None``.
 
 
 Scilla versions
@@ -1449,15 +1506,15 @@ Major and Minor versions
 ************************
 
 Scilla releases have a major version, minor version and a patch
-number, denoted as ``X.Y.Z`` where ``X`` is the major version and
-``Y`` is the minor version and ``Z`` the patch number.
+number, denoted as ``X.Y.Z`` where ``X`` is the major version,
+``Y`` is the minor version, and ``Z`` the patch number.
 
 - Patches are usually bug fixes that do not impact the behaviour of
   existing contracts. Patches are backward compatible.
 
 - Minor versions typically include performance improvements and
   feature additions that do not affect the behaviour of existing
-  contracts. Minor versions are backward compatible till the latest
+  contracts. Minor versions are backward compatible until the latest
   major version.
 
 - Major versions are not backward compatible. It is expected that
@@ -1467,7 +1524,7 @@ number, denoted as ``X.Y.Z`` where ``X`` is the major version and
 Within a major version, miners are advised to use the latest minor
 revision.
 
-``$scilla-runner -version`` will print major, minor and patch versions
+The command ``scilla-runner -version`` will print major, minor and patch versions
 of the interpreter being invoked.
 
 
@@ -1483,7 +1540,7 @@ syntax is shown below:
     (*                 Scilla version                  *)
     (***************************************************)
 
-    scilla_version 1
+    scilla_version 0
     
     (***************************************************)
     (*               Associated library                *)
