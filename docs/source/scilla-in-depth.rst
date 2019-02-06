@@ -493,6 +493,8 @@ Scilla supports the following built-in operations on strings:
   start from 0.  Returns a ``String``.
 - ``builtin to_string x1``: Convert ``x1`` to a string literal. Valid types of
   ``x1`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``. Returns a ``String``.
+- ``strlen s`` : Calculate the length of ``s`` (of type
+  ``String``). Returns a ``Uint32``.
 
 Crypto Built-ins
 ****************
@@ -1528,12 +1530,12 @@ ListUtils
     occurrence. Note that ``list_to_map`` has quadratic time
     complexity.
 
-- ``list_nth : Int32 -> List 'A -> Option 'A``.
+- ``list_nth : Uint32 -> List 'A -> Option 'A``.
 
   | Return the element number ``n`` from a list. If the list has at
     least ``n`` elements, and the element number ``n`` is ``x``,
     ``list_nth`` returns ``Some x``. If the list has fewer than ``n``
-    elements, or if ``n`` is negative, ``list_nth`` returns ``None``.
+    elements, ``list_nth`` returns ``None``.
 
 NatUtils
 ************
