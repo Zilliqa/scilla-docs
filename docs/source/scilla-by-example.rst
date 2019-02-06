@@ -28,7 +28,7 @@ following  specification:
   ``welcome_msg``. ``getHello`` will not take any input. 
 
 
-Defining contract and its (im)mutable variables
+Defining a Contract and its (Im)Mutable Variables
 **************************************************
 
 A contract is declared using the ``contract`` keyword that starts the scope of
@@ -86,16 +86,8 @@ that includes the contract name and its (im)mutable variables:
 
     
 
-.. note::
-        In addition to these fields, any contract in Scilla has an implicitly
-        declared mutable field ``_balance`` (initialised upon the contract’s
-        creation), which keeps the amount of funds held by the contract.  This
-        field can be freely read within the implementation, but can only
-        modified by explicitly transferring funds to other accounts.
 
-
-
-Defining interfaces `aka` transitions
+Defining Interfaces `aka` Transitions
 ***************************************
 
 Interfaces like ``setHello`` are referred to as `transitions` in Scilla.
@@ -105,7 +97,7 @@ Transitions are similar to `functions` or `methods` in other languages.
 .. note::
 	The term `transition` comes from the underlying computation model in Scilla
 	which follows a communicating automaton. A contract in Scilla is an
-	automaton with some state. The state of an automaton can be changed via a
+	automaton with some state. The state of an automaton can be changed using a
 	transition that takes a previous state and an input and yields a new state.
 	Check the `wikipedia entry <https://en.wikipedia.org/wiki/Transition_system>`_
 	to read more about transition systems.
@@ -156,7 +148,7 @@ operator. The operator returns a boolean value ``True`` or ``False``.
     Scilla refers to the account address that called the current contract.
 
 Depending on the output of the comparison, the transition takes a different path
-declared via `pattern matching`, the syntax of which is given in the fragment
+declared using `pattern matching`, the syntax of which is given in the fragment
 below. 
 
 .. code-block:: ocaml
@@ -183,11 +175,17 @@ Hence, the following code block implements an ``if-then-else`` instruction:
                 end
 
   
-The caller is not the owner
+The Caller is Not the Owner
 """""""""""""""""""""""""""""
 
 In case the caller is different from ``owner``, the transition takes
-the ``False`` branch and the contract issues an event using the instruction ``event``. 
+the ``False`` branch and the contract emits an event using the
+instruction ``event``.
+
+An event is a signal that gets stored on the blockchain for everyone
+to see. If a user uses a client application to invoke a transition on
+a contract, the client application can listen for events that the
+contract may emit, and alert the user.
 
 More concretely, the output event in this case is:
 
@@ -198,24 +196,20 @@ More concretely, the output event in this case is:
 An event is comprised of a number of ``vname : value`` pairs delimited
 by ``;`` inside a pair of curly braces ``{}``. An event must contain
 the compulsory field ``_eventname``, and may contain other fields such
-as the ``code`` field in the example above. The fields may occur in
-any order, though two events with the same name must contain the same
-fields of the same respective types.
-
-Once an event has been issued (using the instruction ``event e``), the
-event gets stored on the blockchain for everyone to see.
+as the ``code`` field in the example above. 
 
 .. note::
 
    In our example we have chosen to name the event after the
-   transition that issues the event, but any name can be
+   transition that emits the event, but any name can be
    chosen. However, it is recommended that you name the events in a
-   way that makes it easy to see which part of the code issued the event.
+   way that makes it easy to see which part of the code emitted the
+   event.
 
 
 
 
-The caller is the owner
+The Caller is the Owner
 """"""""""""""""""""""""
 
 In case the caller is ``owner``, the contract allows the caller to set the
@@ -230,7 +224,7 @@ This is done through the following instruction:
 
 .. note::
  
-    Writing to a mutable variable is done via the operator ``:=``.
+    Writing to a mutable variable is done using the operator ``:=``.
 
 
 And as in the previous case, the contract then emits an event with
@@ -289,8 +283,8 @@ At this stage, our contract fragment will have the following form:
     end
 
 
-The second transition
-*********************
+Adding Another Transition
+***************************
 
 We may now add the second transition ``getHello()`` that allows client
 applications to know what the ``welcome_msg`` is. The declaration is
@@ -306,13 +300,13 @@ not take a parameter.
     end
 
 .. note::
-	Reading from a mutable variable is done via the operator ``<-``.
+	Reading from a contract state variable is done using the operator ``<-``.
 
 In the ``getHello()`` transition, we will first read from a mutable
 variable, and then we construct and emit the event.
 
 
-Scilla version
+Scilla Version
 ***************
 
 Once a contract has been deployed on the network, it cannot be
@@ -332,7 +326,7 @@ The version declaration must appear before any library or contract
 code.
 
 
-Putting it all together
+Putting it All Together
 *************************
 
 The complete contract that implements the desired specification is
@@ -387,7 +381,7 @@ construct:
 
 
 
-A second example: Crowdfunding
+A Second Example: Crowdfunding
 #################################
 
 In this section, we present a slightly more involved contract that runs a
@@ -401,6 +395,11 @@ amount of funds (``goal``) without which the project can not be
 started. The contract hence has three immutable variables ``owner``,
 ``max_block`` and ``goal``.
 
+The total amount that has been donated to the campaign so far is
+stored in a field ``_balance``. Any contract in Scilla has an implicit
+``_balance`` field of type ``Uint128``, which is initialised to 0 when
+the contract is deployed, and which holds the amount of ZIL in the
+contract's account on the blockchain. 
 
 The campaign is deemed successful if the owner can raise the goal in
 the stipulated time. In case the campaign is unsuccessful, the
@@ -417,7 +416,59 @@ owner** to claim the donated amount and transfer it to ``owner`` and
 the campaign is not successful.
 
 
-Sending messages
+Reading the Current Block Number
+**********************************
+
+The deadline is given as a block number, so to check whether the
+deadline has passed, we must compare the deadline against the current
+block number.
+
+The current block number is read as follows:
+
+.. code-block:: ocaml
+
+   blk <- & BLOCKNUMBER;
+
+Block numbers have a dedicated type ``BNum`` in Scilla, so as to not
+confuse them with regular unsigned integers.
+
+.. note::
+
+   Reading data from the blockchain is done using the operator
+   ``<- &``. Blockchain data cannot be updated directly from the
+   contract.
+  
+
+Reading and Updating the Current Balance
+******************************************
+
+The target for the campaign is specified by the owner in the immutable
+variable ``goal`` when the contract is deployed. To check whether the
+target have been met, we must compare the total amount raised to the
+target.
+
+The amount of ZIL raised is stored in the contract's account on the
+blockchain, and can be accessed through the implicitly declared
+``_balance`` field as follows:
+
+.. code-block:: ocaml
+
+   bal <- _balance;
+
+Money is represented as values of type ``Uint128``.
+
+.. note::
+
+   The ``_balance`` field is read using the operator ``<-`` just like
+   any other contract state variable. However, the ``_balance`` field
+   can only be updated by accepting money from incoming messages
+   (using the instruction ``accept``), or by explicitly transferring
+   money to other account (using the instruction ``send`` as explained
+   below).
+
+
+
+Sending Messages
 **********************
 
 In Scilla, there are two ways that transitions can transmit data. One
@@ -479,14 +530,16 @@ a list, and send it:
 .. note::
 
    The Zilliqa blockchain does not yet support sending multiple
-   messages in the same ``send`` instruction. The list given as an
-   argument to ``send`` must therefore contain only one message.
+   messages in the same transition. This means that the list given as
+   an argument to ``send`` must contain only one message, and that a
+   transition may perform at most one ``send`` instruction each time
+   the transition is called.
+   
 
-
-Putting it all together
+Putting it All Together
 *************************
 
-The complete crowdfunding contract is given below:
+The complete crowdfunding contract is given below.
 
 .. code-block:: ocaml
 
