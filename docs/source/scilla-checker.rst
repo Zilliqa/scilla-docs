@@ -20,6 +20,8 @@ annotations to each piece of syntax:
   location from the source file in the form of line and column
   numbers.
   
++ `ADT checking` checks various constraints on user-defined ADTs.
+
 + `Typechecking` checks that values in the contract are used in a way
   that is consistent with the type system. The typechecker also
   annotates each expression with its type.
@@ -371,7 +373,7 @@ The analysis uses the following set of tags:
   and not money. Inconsistent usage indicates a bug.
 
   
-Lists are currently not supported.
+Lists and user-defined ADTs are currently not supported.
 
 Library and local functions are only partially supported, since no
 attempt is made to connect the tags of parameters to the tag of the
