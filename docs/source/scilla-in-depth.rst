@@ -1522,14 +1522,6 @@ ListUtils
   | Split a list of pairs into a pair of lists consisting of the
     elements of the pairs of the original list.
 
-- ``list_to_map : List (Pair 'A 'B) -> Map 'A 'B``.
-
-  | Convert a list of key-value pairs into a map of the key-value
-    associations of the pairs in the list. In case of duplicate keys,
-    the last occurrence of the key overwrites any other
-    occurrence. Note that ``list_to_map`` has quadratic time
-    complexity.
-
 - ``list_nth : Uint32 -> List 'A -> Option 'A``.
 
   | Return the element number ``n`` from a list. If the list has at
