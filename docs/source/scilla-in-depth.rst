@@ -520,7 +520,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin keccak256hash x``: Convert ``x`` of ``Any`` type to its Keccak256 hash. Returns a ``ByStr32``.
 
-- ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr16``.
+- ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr20``.
 
 - ``builtin to_byStr x`` : Convert a hash ``x`` of type ``ByStrX`` (for
   some known ``X``) to one of arbitrary length of type ``ByStr``.
