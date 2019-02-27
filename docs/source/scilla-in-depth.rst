@@ -155,6 +155,24 @@ these fields get modified.
      of every constructor argument must be storable.
 
 
+Units
+***************
+
+The Zilliqa protocol supports three basic tokens units - ZIL, LI (10^-6 ZIL) and QA (10^-12 ZIL).
+
+The base unit used in Scilla smart contracts is QA. Hence, when using money variables, it is important to attach the trailing zeroes that are needed to represent it in QAs.
+
+    .. code-block:: ocaml
+
+      (* fee is 1 QA *)
+      let fee = Uint128 1
+
+      (* fee is 1 LI *)
+      let fee = Uint128 1000000
+
+      (* fee is 1 ZIL *)
+      let fee = Uint128 1000000000000
+
 
 Transitions
 ************
@@ -183,7 +201,7 @@ multiple parameters are separated by ``,``.
       instead of a user account, then ``_sender`` is the address of
       the contract that called this transition.
 
-    - ``_amount : Uint128`` : Incoming amount of ZILs sent by the
+    - ``_amount : Uint128`` : Incoming amount of QAs (see section above on the units) sent by the
       sender. To transfer the money from the sender to the contract,
       the transition must explicitly accept the money using the
       ``accept`` instruction. The money transfer does not happen if
@@ -319,9 +337,9 @@ mathematical. Scilla contains the following types of statements:
        ...
      end
 
-- ``accept`` : Accept the ZILs of the message that invoked the
+- ``accept`` : Accept the QAs of the message that invoked the
   transition. The amount is automatically added to the ``_balance``
-  field of the contract. If a message contains ZILs, but the invoked
+  field of the contract. If a message contains QAs, but the invoked
   transition does not accept the money, the money is transferred back
   to the sender of the message.
 
@@ -345,7 +363,7 @@ A sequence of statements must be separated by semicolons ``;``:
 Notice that the final statement does not have a trailing ``;``, since
 ``;`` is used to separate statements rather than terminate them.
 
-  
+
 Communication
 ***************
 
