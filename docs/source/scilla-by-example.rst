@@ -320,7 +320,7 @@ The Scilla version of the contract is declared using the keyword
 
 .. code-block:: ocaml
 
-    scilla_version 1
+    scilla_version 0
 
 The version declaration must appear before any library or contract
 code.
@@ -341,7 +341,7 @@ construct:
     (*                 Scilla version                  *)
     (***************************************************)
 
-    scilla_version 1
+    scilla_version 0
     
     (***************************************************)
     (*               Associated library                *)
@@ -548,7 +548,7 @@ The complete crowdfunding contract is given below.
         (*                 Scilla version                  *)
         (***************************************************)
 
-        scilla_version 1
+        scilla_version 0
 
   	(***************************************************)
   	(*               Associated library                *)
