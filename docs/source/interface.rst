@@ -158,7 +158,7 @@ A sample ``init.json`` for this contract will look like the following:
     { 
         "vname" : "goal",
         "type" : "Uint128",
-        "value" : "500"
+        "value" : "500000000000000"
     },
     {
         "vname" : "_creation_block",
@@ -259,7 +259,7 @@ an example ``input_message.json`` is given below:
         {
           "vname" : "tokens",
           "type"  : "Uint128",
-          "value" : "500"
+          "value" : "500000000000000"
         }
       ]
     }
@@ -293,7 +293,7 @@ events                  An array of events emitted by the transition.
   Field              Description
   ===========       =======================================================  
   _tag               Transition to be invoked
-  _amount            Number of ZILs to be transferred
+  _amount            Number of QAs (10^-12 ZILs) to be transferred
   _recipient         Address of the recipient
   params             An array of parameter objects to be passed
   ===========       =======================================================
@@ -336,18 +336,18 @@ below. The example also shows the format for maps in contract states.
     "_accepted": "false",
     "message": {
       "_tag": "",
-      "_amount": "100",
+      "_amount": "100000000000000",
       "_recipient": "0x12345678901234567890123456789012345678ab",
       "params": []
     },
     "states": [
-      { "vname": "_balance", "type": "Uint128", "value": "300" },
+      { "vname": "_balance", "type": "Uint128", "value": "300000000000000" },
       {
         "vname": "backers",
         "type": "Map (ByStr20) (Uint128)",
         "value": [
-          { "key": "0x12345678901234567890123456789012345678cd", "val": "200" },
-          { "key": "0x123456789012345678901234567890123456abcd", "val": "100" }
+          { "key": "0x12345678901234567890123456789012345678cd", "val": "200000000000000" },
+          { "key": "0x123456789012345678901234567890123456abcd", "val": "100000000000000" }
         ]
       },
       {
@@ -365,7 +365,7 @@ below. The example also shows the format for maps in contract states.
             "type": "ByStr20",
             "value": "0x12345678901234567890123456789012345678ab"
           },
-          { "vname": "amount", "type": "Uint128", "value": "100" },
+          { "vname": "amount", "type": "Uint128", "value": "100000000000000" },
           { "vname": "code", "type": "Int32", "value": "9" }
         ]
       }
@@ -455,11 +455,11 @@ has the same forms  as the ``states`` field in ``output.json``.  An example of
       "value": [
         { 
           "key": "0x12345678901234567890123456789012345678cd", 
-          "val": "200" 
+          "val": "200000000000000"
         },
         { 
           "key": "0x12345678901234567890123456789012345678ab", 
-          "val": "100" 
+          "val": "100000000000000"
         }
       ]
     },
@@ -475,7 +475,7 @@ has the same forms  as the ``states`` field in ``output.json``.  An example of
     {
       "vname": "_balance",
       "type": "Uint128",
-      "value": "300"
+      "value": "300000000000000"
     }
   ]
 
