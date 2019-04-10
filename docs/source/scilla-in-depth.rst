@@ -475,7 +475,7 @@ arguments, except for ``pow`` whose second argument is always
 - ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` or ``String`` (that represents a number) value to the equivalent ``UintX/IntX`` value.
   Returns ``Some IntX/UintX`` if the conversion succeeded, ``None`` otherwise.
 
-Addition, subtraction, multiplication, pow, division and reminder operations
+Addition, subtraction, multiplication, pow, division and remainder operations
 may raise integer overflow, underflow and division_by_zero errors.
 
 .. note::
