@@ -14,6 +14,5 @@ Please preview your HTML files BEFORE submitting a pull request. Try your best t
 
 To preview:
 1. You need to have [sphinx](http://www.sphinx-doc.org/en/master/) installed. Install Sphinx by running `pip install -U Sphinx`.
+   For newer versions (>1.4.0) of Sphinx install the 'Read the Docs' theme by running `pip install -U sphinx_rtd_theme`.
 2. Run `make html` from `docs` folder and make sure that the edits are rendered correctly on the HTML file
-
-
