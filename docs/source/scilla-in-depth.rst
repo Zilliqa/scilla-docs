@@ -511,7 +511,7 @@ Scilla supports the following built-in operations on strings:
   start from 0.  Returns a ``String``.
 - ``builtin to_string x1``: Convert ``x1`` to a string literal. Valid types of
   ``x1`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``. Returns a ``String``.
-- ``strlen s`` : Calculate the length of ``s`` (of type
+- ``builtin strlen s`` : Calculate the length of ``s`` (of type
   ``String``). Returns a ``Uint32``.
 
 Crypto Built-ins
@@ -540,7 +540,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr20``.
 
-- ``builtin to_byStr x`` : Convert a hash ``x`` of type ``ByStrX`` (for
+- ``builtin to_bystr x`` : Convert a hash ``x`` of type ``ByStrX`` (for
   some known ``X``) to one of arbitrary length of type ``ByStr``.
 
 - ``builtin to_uint256 x`` : Convert a hash ``x`` to the equivalent
@@ -551,6 +551,10 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   of type ``ByStr64`` against a hash ``x`` of type ``ByStr32`` with the
   Schnorr public key ``pubk`` of type ``ByStr33``.
   
+- ``builtin ecdsa_verify pubk x sig`` : Verify a signature ``sig``
+  of type ``ByStr64`` against a hash ``x`` of type ``ByStr32`` with the
+  ECDSA public key ``pubk`` of type ``ByStr33``.
+
 - ``concat x1 x2``: Concatenate the hashes ``x1`` and ``x2``. If
   ``x1`` has type ``ByStrX`` and ``x2`` has type ``ByStrY``, then the
   result will have type ``ByStr(X+Y)``.
@@ -567,7 +571,7 @@ any one of ``String``, ``IntX``, ``UintX``, ``ByStrX`` or
 
 Scilla supports the following built-in operations on maps:
 
-- ``put m k v``: Insert a key ``k`` and a value ``v`` into a map
+- ``builtin put m k v``: Insert a key ``k`` and a value ``v`` into a map
   ``m``. Returns a new map which is a copy of the ``m`` but with ``k``
   associated with ``v``. The value of ``m`` is unchanged. The ``put``
   function is typically used in library functions. Note that ``put``
@@ -580,7 +584,7 @@ Scilla supports the following built-in operations on maps:
   exist in the nested maps, they are freshly created along with the
   map values they are associated with.
   
-- ``get m k``: Fetch the value associated with the key ``k`` in the
+- ``builtin get m k``: Fetch the value associated with the key ``k`` in the
   map ``m``. Returns an optional value (see the ``Option`` type below)
   -- if ``k`` has an associated value ``v`` in ``m``, then the result
   is ``Some v``, otherwise the result is ``None``. The ``get``
@@ -595,7 +599,7 @@ Scilla supports the following built-in operations on maps:
   key(s) do not exist in the corresponding map, the result is
   ``None``.
 
-- ``contains m k``: Is the key ``k`` associated with a value in the map
+- ``builtin contains m k``: Is the key ``k`` associated with a value in the map
   ``m``?  Returns a ``Bool``. The ``contains`` function is typically
   used in library functions.
 
@@ -606,7 +610,7 @@ Scilla supports the following built-in operations on maps:
   intermediate key(s) do not exist in the corresponding map, the
   result is ``False``.
 
-- ``remove m k``: Remove a key ``k`` and its associated value from the
+- ``builtin remove m k``: Remove a key ``k`` and its associated value from the
   map ``m``. Returns a new map which is a copy of ``m`` but with ``k``
   being unassociated with a value. The value of ``m`` is
   unchanged. The ``remove`` function is typically used in library
@@ -622,10 +626,12 @@ Scilla supports the following built-in operations on maps:
   the key-value association of ``kn`` is removed. The key-value
   bindings of ``k`` to ``kn-1`` will still exist.
 
-- ``to_list m``: Convert a map ``m`` to a ``List (Pair kt vt)`` where
+- ``builtin to_list m``: Convert a map ``m`` to a ``List (Pair kt vt)`` where
   ``kt`` and ``vt`` are key and value types, respectively (see the
   ``List`` type below).
 
+- ``builtin size m``: Return the number of bindings in map ``m``.
+  The result type is ``Uint32``.
 
 Addresses
 *********
