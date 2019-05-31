@@ -1435,7 +1435,7 @@ ListUtils
     time complexity in the total number of elements in all of the
     lists.
 
-- ``list_length : List 'A -> Int32``
+- ``list_length : List 'A -> Uint32``
 
   | Count the number of elements in a list. Note that ``list_length``
     has linear time complexity in the number of elements in the list.
