@@ -548,11 +548,11 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   known ``X`` less than or equal to 32.
 
 - ``builtin schnorr_verify pubk x sig`` : Verify a signature ``sig``
-  of type ``ByStr64`` against a hash ``x`` of type ``ByStr32`` with the
+  of type ``ByStr64`` against a hash ``x`` of type ``ByStr`` with the
   Schnorr public key ``pubk`` of type ``ByStr33``.
   
 - ``builtin ecdsa_verify pubk x sig`` : Verify a signature ``sig``
-  of type ``ByStr64`` against a hash ``x`` of type ``ByStr32`` with the
+  of type ``ByStr64`` against a hash ``x`` of type ``ByStr`` with the
   ECDSA public key ``pubk`` of type ``ByStr33``.
 
 - ``concat x1 x2``: Concatenate the hashes ``x1`` and ``x2``. If
