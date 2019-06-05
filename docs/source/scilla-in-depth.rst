@@ -567,7 +567,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   ``String`` and an input bech32 string (of type ``String``) and if the inputs are valid, converts it to a
   raw byte address (`ByStr20`). On success, ``Option ByStr20`` is returned. On invalid input, None is returned.
 
-- ``builtin bystr20_to_bech32 prefix addr``. The builtin takes an a network specific prefix ("zil" / "tzil") of type
+- ``builtin bystr20_to_bech32 prefix addr``. The builtin takes an a network specific prefix (``"zil"`` / ``"tzil"``) of type
   ``String`` and an input ``ByStr20`` address, and if the inputs are valid, converts it to a bech32 address.
   On success, ``Option String`` is returned. On invalid input, None is returned.
 
