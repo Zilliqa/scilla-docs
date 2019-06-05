@@ -358,7 +358,8 @@ The following code snippet declares a global ``ByStr32`` constant:
 
 
 
-The following operations on hashes are language built-ins. In the description
+The following operations on hashes and other cryptographic primitives, including
+byte sequences are language built-ins. In the description
 below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 ``ByStr32``.
 
@@ -384,6 +385,12 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 - ``builtin schnorr_verify pubk msg sig`` : Verify a signed ``sig`` of type ``ByStr64`` against the ``msg`` of 
   type ``ByStr32`` with the ``pubk`` of type ``ByStr33``.
 - ``concat x1 x2``: Concatenate ``x1 : ByStrX1`` and ``x2 : ByStrX2`` to result in a ``ByStr(X1+X2)`` value.
+- ``builtin bech32_to_bystr20 prefix addr``. The builtin takes an a network specific prefix ("zil" / "tzil") of type
+  ``String`` and an input bech32 string (of type ``String``) and if the bech32 string is valid, converts it to a
+  raw byte address (`ByStr20`). On success, ``Option ByStr20`` is returned. On invalid input, None is returned.
+- ``builtin bystr20_to_bech32 prefix addr``. The builtin takes an a network specific prefix ("zil" / "tzil") of type
+  ``String`` and an input ``ByStr20`` address, and if the input is valid, converts it to a bech32 address.
+  On success, ``Option String`` is returned. On invalid input, None is returned.
 
 
 Maps
