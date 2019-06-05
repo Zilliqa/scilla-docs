@@ -563,7 +563,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   ``x1`` has type ``ByStrX`` and ``x2`` has type ``ByStrY``, then the
   result will have type ``ByStr(X+Y)``.
 
-- ``builtin bech32_to_bystr20 prefix addr``. The builtin takes an a network specific prefix ("zil" / "tzil") of type
+- ``builtin bech32_to_bystr20 prefix addr``. The builtin takes an a network specific prefix (``"zil"`` / ``"tzil"``) of type
   ``String`` and an input bech32 string (of type ``String``) and if the inputs are valid, converts it to a
   raw byte address (`ByStr20`). On success, ``Option ByStr20`` is returned. On invalid input, None is returned.
 
