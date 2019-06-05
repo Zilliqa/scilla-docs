@@ -528,7 +528,11 @@ The following code snippet declares a variable of type ``ByStr32``:
         
     let x = 0x123456789012345678901234567890123456789012345678901234567890abff 
 
-Scilla supports the following built-in operations on hashes. In the description
+
+
+
+Scilla supports the following built-in operations on hashes and other cryptographic primitives,
+including byte sequences. In the description
 below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 ``ByStr32``.
 
@@ -558,6 +562,15 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 - ``concat x1 x2``: Concatenate the hashes ``x1`` and ``x2``. If
   ``x1`` has type ``ByStrX`` and ``x2`` has type ``ByStrY``, then the
   result will have type ``ByStr(X+Y)``.
+
+- ``builtin bech32_to_bystr20 prefix addr``. The builtin takes a network specific prefix (``"zil"`` / ``"tzil"``) of type
+  ``String`` and an input bech32 string (of type ``String``) and if the inputs are valid, converts it to a
+  raw byte address (`ByStr20`). The return type is ``Option ByStr20``.
+  On success, ``Some addr`` is returned and on invalid inputs ``None`` is returned.
+
+- ``builtin bystr20_to_bech32 prefix addr``. The builtin takes a network specific prefix (``"zil"`` / ``"tzil"``) of type
+  ``String`` and an input ``ByStr20`` address, and if the inputs are valid, converts it to a bech32 address.
+  The return type is ``Option String``. On success, ``Some addr`` is returned and on invalid inputs ``None`` is returned.
 
 
 Maps
