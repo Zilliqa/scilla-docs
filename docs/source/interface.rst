@@ -5,18 +5,18 @@
 Interpreter Interface
 =========================
 
-The Scilla interpreter executable provides a calling interface that enables
-users to invoke transitions with specified inputs and obtain outputs. Execution
-of a contract with supplied inputs will result in a set of outputs and a change
-in the smart contract mutable state. 
+The Scilla interpreter provides a calling interface that enables users
+to invoke transitions with specified inputs and obtain
+outputs. Execution of a transition with supplied inputs will result in a
+set of outputs, and a change in the smart contract mutable state.
 
 Calling Interface
 ###################
 
-A transition defined in a smart contract can be called either by the issuance
-of a transaction or by message calls from another smart contract. The same
-calling interface will be used to call the contract via external transactions
-and inter-contract message calls.
+A transition defined in a contract can be called either by the
+issuance of a transaction, or by message calls from another
+contract. The same calling interface will be used to call the contract
+via external transactions and inter-contract message calls.
 
 The inputs to the interpreter (``scilla-runner``) consists of four input JSON
 files as described below. Every invocation of the interpreter to execute a 
@@ -101,6 +101,11 @@ A sample ``init.json`` for this contract will look like the following:
           "value" : "0x1234567890123456789012345678901234567890"
       },
       {
+          "vname" : "_this_address",
+          "type" : "ByStr20",
+          "value" : "0xabfeccdc9012345678901234567890f777567890"
+      },
+      {
           "vname" : "_creation_block",
           "type" : "BNum",
           "value" : "1"
@@ -145,10 +150,15 @@ A sample ``init.json`` for this contract will look like the following:
         "type" : "BNum" ,
         "value" : "199"
     },
+    {
+        "vname" : "_this_address",
+        "type" : "ByStr20",
+        "value" : "0xabfeccdc9012345678901234567890f777567890"
+    },
     { 
         "vname" : "goal",
         "type" : "Uint128",
-        "value" : "500"
+        "value" : "500000000000000"
     },
     {
         "vname" : "_creation_block",
@@ -165,8 +175,7 @@ interpreter. It is similar to ``init.json``, except that it is a fixed size
 array of objects, where each object has ``vname`` fields only from a
 pre-determined set (which correspond to actual blockchain state variables). 
 
-**Permitted JSON fields:** Only JSONs that differ in the ``value`` field as per
-the example below are permitted currently.
+**Permitted JSON fields:** At the moment, the only blockchain value that is exposed to contracts is the current ``BLOCKNUMBER``.
 
 .. code-block:: json
 
@@ -181,7 +190,7 @@ the example below are permitted currently.
 Input Message
 ###############
 
-``input_message.json`` contains the required information to invoke a
+``input_message.json`` contains the information required to invoke a
 transition. The json is an array containing the following four objects:
 
 =======  ===========================================
@@ -250,7 +259,7 @@ an example ``input_message.json`` is given below:
         {
           "vname" : "tokens",
           "type"  : "Uint128",
-          "value" : "500"
+          "value" : "500000000000000"
         }
       ]
     }
@@ -269,20 +278,22 @@ Field                   Description
 =====================   ====================================================================
 scilla_major_version    The major version of the scilla language of this contract.
 gas_remaining           The remaining gas after invoking or deploying a contract.
-_accepted               Whether the contract has accepted ZIL (Either ``true``/``false``)
-message                 The emitted message to another contract/non-contract account.
+_accepted               Whether the contract has accepted ZIL (Either ``"true"`` or ``"false"``)
+message                 The message to be sent to another contract/non-contract account, if any.
 states                  An array of objects that form the new contract state
+events                  An array of events emitted by the transition.
 =====================   ====================================================================
 
-+ ``message`` is a JSON object that will have a similar format to
-  ``input_message.json``, except that instead of ``_sender`` field, it will have
-  a ``_recipient`` field. The fields in ``message`` are given below:
++ ``message`` is a JSON object with a similar format to
+  ``input_message.json``, except that it has a ``_recipient`` field
+  instead of the ``_sender`` field. The fields in ``message`` are
+  given below:
 
   ===========       =======================================================
   Field              Description
   ===========       =======================================================  
   _tag               Transition to be invoked
-  _amount            Number of ZILs to be transferred
+  _amount            Number of QAs (10^-12 ZILs) to be transferred
   _recipient         Address of the recipient
   params             An array of parameter objects to be passed
   ===========       =======================================================
@@ -296,72 +307,47 @@ states                  An array of objects that form the new contract state
   contract. Each entry of the ``states`` array also specifies (``vname``,
   ``type``, ``value``). 
 
++ ``events`` is an array of objects that represents the events emitted
+  by the transition. The fields in each object in the ``events`` array
+  are given below:
+
+  ===========       =======================================================
+  Field              Description
+  ===========       =======================================================  
+  _eventname         The name of the event
+  params             An array of additional event fields
+  ===========       =======================================================
+
+  The ``params`` array is encoded similar to how ``init.json`` is
+  encoded, with each parameter specifying the (``vname``, ``type``,
+  ``value``) of each event field.
 
 Example 1
 *********
 
-The example below is an output generated by ``HelloWorld.scilla``. 
+An example of the output generated by ``Crowdfunding.scilla`` is given
+below. The example also shows the format for maps in contract states.
 
 .. code-block:: json
 
   {
     "scilla_major_version": "0",
-    "gas_remaining": "7402",
+    "gas_remaining": "7365",
     "_accepted": "false",
     "message": {
-      "_tag": "Main",
-      "_amount": "0",
-      "_recipient": "0x1234567890123456789012345678901234567890",
-      "params": [ 
-        { 
-          "vname": "code", 
-          "type": "Int32", 
-          "value": "2" 
-        } 
-      ]
+      "_tag": "",
+      "_amount": "100000000000000",
+      "_recipient": "0x12345678901234567890123456789012345678ab",
+      "params": []
     },
     "states": [
-      { 
-        "vname": "_balance", 
-        "type": "Uint128", 
-        "value": "0" 
-      },
-      { 
-        "vname": "welcome_msg", 
-        "type": "String",
-        "value": "Hello World" 
-      }
-    ],
-    "events": []
-  }
-
-
-Example 2
-*********
-
-Another slightly more involved example with ``Map`` in ``states``.
-
-.. code-block:: json
-
-  {
-    "scilla_major_version": "0",
-    "gas_remaining": "7359",
-    "_accepted": "true",
-    "message": null,
-    "states": [
-      { 
-        "vname": "_balance", 
-        "type": "Uint128", 
-        "value": "100" 
-      },
+      { "vname": "_balance", "type": "Uint128", "value": "300000000000000" },
       {
         "vname": "backers",
         "type": "Map (ByStr20) (Uint128)",
         "value": [
-          { 
-            "key": "0x12345678901234567890123456789012345678ab", 
-            "val": "100" 
-          }
+          { "key": "0x12345678901234567890123456789012345678cd", "val": "200000000000000" },
+          { "key": "0x123456789012345678901234567890123456abcd", "val": "100000000000000" }
         ]
       },
       {
@@ -372,35 +358,86 @@ Another slightly more involved example with ``Map`` in ``states``.
     ],
     "events": [
       {
-        "_eventname": "DonationSuccess",
+        "_eventname": "ClaimBackSuccess",
         "params": [
           {
-            "vname": "donor",
+            "vname": "caller",
             "type": "ByStr20",
             "value": "0x12345678901234567890123456789012345678ab"
           },
-          { 
-            "vname": "amount", 
-            "type": "Uint128", 
-            "value": "100" 
-          },
-          { "vname": "code", 
-            "type": "Int32", 
-            "value": "1" 
-          }
+          { "vname": "amount", "type": "Uint128", "value": "100000000000000" },
+          { "vname": "code", "type": "Int32", "value": "9" }
         ]
       }
     ]
   }
 
 
+Example 2
+*********
 
-.. note::
+For values of an ADT type, the ``value`` field contains three subfields:
 
-    For mutable variables of type ``Map``, the first entry in the ``value``
-    field are the types of the ``key`` and ``value``. Also, note that the
-    ``value`` field of a variable of type ``ADT`` has several fields namely,
-    ``constructor``, ``argtypes`` and ``arguments``.
+- ``constructor``: The name of the constructor used to construct the value.
+
+- ``argtypes``: An array of type instantiations. For the ``List`` and
+  ``Option`` types, this array will contain one type, indicating the
+  type of the list elements or the optional value, respectively. For
+  the ``Pair`` type, the array will contain two types, indicating the
+  types of the two values in the pair. For all other ADTs, the array
+  will be empty.
+
+- ``arguments``: The arguments to the constructor.
+
+The following example shows how values of the ``List`` and ``Option`` types are represented in the output json:
+
+.. code-block:: json
+
+  {
+    "scilla_major_version": "0",
+    "gas_remaining": "7733",
+    "_accepted": "false",
+    "message": null,
+    "states": [
+      { "vname": "_balance", "type": "Uint128", "value": "0" },
+      {
+        "vname": "gpair",
+        "type": "Pair (List (Int64)) (Option (Bool))",
+        "value": {
+          "constructor": "Pair",
+          "argtypes": [ "List (Int64)", "Option (Bool)" ],
+          "arguments": [
+            [],
+            { "constructor": "None", "argtypes": [ "Bool" ], "arguments": [] }
+          ]
+        }
+      },
+      { "vname": "llist", "type": "List (List (Int64))", "value": [] },
+      { "vname": "plist", "type": "List (Option (Int32))", "value": [] },
+      {
+        "vname": "gnat",
+        "type": "Nat",
+        "value": { "constructor": "Zero", "argtypes": [], "arguments": [] }
+      },
+      {
+        "vname": "gmap",
+        "type": "Map (ByStr20) (Pair (Int32) (Int32))",
+        "value": [
+          {
+            "key": "0x12345678901234567890123456789012345678ab",
+            "val": {
+              "constructor": "Pair",
+              "argtypes": [ "Int32", "Int32" ],
+              "arguments": [ "1", "2" ]
+            }
+          }
+        ]
+      }
+    ],
+    "events": []
+  }
+                
+
 
 Input Mutable Contract State
 ############################
@@ -418,11 +455,11 @@ has the same forms  as the ``states`` field in ``output.json``.  An example of
       "value": [
         { 
           "key": "0x12345678901234567890123456789012345678cd", 
-          "val": "200" 
+          "val": "200000000000000"
         },
         { 
           "key": "0x12345678901234567890123456789012345678ab", 
-          "val": "100" 
+          "val": "100000000000000"
         }
       ]
     },
@@ -438,7 +475,7 @@ has the same forms  as the ``states`` field in ``output.json``.  An example of
     {
       "vname": "_balance",
       "type": "Uint128",
-      "value": "300"
+      "value": "300000000000000"
     }
   ]
 

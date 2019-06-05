@@ -9,10 +9,11 @@ We start off by writing a classical ``HelloWorld.scilla`` contract with the
 following  specification:
 
 
-+ It should have an `immutable variable` ``owner`` to be initialized by the
-  creator of the contract. The variable is immutable in the sense that once
-  initialized, its value cannot be changed. ``owner`` will be of type
-  ``ByStr20`` (a hexadecimal Byte String representing 20 bytes). 
++ It should have an `immutable variable` ``owner`` to be initialized
+  by the creator of the contract. The variable is immutable in the
+  sense that once initialized, its value cannot be changed. ``owner``
+  will be of type ``ByStr20`` (a hexadecimal Byte String representing
+  a 20 byte address).
 
 + It should have a `mutable variable` ``welcome_msg`` of type ``String``
   initialized to ``""``. Mutability here refers to the possibility of modifying
@@ -27,7 +28,7 @@ following  specification:
   ``welcome_msg``. ``getHello`` will not take any input. 
 
 
-Defining Contract and its (Im)Mutable Variables
+Defining a Contract and its (Im)Mutable Variables
 **************************************************
 
 A contract is declared using the ``contract`` keyword that starts the scope of
@@ -85,14 +86,6 @@ that includes the contract name and its (im)mutable variables:
 
     
 
-.. note::
-        In addition to these fields, any contract in Scilla has an implicitly
-        declared mutable field ``_balance`` (initialised upon the contract’s
-        creation), which keeps the amount of funds held by the contract.  This
-        field can be freely read within the implementation, but can only
-        modified by explicitly transferring funds to other accounts.
-
-
 
 Defining Interfaces `aka` Transitions
 ***************************************
@@ -104,9 +97,9 @@ Transitions are similar to `functions` or `methods` in other languages.
 .. note::
 	The term `transition` comes from the underlying computation model in Scilla
 	which follows a communicating automaton. A contract in Scilla is an
-	automaton with some state. The state of an automaton can be changed via a
+	automaton with some state. The state of an automaton can be changed using a
 	transition that takes a previous state and an input and yields a new state.
-	Check `wikipedia entry <https://en.wikipedia.org/wiki/Transition_system>`_
+	Check the `wikipedia entry <https://en.wikipedia.org/wiki/Transition_system>`_
 	to read more about transition systems.
 
 A transition is declared using the keyword ``transition``. The end of a
@@ -133,14 +126,12 @@ given below:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : not_owner_code};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname : "setHello"; code : not_owner_code};
+        event e
       | True =>
         welcome_msg := msg;
-        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : set_hello_code};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname : "setHello"; code : set_hello_code};
+        event e
       end
     end
 
@@ -157,72 +148,73 @@ operator. The operator returns a boolean value ``True`` or ``False``.
     Scilla refers to the account address that called the current contract.
 
 Depending on the output of the comparison, the transition takes a different path
-declared via `pattern matching`, the syntax of which is given in the fragment
+declared using `pattern matching`, the syntax of which is given in the fragment
 below. 
 
 .. code-block:: ocaml
 
-	match expr with
-	| x => expr_1
-	| y => expr_2
-        end 
+                match expr with
+                | pattern_1 => expr_1
+                | pattern_2 => expr_2
+                end 
 
-The above code checks whether ``expr`` evaluates to ``x`` or ``y``. If ``expr``
-evaluates to ``x``, then the next expression to be evaluated will be
-``expr_1``, else if it evaluates to ``y``, then, the next expression to be
-evaluated will be ``expr_2``. Simply put, the above code implements an
-``if-then-else`` instruction. 
+The above code checks whether ``expr`` evaluates to a value that
+matches ``pattern_1`` or ``pattern_2``. If ``expr`` evaluates to a
+value matching ``pattern_1``, then the next expression to be evaluated
+will be ``expr_1``.  Otherwise, if ``expr`` evaluates to a value
+matching ``pattern_2``, then the next expression to be evaluated will
+be ``expr_2``.
+
+Hence, the following code block implements an ``if-then-else`` instruction:
+
+.. code-block:: ocaml
+
+                match expr with
+                | True  => expr_1
+                | False => expr_2
+                end
+
   
-Caller is not owner
-""""""""""""""""""""""""
+The Caller is Not the Owner
+"""""""""""""""""""""""""""""
 
-In case the caller is different from ``owner``, the transition takes the
-``False`` branch and the contract sends out a message. Scilla defines a special
-type ``Message`` for outgoing messages. An outgoing message contains
-information about any other contract that needs to be called as a part of the
-current call. 
+In case the caller is different from ``owner``, the transition takes
+the ``False`` branch and the contract emits an event using the
+instruction ``event``.
 
-The output message in this case is an error code ``not_owner_code`` included in
-``msg``.  More concretely, the output message in this case is:
+An event is a signal that gets stored on the blockchain for everyone
+to see. If a user uses a client application to invoke a transition on
+a contract, the client application can listen for events that the
+contract may emit, and alert the user.
 
-.. code-block:: ocaml
-
-        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : not_owner_code};
-
-
-        
-An outgoing message is formed of  ``vname : value`` pairs delimited by ``;``,
-the scope of which is defined by ``{}``. Each outgoing message must have
-three compulsory fields: ``_tag``, ``_recipient`` and ``_amount`` in no
-particular order. ``_recipient`` is an account address to which the message
-will be sent. ``_tag`` is the name of the transition to be invoked in
-``_recipient`` and ``_amount`` is the number of ZIL to be transferred to
-``_recipient``. 
-
-Apart from these compulsory fields, a message may have other fields. In the
-current example, the message has a field ``code`` to report an error message.
-
-
-Sending a message out is done using the ``send`` instruction that takes a list
-of entries of type ``Message``. In the current example, the list will contain
-only one entry.  To sum up, the following code will create a message and send
-it out.
+More concretely, the output event in this case is:
 
 .. code-block:: ocaml
 
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname : "setHello"; code : not_owner_code};
 
-``one_msg`` is a utility function that allows to create a list of messages and
-inserts ``msg`` into the list.
+An event is comprised of a number of ``vname : value`` pairs delimited
+by ``;`` inside a pair of curly braces ``{}``. An event must contain
+the compulsory field ``_eventname``, and may contain other fields such
+as the ``code`` field in the example above. 
+
+.. note::
+
+   In our example we have chosen to name the event after the
+   transition that emits the event, but any name can be
+   chosen. However, it is recommended that you name the events in a
+   way that makes it easy to see which part of the code emitted the
+   event.
 
 
-Caller is owner
+
+
+The Caller is the Owner
 """"""""""""""""""""""""
 
 In case the caller is ``owner``, the contract allows the caller to set the
 value of the mutable variable ``welcome_msg`` to the input parameter ``msg``.
-It is done through the following instruction. 
+This is done through the following instruction:
 
 
 .. code-block:: ocaml
@@ -232,48 +224,35 @@ It is done through the following instruction.
 
 .. note::
  
-    Writing to a mutable parameter is done via the operator ``:=``.
+    Writing to a mutable variable is done using the operator ``:=``.
 
 
-
-And as in the previous case, the contract then sends out a message to the caller
-with the code ``set_hello_code``. 
+And as in the previous case, the contract then emits an event with
+the code ``set_hello_code``.
 
 
 Libraries 
 ***************
 
-A Scilla contract may come with some helper libraries that declare purely
-functional (with no state manipulation) components of a contract. A library is
-declared in the preamble of a contract using the keyword ``library`` followed by
-the name of the library. In our current example a library declaration would
-look like the following:
+A Scilla contract may come with some helper libraries that declare
+purely functional components of a contract, i.e., components with no
+state manipulation. A library is declared in the preamble of a
+contract using the keyword ``library`` followed by the name of the
+library. In our current example a library declaration would look as
+follows:
 
-
- 
 .. code-block:: ocaml
 
 	library HelloWorld
 
-In our example, the library will include the definition of the error codes as
-given below defined using standard ``let x = y in expr`` construct. 
+The library may include utility functions and program constants using
+the ``let x = y in expr`` construct. In our example the library will
+only include the definition of error codes:
 
 .. code-block:: ocaml
 
 	let not_owner_code  = Uint32 1
 	let set_hello_code  = Uint32 2
-
-The library may also include utility functions, for instance, the function
-``one_msg`` that creates a list with one entry of type ``Message`` as given
-below:
-
-.. code-block:: ocaml
-
-	let one_msg =
-  	   fun (msg : Message) =>
-           let nil_msg = Nil {Message} in
-           Cons {Message} msg nil_msg
-
 
 At this stage, our contract fragment will have the following form:
 
@@ -281,11 +260,6 @@ At this stage, our contract fragment will have the following form:
 	
    library HelloWorld
   
-    let one_msg =
-        fun (msg : Message) =>
-        let nil_msg = Nil {Message} in
-        Cons {Message} msg nil_msg
-
     let not_owner_code  = Uint32 1
     let set_hello_code  = Uint32 2
 
@@ -299,42 +273,65 @@ At this stage, our contract fragment will have the following form:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : not_owner_code};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname : "setHello"; code : not_owner_code};
+        event e
       | True =>
         welcome_msg := msg;
-        msg = {_tag : "Main"; _recipient : _sender; _amount : Uint128 0; code : set_hello_code};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname : "setHello"; code : set_hello_code};
+        event e
       end
     end
 
-Final Touches
-*********************
 
-We may now add the second transition ``getHello()`` that allows client applications to know what the ``welcome_msg`` is. The declaration is similar to ``setHello (msg : String)`` except that ``getHello()`` does not take any parameter.
+Adding Another Transition
+***************************
 
-In Scilla, there are two ways that transitions can transmit data. One way is through ``send`` messages (covered in ``setHello``), and another way is through events. The difference between the two lies in what you are trying to communicate to.
-
-``send`` is used to send message to another smart contract and is not emitted back to your client application. Meanwhile, events are dispatched signals that smart contracts can use to transmit data to client applications. 
+We may now add the second transition ``getHello()`` that allows client
+applications to know what the ``welcome_msg`` is. The declaration is
+similar to ``setHello (msg : String)`` except that ``getHello()`` does
+not take a parameter.
 
 .. code-block:: ocaml
 
     transition getHello ()
         r <- welcome_msg;
-        e = {_eventname: "GetHello"; msg: r};
+        e = {_eventname: "getHello"; msg: r};
         event e
     end
 
 .. note::
-	Reading from a mutable variable is done via the operator ``<-``. In our example, this translates to ``r <- welcome_msg``.
+	Reading from a contract state variable is done using the operator ``<-``.
 
-In the ``getHello()`` transition, we will first read from a mutable variable, then we construct an event message. Take note that ``_eventname`` is a compulsory variable which must be added into an event message. You are free to name it whatever you want, but it is a good practice to give it a unique name so you know where your events are being emitted from. 
+In the ``getHello()`` transition, we will first read from a mutable
+variable, and then we construct and emit the event.
 
-After constructing the event message, you can emit the event to your client application through ``event e``.
 
-The complete contract that implements the desired specification is given below:
+Scilla Version
+***************
+
+Once a contract has been deployed on the network, it cannot be
+changed. It is therefore necessary to specify which version of Scilla
+the contract is written in, so as to ensure that the behaviour of the
+contract does not change even if changes are made to the Scilla
+specification.
+
+The Scilla version of the contract is declared using the keyword
+``scilla_version``:
+
+.. code-block:: ocaml
+
+    scilla_version 0
+
+The version declaration must appear before any library or contract
+code.
+
+
+Putting it All Together
+*************************
+
+The complete contract that implements the desired specification is
+given below, where we have added comments using the ``(* *)``
+construct:
 
 .. code-block:: ocaml
 
@@ -344,17 +341,12 @@ The complete contract that implements the desired specification is given below:
     (*                 Scilla version                  *)
     (***************************************************)
 
-    scilla_version 1
+    scilla_version 0
     
     (***************************************************)
     (*               Associated library                *)
     (***************************************************)
     library HelloWorld
-
-    let one_msg = 
-      fun (msg : Message) => 
-      let nil_msg = Nil {Message} in
-      Cons {Message} msg nil_msg
 
     let not_owner_code  = Uint32 1
     let set_hello_code  = Uint32 2
@@ -372,45 +364,49 @@ The complete contract that implements the desired specification is given below:
       is_owner = builtin eq owner _sender;
       match is_owner with
       | False =>
-        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : not_owner_code};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname : "setHello"; code : not_owner_code};
+        event e
       | True =>
         welcome_msg := msg;
-        msg = {_tag : "Main"; _recipient : _sender; _amount : 0; code : set_hello_code};
-        msgs = one_msg msg;
-        send msgs
+        e = {_eventname : "setHello"; code : set_hello_code};
+        event e
       end
     end
 
     transition getHello ()
-        r <- welcome_msg;
-        e = {_eventname: "getHello"; msg: r};
-        event e
+      r <- welcome_msg;
+      e = {_eventname: "getHello"; msg: r};
+      event e
     end
 
 
 
-Crowdfunding
-###################
+A Second Example: Crowdfunding
+#################################
 
 In this section, we present a slightly more involved contract that runs a
 crowdfunding campaign. In a crowdfunding campaign, a project owner wishes to
 raise funds through donations from the community. 
 
-It is  assumed that the owner (``owner``) wishes to run the campaign for a
-certain pre-determined period of time (``max_block``). The owner also wishes to
-raise a minimum amount of funds (``goal``) without which the project can not be
+It is assumed that the owner (``owner``) wishes to run the campaign
+until a certain, pre-determined block number is reached on the
+blockchain (``max_block``). The owner also wishes to raise a minimum
+amount of funds (``goal``) without which the project can not be
 started. The contract hence has three immutable variables ``owner``,
-``max_block`` and ``goal``. 
+``max_block`` and ``goal``.
 
+The total amount that has been donated to the campaign so far is
+stored in a field ``_balance``. Any contract in Scilla has an implicit
+``_balance`` field of type ``Uint128``, which is initialised to 0 when
+the contract is deployed, and which holds the amount of ZIL in the
+contract's account on the blockchain. 
 
-The campaign is deemed successful if the owner can raise the minimum goal in the
-stipulated time. In
-case the campaign is unsuccessful, the donations are returned to the project
-backers who contributed during the campaign. The contract maintains two mutable
-variables: ``backer`` a map between contributor's address and amount
-contributed and a boolean flag ``funded`` that indicates whether the owner has already
+The campaign is deemed successful if the owner can raise the goal in
+the stipulated time. In case the campaign is unsuccessful, the
+donations are returned to the project backers who contributed during
+the campaign. The contract maintains two mutable variables: ``backer``
+a map between contributor's address and amount contributed and a
+boolean flag ``funded`` that indicates whether the owner has already
 transferred the funds after the end of the campaign.
 
 The contract contains three transitions: ``Donate ()`` that allows anyone to
@@ -419,7 +415,131 @@ owner** to claim the donated amount and transfer it to ``owner`` and
 ``ClaimBack()`` that allows contributors to claim back their donations in case
 the campaign is not successful.
 
-The complete contract is given below:
+
+Reading the Current Block Number
+**********************************
+
+The deadline is given as a block number, so to check whether the
+deadline has passed, we must compare the deadline against the current
+block number.
+
+The current block number is read as follows:
+
+.. code-block:: ocaml
+
+   blk <- & BLOCKNUMBER;
+
+Block numbers have a dedicated type ``BNum`` in Scilla, so as to not
+confuse them with regular unsigned integers.
+
+.. note::
+
+   Reading data from the blockchain is done using the operator
+   ``<- &``. Blockchain data cannot be updated directly from the
+   contract.
+  
+
+Reading and Updating the Current Balance
+******************************************
+
+The target for the campaign is specified by the owner in the immutable
+variable ``goal`` when the contract is deployed. To check whether the
+target have been met, we must compare the total amount raised to the
+target.
+
+The amount of ZIL raised is stored in the contract's account on the
+blockchain, and can be accessed through the implicitly declared
+``_balance`` field as follows:
+
+.. code-block:: ocaml
+
+   bal <- _balance;
+
+Money is represented as values of type ``Uint128``.
+
+.. note::
+
+   The ``_balance`` field is read using the operator ``<-`` just like
+   any other contract state variable. However, the ``_balance`` field
+   can only be updated by accepting money from incoming messages
+   (using the instruction ``accept``), or by explicitly transferring
+   money to other account (using the instruction ``send`` as explained
+   below).
+
+
+
+Sending Messages
+**********************
+
+In Scilla, there are two ways that transitions can transmit data. One
+way is through events, as covered in the previous example. The other
+is through the sending of messages using the instruction ``send``.
+
+``send`` is used to send messages to other accounts, either in order
+to invoke transitions on another smart contract, or to transfer money
+to user accounts. On the other hand, events are dispatched signals
+that smart contracts can use to transmit data to client applications.
+
+To construct a message we use a similar syntax as when constructing
+events:
+
+.. code-block:: ocaml
+
+   msg = {_tag : ""; _recipient : owner; _amount : bal; code : got_funds_code};
+
+A message must contain the compulsory fields ``_tag``, ``_recipient``
+and ``_amount``. The ``_recipient`` field is the blockchain address
+(of type ``ByStr20``) that the message is to be sent to, and the
+``_amount`` field is the number of ZIL to be transferred to that
+account.
+
+The value of the ``_tag`` field is the name of the transition (of type ``String``) 
+that is to be invoked on the ``_recipient`` contract. If ``_recipient`` 
+is a user account, then the value of ``_tag`` can be set to be ``""`` (the empty string).
+In fact, if the ``_recipient`` is a user account, then the value of ``_tag`` is ignored.
+
+In addition to the compulsory fields the message may contain other
+fields, such as ``code`` above. However, if the message recipient is a
+contract, the additional fields must have the same names and types as
+the parameters of the transition being invoked on the recipient
+contract.
+
+Sending a message is done using the ``send`` instruction, which takes
+a list of messages as a parameter. Since we will only ever send one
+message at a time in the crowdfunding contract, we define a library
+function ``one_msg`` to construct a list consisting of one message:
+
+.. code-block:: ocaml
+                
+   let one_msg =
+     fun (msg : Message) =>
+     let nil_msg = Nil {Message} in
+       Cons {Message} msg nil_msg
+
+
+To send out a message, we first construct the message, insert it into
+a list, and send it:
+
+.. code-block:: ocaml
+
+   msg = {_tag : ""; _recipient : owner; _amount : bal; code : got_funds_code};
+   msgs = one_msg msg;
+   send msgs
+
+
+.. note::
+
+   The Zilliqa blockchain does not yet support sending multiple
+   messages in the same transition. This means that the list given as
+   an argument to ``send`` must contain only one message, and that a
+   transition may perform at most one ``send`` instruction each time
+   the transition is called.
+   
+
+Putting it All Together
+*************************
+
+The complete crowdfunding contract is given below.
 
 .. code-block:: ocaml
 
@@ -428,7 +548,7 @@ The complete contract is given below:
         (*                 Scilla version                  *)
         (***************************************************)
 
-        scilla_version 1
+        scilla_version 0
 
   	(***************************************************)
   	(*               Associated library                *)
@@ -520,24 +640,21 @@ The complete contract is given below:
   	    bs  <- backers;
   	    res = check_update bs _sender _amount;
   	    match res with
-  	    | None => 
-  	      msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-  		      code : already_backed_code};
-  	      msgs = one_msg msg;
-  	      send msgs
+  	    | None =>
+              e = {_eventname : "DonationFailure"; donor : _sender;
+                   amount : _amount; code : already_backed_code};
+              event e
   	    | Some bs1 =>
   	      backers := bs1; 
   	      accept; 
-  	      msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-  		      code : accepted_code};
-  	      msgs = one_msg msg;
-  	      send msgs     
+              e = {_eventname : "DonationSuccess"; donor : _sender;
+                   amount : _amount; code : accepted_code};
+              event e
   	    end  
   	  | False => 
-  	    msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-  		    code : missed_dealine_code};
-  	    msgs = one_msg msg;
-  	    send msgs
+            e = {_eventname : "DonationFailure"; donor : _sender;
+                 amount : _amount; code : missed_deadline_code};
+            event e
   	  end 
   	end
   
@@ -545,10 +662,9 @@ The complete contract is given below:
   	  is_owner = builtin eq owner _sender;
   	  match is_owner with
   	  | False => 
-  	    msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-  		    code : not_owner_code};
-  	    msgs = one_msg msg;
-  	    send msgs
+            e = {_eventname : "GetFundsFailure"; caller : _sender;
+                 amount : Uint128 0; code : not_owner_code};
+            event e
   	  | True => 
   	    blk <- & BLOCKNUMBER;
   	    in_time = blk_leq blk max_block;
@@ -559,15 +675,13 @@ The complete contract is given below:
   	    c4 = andb c1 c3;
   	    match c4 with 
   	    | False =>  
-  	      msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-  		      code : cannot_get_funds};
-  	      msgs = one_msg msg;
-  	      send msgs
+              e = {_eventname : "GetFundsFailure"; caller : _sender;
+                   amount : Uint128 0; code : cannot_get_funds};
+              event e
   	    | True => 
   	      tt = True;
   	      funded := tt;
-  	      msg  = {_tag : Main; _recipient : owner; _amount : bal; 
-  		      code : got_funds_code};
+  	      msg = {_tag : ""; _recipient : owner; _amount : bal; code : got_funds_code};
   	      msgs = one_msg msg;
   	      send msgs
   	    end
@@ -580,10 +694,9 @@ The complete contract is given below:
   	  after_deadline = builtin blt max_block blk;
   	  match after_deadline with
   	  | False =>
-  	    msg  = {_tag : Main; _recipient : _sender; _amount : 0;
-  		code : too_early_code};
-  	    msgs = one_msg msg;
-  	    send msgs
+            e = {_eventname : "ClaimBackFailure"; caller : _sender;
+                 amount : Uint128 0; code : too_early_code};
+            event e
   	  | True =>
   	    bs <- backers;
   	    bal <- _balance;
@@ -596,25 +709,22 @@ The complete contract is given below:
   	    c5 = andb c3 c4;
   	    match c5 with
   	    | False =>
-  	      msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-  		      code : cannot_reclaim_code};
-  	      msgs = one_msg msg;
-  	      send msgs
+              e = {_eventname : "ClaimBackFailure"; caller : _sender;
+                   amount : Uint128 0; code : cannot_reclaim_code};
+              event e
   	    | True =>
   	      res = builtin get bs _sender;
   	      match res with
   	      | None =>
-  		msg  = {_tag : Main; _recipient : _sender; _amount : 0; 
-  			code : cannot_reclaim_code};
-  		msgs = one_msg msg;
-  		send msgs
+                e = {_eventname : "ClaimBackFailure"; caller : _sender;
+                     amount : Uint128 0; code : cannot_reclaim_code};
+                event e
   	      | Some v =>
-  		bs1 = builtin remove bs _sender;
-  		backers := bs1;
-  		msg  = {_tag : Main; _recipient : _sender; _amount : v; 
-  			code : reclaimed_code};
-  		msgs = one_msg msg;
-  		send msgs
+                bs1 = builtin remove bs _sender;
+                backers := bs1;
+                msg = {_tag : Main; _recipient : _sender; _amount : v; code : reclaimed_code};
+                msgs = one_msg msg;
+                send msgs
   	      end
   	    end
   	  end  

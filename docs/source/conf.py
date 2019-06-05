@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = u'scilla-doc'
-copyright = u'2018, Zilliqa Research'
+copyright = u'2019, Zilliqa Research'
 author = u'Amrit Kumar'
 
 # The short X.Y version
