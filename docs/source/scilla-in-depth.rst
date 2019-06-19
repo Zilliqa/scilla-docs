@@ -435,8 +435,11 @@ same name must have the same entry names and types.
    at any point during execution, but the event will not be visible on
    the blockchain before the transition has completed.
 
-Finally, a contract can raise errors by throwing exceptions. Any error
-in the execution of a transition (including those due to throwing of
+Run-time Errors
+**************
+
+A contract can raise errors by throwing exceptions. Any error
+in the execution of a transition (including those due to thrown
 exceptions, out-of-gas errors and others such as integer overflows)
 results in the blockchain aborting the execution of the contract as well
 as aborting any other contracts that were executed before in that chain.
