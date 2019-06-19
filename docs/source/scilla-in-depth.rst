@@ -1035,8 +1035,9 @@ no arguments.
 
 The ADTs of a contract must have distinct names, and the set of all
 constructors of all ADTs in a contract must also have distinct
-names. However, a constructor and an ADT may have the same name, as is
-the case with the ``Pair`` type whose only constructor is also called
+names. Both the ADT and constructor names must begin with a capital letter
+('A' - 'Z'). However, a constructor and an ADT may have the same name, as
+is the case with the ``Pair`` type whose only constructor is also called
 ``Pair``.
 
 As an example of user-defined ADTs, consider the following type
