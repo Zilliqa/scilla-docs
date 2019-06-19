@@ -435,6 +435,30 @@ same name must have the same entry names and types.
    at any point during execution, but the event will not be visible on
    the blockchain before the transition has completed.
 
+Run-time Errors
+**************
+
+A contract can raise errors by throwing exceptions. Any error
+in the execution of a transition (including those due to thrown
+exceptions, out-of-gas errors and others such as integer overflows)
+results in the blockchain aborting the execution of the contract as well
+as aborting any other contracts that were executed before in that chain.
+
+The syntax for raising errors is similar to that of events and messages.
+
+.. code-block:: ocaml
+
+    e = { _exception : "InvalidInput"; <entry>_2; <entry>_3 };
+    throw e
+
+Unlike that for ``event`` or ``send``, The argument to ``throw`` is optional
+and can be omitted. An empty throw will result in an error that just conveys
+the location of where the ``throw`` happened without more information.
+
+.. note::
+
+  We do not currently support catching exceptions and may add this in the future.
+
 Primitive Data Types & Operations
 #################################
 
