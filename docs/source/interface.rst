@@ -25,7 +25,7 @@ transition must be provided with these four JSON inputs: ::
     ./scilla-runner -init init.json -istate input_state.json -iblockchain input_blockchain.json -imessage input_message.json -o output.json -i input.scilla
 
 The interpreter executable can be run either to create a contract (denoted
-``CreateContract``) or to invoke a transition (function) in a contract (``InvokeContract``).
+``CreateContract``) or to invoke a transition in a contract (``InvokeContract``).
 Depending on which of these two, some of the arguments will be absent.
 The table below outlays the arguments that should be present in each of
 these two cases.  A ``CreateContract`` is distinguished from an
@@ -281,7 +281,7 @@ gas_remaining           The remaining gas after invoking or deploying a contract
 _accepted               Whether the contract has accepted ZIL (Either ``"true"`` or ``"false"``)
 message                 The message to be sent to another contract/non-contract account, if any.
 states                  An array of objects that form the new contract state
-events                  An array of events emitted by the transition.
+events                  An array of events emitted by the transition and the procedures it invoked.
 =====================   ====================================================================
 
 + ``message`` is a JSON object with a similar format to
