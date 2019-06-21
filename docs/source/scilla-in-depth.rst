@@ -22,7 +22,7 @@ The general structure of a Scilla contract is given in the code fragment below:
 
   1. The first part declares the immutable parameters of the contract.
   2. The second part declares the mutable fields.
-  3. The third part contains all ``transition`` definitions. 
+  3. The third part contains all ``transition`` and ``procedure`` definitions. 
 
 
 .. code-block:: ocaml
@@ -62,12 +62,24 @@ The general structure of a Scilla contract is given in the code fragment below:
     field vname_1 : vtype_1 = init_val_1
     field vname_2 : vtype_2 = init_val_2
 
-    (* Transitions *)
+    (* Transitions and procedures *)
 
+
+    (* Procedure signature *)
+    procedure firstProcedure (param_1 : type_1, param_2 : type_2)
+      (* Procedure body *)
+    
+    end
 
     (* Transition signature *)
     transition firstTransition (param_1 : type_1, param_2 : type_2)
       (* Transition body *)
+    
+    end
+
+    (* Procedure signature *)
+    procedure secondProcedure (param_1 : type_1, param_2 : type_2)
+      (* Procedure body *)
     
     end
 
@@ -121,8 +133,8 @@ declaration prefixed with the keyword ``field``.
 
 Each expression here is an initializer for the field in question. The
 definitions complete the initial state of the contract, at the time of
-creation.  As the contract goes through transitions, the values of
-these fields get modified.
+creation.  As the contract executes a transition, the values of these
+fields get modified.
 
 .. note::
 
@@ -177,9 +189,14 @@ The base unit used in Scilla smart contracts is QA. Hence, when using money vari
 Transitions
 ************
 
-`Transitions` define the change in the state of the contract. These are
-defined with the keyword ``transition`` followed by the parameters to
-be passed. The definition ends with the ``end`` keyword.
+`Transitions` are a way to define now the state of the contract may
+change. The transitions of a contract define the public interface for
+the contract, since transitions may be invoked by sending a message to
+the contract.
+
+Transitions are defined with the keyword ``transition`` followed
+by the parameters to be passed. The definition ends with the ``end``
+keyword.
 
 .. code-block:: ocaml
 
@@ -224,7 +241,63 @@ multiple parameters are separated by ``,``.
      serialisable. This means that the type of every constructor
      argument must be serialisable.
 
+Procedures
+************
 
+`Procedures` are another way to define now the state of the contract
+may change, but in contrast to transitions, procedures are not part of
+the public interface of the contract, and may not be invoked by
+sending a message to the contract. The only way to invoke a procedure
+is to call it from a transition or from another procedure.
+
+Procedures are defined with the keyword ``procedure`` followed
+by the parameters to be passed. The definition ends with the ``end``
+keyword.
+
+.. code-block:: ocaml
+
+  procedure foo (vname_1 : vtype_1, vname_2 : vtype_2, ...)
+    ...
+  end
+
+where ``vname : vtype`` specifies the name and type of each parameter and
+multiple parameters are separated by ``,``. 
+
+Once a procedure is defined it is available to invoked from
+transitions and procedures in the rest of the contract file. It is not
+possible to invoke a procedure from transition or procedure defined
+earlier in the contract, nor is it possible for a procedure to call
+itself recursively.
+
+Procedures are invoked using the name of the procedure followed by the
+actual arguments to the procedure:
+
+.. code-block:: ocaml
+
+        v1 = ...;
+        v2 = ...;
+        foo v1 v2;
+
+All arguments must be supplied when the procedure is invoked. A
+procedure does not return a result.
+        
+
+.. note::
+
+   The implicit transition parameters ``_sender`` and ``_amount`` are
+   implicitly passed to all the procedures that a transition
+   calls. There is therefore no need to declare those parameters
+   explicitly when defining a procedure.
+   
+.. note::
+
+   Procedure parameters cannot be (or contain) maps. If a procedure
+   needs to access a map, it is therefore necessary to either make the
+   procedure directly access the contract field containing the map, or
+   use a library function to perform the necessary computations on the
+   map.
+
+     
 Expressions 
 ************
 
@@ -318,6 +391,10 @@ mathematical. Scilla contains the following types of statements:
 - ``v = e`` : Evaluate the expression ``e``, and assign the value to
   the local variable ``v``.
 
+- ``p x y z`` : Invoke the procedure ``p`` with the arguments ``x``,
+  ``y`` and ``z``. The number of arguments supplied must correspond to
+  the number of arguments the procedure takes.
+
 - ``match`` : Pattern-matching at statement level:
 
   .. code-block:: ocaml
@@ -403,10 +480,11 @@ the recipient contract.
 .. note::
 
    The Zilliqa blockchain does not yet support sending multiple
-   messages in the same transition. This means that the list given as
-   an argument to ``send`` must contain only one message, and that a
-   transition may perform at most one ``send`` instruction each time
-   the transition is called.
+   messages from the same transition invocation, including the
+   procedures that are invoked by the transition. This means that the
+   list given as an argument to ``send`` must contain only one
+   message, and that a transition may perform at most one ``send``
+   instruction each time the transition is called.
 
 A contract can also communicate to the outside world by emitting
 events. An event is a signal that gets stored on the blockchain for
@@ -429,10 +507,12 @@ same name must have the same entry names and types.
 
 .. note::
 
-   A transition may send a message at any point during execution, but
+   A transition may send a message at any point during execution
+   (including during the execution of the procedures it invokes), but
    the recipient account will not receive the message until after the
    transition has completed. Similarly, a transition may emit events
-   at any point during execution, but the event will not be visible on
+   at any point during execution (including during the execution of
+   the procedures it invokes), but the event will not be visible on
    the blockchain before the transition has completed.
 
 Primitive Data Types & Operations
@@ -1319,7 +1399,7 @@ contract's own library declaration, e.g.:
    ... (* The declarations of the contract's own library values and functions *)
 
    contract Wallet ( ... )
-   ... (* The transitions of the contract *)
+   ... (* The transitions and procedures of the contract *)
 
 
 Below, we present the functions defined in each of the library.
@@ -1674,7 +1754,7 @@ The ``init.json`` file
 
 In addition to the version specified in the contract source code, it
 is also required that the contract's ``init.json`` specifies the same
-version when the contract is deployed and when the contracts
+version when the contract is deployed and when the contract's
 transitions are invoked. This eases the process for the blockhain
 code to decide which interpreter to invoke.
 

@@ -583,6 +583,16 @@ donation did not fail, the error code is ignored, and a
 failed, then a ``DonationFailure`` event is issued with the error code
 that was passed as the second argument to the procedure.
 
+The following code shows how to invoke the ``DonationEvent``
+procedure with the arguments ``True`` and ``0``:
+
+.. code-block:: ocaml
+
+        c = True;
+        err_code = Int32 0;
+        DonationEvent c err_code;
+
+
 .. note::
 
     The special variables ``_sender`` and ``_amount`` are available to
