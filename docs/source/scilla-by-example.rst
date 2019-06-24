@@ -536,6 +536,87 @@ a list, and send it:
    the transition is called.
    
 
+Procedures
+**********************
+
+The transitions of a Scilla contract often need to perform the same
+small sequence of instructions. In order to prevent code duplication a
+contract may define a number of `procedures`, which may be invoked
+from the contract's transitions. Procedures also help divide the
+contract code into separate, self-contained pieces which are easier to
+read and reason about individually.
+
+A procedure is declared using the keyword ``procedure``. The end of a
+procedure is declared using the keyword ``end``. The ``procedure``
+keyword is followed by the transition name, then the input parameters
+within ``()``, and then the statements of the procedure.
+
+In our example the ``Donate`` transition will issue an event in three
+situations: An error event if the donation happens after the deadline,
+another error event if the backer has donated money previously, and a
+non-error event indicating a succesful donation. Since much of the
+event issuing code is identical, we decide to define a procedure
+``DonationEvent`` which is responsible for issuing the correct event:
+
+.. code-block:: ocaml
+
+        procedure DonationEvent (failure : Bool, error_code : Int32)
+          match failure with
+          | False =>
+            e = {_eventname : "DonationSuccess"; donor : _sender;
+                 amount : _amount; code : accepted_code};
+            event e
+          | True =>
+            e = {_eventname : "DonationFailure"; donor : _sender;
+                 amount : _amount; code : error_code};
+            event e
+          end
+        end
+
+The procedure takes two arguments: A ``Bool`` indicating whether the
+donation failed, and an error code indicating the type of failure if a
+failure did indeed occur.
+
+The procedure performs a ``match`` on the ``failure`` argument. If the
+donation did not fail, the error code is ignored, and a
+``DonationSuccess`` event is issued. Otherwise, if the donation
+failed, then a ``DonationFailure`` event is issued with the error code
+that was passed as the second argument to the procedure.
+
+The following code shows how to invoke the ``DonationEvent``
+procedure with the arguments ``True`` and ``0``:
+
+.. code-block:: ocaml
+
+        c = True;
+        err_code = Int32 0;
+        DonationEvent c err_code;
+
+
+.. note::
+
+    The special variables ``_sender`` and ``_amount`` are available to
+    the procedure even though the procedure is invoked by a transition
+    rather than by an incoming message. It is not necessary to pass
+    the variables as arguments to the procedure.
+   
+.. note::
+
+   Procedures are similar to library functions in that they can be
+   invoked from any transition (as long as the transition is defined
+   after the procedure). However, procedures are different from
+   library functions in that library functions cannot access the
+   contract state, and procedures cannot return a value.
+
+   Procedures are similar to transitions in that they can access and
+   change the contract state, as well as read the incoming messages
+   and send outgoing messages. However, procedures cannot be invoked
+   from the blockchain layer. Only transitions may be invoked from
+   outside the contract, so procedures can be viewed as private
+   transitions.
+
+
+
 Putting it All Together
 *************************
 
@@ -550,183 +631,176 @@ The complete crowdfunding contract is given below.
 
         scilla_version 0
 
-  	(***************************************************)
-  	(*               Associated library                *)
-  	(***************************************************)
-  	library Crowdfunding
-  
-  	let andb = 
-  	  fun (b : Bool) =>
-  	  fun (c : Bool) =>
-  	    match b with 
-  	    | False => False
-  	    | True  =>
-  	      match c with 
-  	      | False => False
-  	      | True  => True
-  	      end
-  	    end
-  
-  	let orb = 
-  	  fun (b : Bool) => fun (c : Bool) =>
-  	    match b with 
-  	    | True  => True
-  	    | False =>
-  	      match c with 
-  	      | False => False
-  	      | True  => True
-  	      end
-  	    end
-  
-  	let negb = fun (b : Bool) => 
-  	  match b with
-  	  | True => False
-  	  | False => True
-  	  end
-  
-  	let one_msg = 
-  	  fun (msg : Message) => 
-  	    let nil_msg = Nil {Message} in
-  	    Cons {Message} msg nil_msg
-  	    
-  	let check_update = 
-  	  fun (bs : Map ByStr20 Uint128) =>
-  	  fun (_sender : ByStr20) =>
-  	  fun (_amount : Uint128) =>
-  	    let c = builtin contains bs _sender in
-  	    match c with 
-  	    | False => 
-  	      let bs1 = builtin put bs _sender _amount in
-  	      Some {Map ByStr20 Uint128} bs1 
-  	    | True  => None {Map ByStr20 Uint128}
-  	    end
-  
-  	let blk_leq =
-  	  fun (blk1 : BNum) =>
-  	  fun (blk2 : BNum) =>
-  	    let bc1 = builtin blt blk1 blk2 in 
-  	    let bc2 = builtin eq blk1 blk2 in 
-  	    orb bc1 bc2
-  
-  	let accepted_code = Uint32 1
-  	let missed_deadline_code = Uint32 2
-  	let already_backed_code  = Uint32 3
-  	let not_owner_code  = Uint32 4
-  	let too_early_code  = Uint32 5
-  	let got_funds_code  = Uint32 6
-  	let cannot_get_funds  = Uint32 7
-  	let cannot_reclaim_code = Uint32 8
-  	let reclaimed_code = Uint32 9
-  	  
-  	(***************************************************)
-  	(*             The contract definition             *)
-  	(***************************************************)
-  	contract Crowdfunding
-  
-  	(*  Parameters *)
-  	(owner     : ByStr20,
-  	 max_block : BNum,
-  	 goal      : Uint128)
-  
-  	(* Mutable fields *)
-  	field backers : Map ByStr20 Uint128 = Emp ByStr20 Uint128
-  	field funded : Bool = False
-  
-  	transition Donate ()
-  	  blk <- & BLOCKNUMBER;
-  	  in_time = blk_leq blk max_block;
-  	  match in_time with 
-  	  | True  => 
-  	    bs  <- backers;
-  	    res = check_update bs _sender _amount;
-  	    match res with
-  	    | None =>
-              e = {_eventname : "DonationFailure"; donor : _sender;
-                   amount : _amount; code : already_backed_code};
-              event e
-  	    | Some bs1 =>
-  	      backers := bs1; 
-  	      accept; 
-              e = {_eventname : "DonationSuccess"; donor : _sender;
-                   amount : _amount; code : accepted_code};
-              event e
-  	    end  
-  	  | False => 
-            e = {_eventname : "DonationFailure"; donor : _sender;
-                 amount : _amount; code : missed_deadline_code};
-            event e
-  	  end 
-  	end
-  
-  	transition GetFunds ()
-  	  is_owner = builtin eq owner _sender;
-  	  match is_owner with
-  	  | False => 
-            e = {_eventname : "GetFundsFailure"; caller : _sender;
-                 amount : Uint128 0; code : not_owner_code};
-            event e
-  	  | True => 
-  	    blk <- & BLOCKNUMBER;
-  	    in_time = blk_leq blk max_block;
-  	    c1 = negb in_time;
-  	    bal <- _balance;
-  	    c2 = builtin lt bal goal;
-  	    c3 = negb c2;
-  	    c4 = andb c1 c3;
-  	    match c4 with 
-  	    | False =>  
-              e = {_eventname : "GetFundsFailure"; caller : _sender;
-                   amount : Uint128 0; code : cannot_get_funds};
-              event e
-  	    | True => 
-  	      tt = True;
-  	      funded := tt;
-  	      msg = {_tag : ""; _recipient : owner; _amount : bal; code : got_funds_code};
-  	      msgs = one_msg msg;
-  	      send msgs
-  	    end
-  	  end   
-  	end
-  
-  	(* transition ClaimBack *)
-  	transition ClaimBack ()
-  	  blk <- & BLOCKNUMBER;
-  	  after_deadline = builtin blt max_block blk;
-  	  match after_deadline with
-  	  | False =>
-            e = {_eventname : "ClaimBackFailure"; caller : _sender;
-                 amount : Uint128 0; code : too_early_code};
-            event e
-  	  | True =>
-  	    bs <- backers;
-  	    bal <- _balance;
-  	    (* Goal has not been reached *)
-  	    f <- funded;
-  	    c1 = builtin lt bal goal;
-  	    c2 = builtin contains bs _sender;
-  	    c3 = negb f;
-  	    c4 = andb c1 c2;
-  	    c5 = andb c3 c4;
-  	    match c5 with
-  	    | False =>
-              e = {_eventname : "ClaimBackFailure"; caller : _sender;
-                   amount : Uint128 0; code : cannot_reclaim_code};
-              event e
-  	    | True =>
-  	      res = builtin get bs _sender;
-  	      match res with
-  	      | None =>
-                e = {_eventname : "ClaimBackFailure"; caller : _sender;
-                     amount : Uint128 0; code : cannot_reclaim_code};
-                event e
-  	      | Some v =>
-                bs1 = builtin remove bs _sender;
-                backers := bs1;
-                msg = {_tag : Main; _recipient : _sender; _amount : v; code : reclaimed_code};
-                msgs = one_msg msg;
-                send msgs
-  	      end
-  	    end
-  	  end  
-  	end
+        (***************************************************)
+        (*               Associated library                *)
+        (***************************************************)
+        import BoolUtils
+        
+        library Crowdfunding
+        
+        let one_msg = 
+          fun (msg : Message) => 
+            let nil_msg = Nil {Message} in
+            Cons {Message} msg nil_msg
+        
+        let blk_leq =
+          fun (blk1 : BNum) =>
+          fun (blk2 : BNum) =>
+            let bc1 = builtin blt blk1 blk2 in 
+            let bc2 = builtin eq blk1 blk2 in 
+            orb bc1 bc2
+        
+        let get_funds_allowed =
+          fun (cur_block : BNum) =>
+          fun (max_block : BNum) =>
+          fun (balance : Uint128) =>
+          fun (goal : Uint128) =>
+            let in_time = blk_leq cur_block max_block in
+            let deadline_passed = negb in_time in
+            let target_not_reached = builtin lt balance goal in
+            let target_reached = negb target_not_reached in
+            andb deadline_passed target_reached
+        
+        let claimback_allowed =
+          fun (balance : Uint128) =>
+          fun (goal : Uint128) =>
+          fun (already_funded : Bool) =>
+            let target_not_reached = builtin lt balance goal in
+            let not_already_funded = negb already_funded in
+            andb target_not_reached not_already_funded
+        
+        let accepted_code = Int32 1
+        let missed_deadline_code = Int32 2
+        let already_backed_code  = Int32 3
+        let not_owner_code  = Int32 4
+        let too_early_code  = Int32 5
+        let got_funds_code  = Int32 6
+        let cannot_get_funds  = Int32 7
+        let cannot_reclaim_code = Int32 8
+        let reclaimed_code = Int32 9
 
+        (***************************************************)
+        (*             The contract definition             *)
+        (***************************************************)
+        contract Crowdfunding
+        
+        (*  Parameters *)
+        (owner     : ByStr20,
+        max_block : BNum,
+        goal      : Uint128)
+        
+        (* Mutable fields *)
+        field backers : Map ByStr20 Uint128 = Emp ByStr20 Uint128
+        field funded : Bool = False
+        
+        procedure DonationEvent (failure : Bool, error_code : Int32)
+          match failure with
+          | False =>
+            e = {_eventname : "DonationSuccess"; donor : _sender;
+                 amount : _amount; code : accepted_code};
+            event e
+          | True =>
+            e = {_eventname : "DonationFailure"; donor : _sender;
+                 amount : _amount; code : error_code};
+            event e
+          end
+        end
+        
+        procedure PerformDonate ()
+          c <- exists backers[_sender];
+          match c with
+          | False =>
+            accept;
+            backers[_sender] := _amount;
+            DonationEvent c accepted_code
+          | True =>
+            DonationEvent c already_backed_code
+          end
+        end
+        
+        transition Donate ()
+          blk <- & BLOCKNUMBER;
+          in_time = blk_leq blk max_block;
+          match in_time with 
+          | True  => 
+            PerformDonate
+          | False =>
+            t = True;
+            DonationEvent t missed_deadline_code
+          end 
+        end
+        
+        procedure GetFundsFailure (error_code : Int32)
+          e = {_eventname : "GetFundsFailure"; caller : _sender;
+               amount : _amount; code : error_code};
+          event e
+        end
+        
+        procedure PerformGetFunds ()
+          bal <- _balance;
+          tt = True;
+          funded := tt;
+          msg = {_tag : ""; _recipient : owner; _amount : bal; code : got_funds_code};
+          msgs = one_msg msg;
+          send msgs
+        end
+          
+        transition GetFunds ()
+          is_owner = builtin eq owner _sender;
+          match is_owner with
+          | False =>
+            GetFundsFailure not_owner_code
+          | True => 
+            blk <- & BLOCKNUMBER;
+            bal <- _balance;
+            allowed = get_funds_allowed blk max_block bal goal;
+            match allowed with 
+            | False =>  
+              GetFundsFailure cannot_get_funds
+            | True =>
+              PerformGetFunds
+            end
+          end   
+        end
+        
+        procedure ClaimBackFailure (error_code : Int32)
+          e = {_eventname : "ClaimBackFailure"; caller : _sender;
+               amount : _amount; code : error_code};
+          event e
+        end
+        
+        procedure PerformClaimBack (amount : Uint128)
+          delete backers[_sender];
+          msg = {_tag : ""; _recipient : _sender; _amount : amount; code : reclaimed_code};
+          msgs = one_msg msg;
+          e = { _eventname : "ClaimBackSuccess"; caller : _sender; amount : amount; code : reclaimed_code};
+          event e;
+          send msgs
+        end
+        
+        transition ClaimBack ()
+          blk <- & BLOCKNUMBER;
+          after_deadline = builtin blt max_block blk;
+          match after_deadline with
+          | False =>
+            ClaimBackFailure too_early_code
+          | True =>
+            bal <- _balance;
+            f <- funded;
+            allowed = claimback_allowed bal goal f;
+            match allowed with
+            | False =>
+              ClaimBackFailure cannot_reclaim_code
+            | True =>
+              res <- backers[_sender];
+              match res with
+              | None =>
+                (* Sender has not donated *)
+                ClaimBackFailure cannot_reclaim_code
+              | Some v =>
+                PerformClaimBack v
+              end
+            end
+          end  
+        end
+        

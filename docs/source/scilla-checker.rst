@@ -43,7 +43,7 @@ annotations to each piece of syntax:
   variables and fields are annotated with tags indicating their usage.
 
 + `Sanity-checking` performs a number of minor checks, e.g., that all
-  parameters to a transition have distinct names.
+  parameters to a transition or a procedure have distinct names.
 
 
 Annotations
@@ -304,8 +304,8 @@ field.
 The Analysis in Detail
 **********************
 
-The analysis works by continually analysing the transitions of the
-contract until no further information is gathered.
+The analysis works by continually analysing the transitions and
+procedures of the contract until no further information is gathered.
 
 The starting point for the analysis is the incoming message that
 invokes the contract's transition, the outgoing messages and events
@@ -336,11 +336,12 @@ Tagging of contract fields happens when a local variable is used when
 loading or storing a contract field. In these cases, the field is
 deemed to have the same tag as the local variable.
 
-Once a transition has been analyzed the local variables and their
-tags are saved, and the analysis proceeds to the next transition while
-keeping the tags of the contract fields. The analysis continues until
-all the transitions have been analysed without any existing tags
-having changed.
+Once a transition or procedure has been analyzed the local variables
+and their tags are saved, and the analysis proceeds to the next
+transition or procedure while keeping the tags of the contract
+fields. The analysis continues until all the transitions and
+procedures have been analysed without any existing tags having
+changed.
 
 
 Tags
@@ -417,7 +418,7 @@ Conversely, both ``owner``, ``max_block`` and ``funded`` represent
 something other than money, so they should all be tagged with `Not
 money`.
 
-The cashflow analysis will tag the parameters and fields according to how they
-are used in the contract's transitions, and if the resulting tags do not
-correspond to the expectation, then the contract likely contains a bug
-somewhere.
+The cashflow analysis will tag the parameters and fields according to
+how they are used in the contract's transitions and procedures, and if
+the resulting tags do not correspond to the expectation, then the
+contract likely contains a bug somewhere.
