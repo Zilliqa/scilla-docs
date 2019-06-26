@@ -648,23 +648,23 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr20``.
 
-- ``builtin to_bystr x`` : Convert a hash ``x`` of type ``ByStrX`` (for
+- ``builtin to_bystr h`` : Convert a hash ``h`` of type ``ByStrX`` (for
   some known ``X``) to one of arbitrary length of type ``ByStr``.
 
-- ``builtin to_uint256 x`` : Convert a hash ``x`` to the equivalent
-  value of type ``Uint256``. ``x`` must be of type ``ByStrX`` for some
+- ``builtin to_uint256 h`` : Convert a hash ``h`` to the equivalent
+  value of type ``Uint256``. ``h`` must be of type ``ByStrX`` for some
   known ``X`` less than or equal to 32.
 
-- ``builtin schnorr_verify pubk x sig`` : Verify a signature ``sig``
-  of type ``ByStr64`` against a hash ``x`` of type ``ByStr`` with the
+- ``builtin schnorr_verify pubk data sig`` : Verify a signature ``sig``
+  of type ``ByStr64`` against a byte string ``data`` of type ``ByStr`` with the
   Schnorr public key ``pubk`` of type ``ByStr33``.
   
-- ``builtin ecdsa_verify pubk x sig`` : Verify a signature ``sig``
-  of type ``ByStr64`` against a hash ``x`` of type ``ByStr`` with the
+- ``builtin ecdsa_verify pubk data sig`` : Verify a signature ``sig``
+  of type ``ByStr64`` against a byte string ``data`` of type ``ByStr`` with the
   ECDSA public key ``pubk`` of type ``ByStr33``.
 
-- ``concat x1 x2``: Concatenate the hashes ``x1`` and ``x2``. If
-  ``x1`` has type ``ByStrX`` and ``x2`` has type ``ByStrY``, then the
+- ``concat h1 h2``: Concatenate the hashes ``h1`` and ``h2``. If
+  ``h1`` has type ``ByStrX`` and ``h2`` has type ``ByStrY``, then the
   result will have type ``ByStr(X+Y)``.
 
 - ``builtin bech32_to_bystr20 prefix addr``. The builtin takes a network specific prefix (``"zil"`` / ``"tzil"``) of type
