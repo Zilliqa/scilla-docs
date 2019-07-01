@@ -546,6 +546,10 @@ Deploying contracts and executing transitions in them cost gas. The detailed
 cost mechanism is explained `here 
 <https://github.com/Zilliqa/scilla-docs/tree/master/docs/texsources/gas-costs/gas-doc.pdf>`_.
 
+The `Nucleus Wallet <https://dev-wallet.zilliqa.com/calculate>`_
+page can be used to estimate gas costs for some transactions
+.
+
 Primitive Data Types & Operations
 #################################
 
