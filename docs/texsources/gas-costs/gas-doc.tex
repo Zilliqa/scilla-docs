@@ -1,0 +1,447 @@
+\documentclass[10pt]{article}
+\usepackage{geometry}
+\geometry{
+	a4paper,
+	total={170mm,257mm},
+	%left=20mm,
+	%top=30mm,
+}
+% Required to make the margins smaller to fit more content on each page
+\usepackage[linkcolor=blue]{hyperref} % Required to create hyperlinks to questions from elsewhere in the document
+\hypersetup{pdfborder={0 0 0}, colorlinks=true, urlcolor=blue} % Specify a color for hyperlinks
+%\usepackage{tocloft} % Required to give customize the table of contents to display questions
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+\usepackage{palatino} % Use the Palatino font
+\usepackage{verbatim} 
+\usepackage{makeidx}
+\usepackage{xcolor}
+\usepackage{amsmath,multirow}
+% Uncomment the line below to get rid of the trailing dots in the table of contents
+%\renewcommand{\cftdot}{}
+
+% Uncomment the two lines below to get rid of the numbers in the table of contents
+%\let\Contentsline\contentsline
+%\renewcommand\contentsline[3]{\Contentsline{#1}{#2}{}}
+\usepackage{marvosym}
+\usepackage{fontawesome}
+\usepackage{tipa}
+\usepackage{ltablex}
+\usepackage{caption, booktabs}
+\usepackage{ragged2e}
+
+\makeindex
+
+
+\begin{document}
+
+\title{\Huge{\textbf{Gas Accounting on \textsc{Zilliqa}}} \\ \small{[Draft version
+0.1]} \\ \small{\textcolor{red}{Subject to changes}}}
+
+\author{
+ 	\href{https://www.zilliqa.com/team.html}{The \textsc{Zilliqa} Team} \\
+    \Mundus~\href{https://www.zilliqa.com}{\texttt{www.zilliqa.com}}
+    \phantom{xx}\faQuestionCircle~\href{https://gitter.im/Zilliqa/SmartContract}{\texttt{gitter.im/zilliqa}}
+}
+
+
+\maketitle
+
+\section{Storage}
+
+Gas consumed for storage (presented in \autoref{tab:storage}) depends on the
+type of literal being stored. In the table below, $\ell$ denotes the literal
+and $litGas(\ell)$, the gas consumed for storing it. Note that for certain
+literal types such as \textbf{\texttt{\textcolor{teal}{Messsage}}},
+\textbf{\texttt{\textcolor{teal}{Map}}} and
+\textbf{\texttt{\textcolor{teal}{ADT}}}, $litGas(\ell)$ is recursively
+computed. 
+
+
+\begin{table}[!hbt]
+	\caption{Gas for storage of literals. \label{tab:storage} }
+\centering
+	\begin{tabular}{|p{3cm}|p{6.7cm}|p{6cm}|}
+	\hline
+		\textbf{Literal Type}  & \textbf{$litGas(\ell)$} & \textbf{Remarks} \\ \hline
+	  	\textbf{\texttt{\textcolor{teal}{String}}}  & $$ 
+	  	\begin{cases}
+      20, & \text{if } len(\ell) \leq 20, \\
+      len(\ell), & \text{else } \\
+  \end{cases} $$ & $len(\cdot)$ computes the length of an input string, e.g.,
+  		$len(\texttt{"Hello"})$ = 5.  \\ \hline
+				\textbf{\texttt{\textcolor{teal}{Int32}}},
+				\textbf{\texttt{\textcolor{teal}{Uint32}}}  & $4$
+				& \multirow{4}{6cm}
+				{Gas consumed is equal to the size of integer in bytes.} \\ \cline{1-2} 
+		\textbf{\texttt{\textcolor{teal}{Int64}}},
+		\textbf{\texttt{\textcolor{teal}{Uint64}}}   & $8$ & \\ \cline{1-2}
+		\textbf{\texttt{\textcolor{teal}{Int128}}},
+		\textbf{\texttt{\textcolor{teal}{Uint128}}}   & $16$ &\\ \cline{1-2}
+		\textbf{\texttt{\textcolor{teal}{Int256}}},
+		\textbf{\texttt{\textcolor{teal}{Uint256}}}  & $32$ & \\ \hline
+		\textbf{\texttt{\textcolor{teal}{BNum}}} &  $64$ & Internally
+		represented as an unsigned BigNum. \\ \hline
+		\textbf{\texttt{\textcolor{teal}{ByStrX}}}, \textbf{\texttt{\textcolor{teal}{ByStr}}}     &
+		\multirow{2}{*}{$width(\ell)$} & $width(\cdot)$ returns
+		the number of bytes needed to represent the hexadecimal input, e.g.,
+		$width(\texttt{0x1cd2}) = 2.$ \\ \hline
+		\textbf{\texttt{\textcolor{teal}{Messsage}}} 
+		& For $\ell = \{s_1 : v_1; s_2 : v_2;
+		\ldots, s_n : v_n\}$:
+		$$ \begin{cases}
+    		0, & \text{if } n = 0,  \\
+    litGas(\{s_2 : v_2; \ldots, s_n : v_n\}) \\
+    		 + litGas(s_1) + litGas(v_1), & 
+    		\text{else } \\
+  \end{cases}
+		$$ & As a \textbf{\texttt{\textcolor{teal}{Messsage}}} literal is an associative array
+		between a  \textbf{\texttt{\textcolor{teal}{String}}} literal (denoted $s_i$) and a
+		value literal (denoted $v_i$), $litGas$
+		is recursively computed by summing up over each $s_i : v_i$.   \\ \hline
+		\textbf{\texttt{\textcolor{teal}{Map}}} &
+		For $\ell = \{(k_1 \rightarrow v_1), 
+		\ldots, (k_n \rightarrow v_n)\}$:
+		$$ \begin{cases}
+    		0, & \text{if } n = 0,  \\
+  			\sum_{(k \rightarrow v) \in \ell} {litGas(k) + litGas(v)},  &
+    		\text{else } \\
+  \end{cases}
+		$$ & As a \textbf{\texttt{\textcolor{teal}{Map}}} literal maps a key literal ($k_i$) to a
+		value literal ($v_i$),  $litGas$
+		is recursively computed by summing up over each $k_i \rightarrow v_i$. \\ \hline
+		\textbf{\texttt{\textcolor{teal}{ADT}}} (e.g.,
+		\textbf{\textcolor{magenta}{\texttt{Bool}}},
+		\textbf{\textcolor{magenta}{\texttt{Option}}},
+		\textbf{\textcolor{magenta}{\texttt{List}}}) & For $\ell = \texttt{cname}\;
+		\{\texttt{types}\} \; t_1 t_2 \ldots t_n $:
+		$$ \begin{cases}
+    		1, & \text{if } n = 0,  \\
+  			\sum_{i} {litGas(t_i)},  &
+    		\text{else } \\
+  		\end{cases}
+		$$ 
+		
+		& An \textbf{\texttt{\textcolor{teal}{ADT}}} literal takes a constructor name
+		(\texttt{cname}), types of the arguments (\texttt{types}) and arguments
+		denoted by $t_1, t_2, \ldots, t_n$. $litGas$ is recursively computed
+		by summing up the gas required over each $t_i$. \\ \hline
+	\end{tabular}
+	\end{table}
+ 
+\section{Computation}
+
+In this section, we present the gas required to perform computations in a contract
+using \textsc{Scilla} \emph{expressions}. Expressions handle purely
+mathematical computations and do not have any side-effects. 
+
+Gas consumed for a computation via an expression can be divided into two parts: the
+static part associated with employing a specific expression and the dynamic
+part that takes into account the cost that can only be estimated at run time.
+Some expressions do not entail any dynamic gas consumption.
+
+\subsection{Static Cost for Expressions}
+
+Every expression has a static gas associated with it.
+\autoref{tab:expressions} lists the gas for each expression supported in
+\textsc{Scilla}. In the table below, $e$ denotes the expression and
+$statExprCost(e)$ the static gas associated with using $e$.
+
+\begin{table}[!hbt]
+	\caption{Static gas for expressions. \label{tab:expressions} }
+\centering
+	\begin{tabular}{|l|c|p{10.0cm}|}
+	\hline
+		\textbf{Expression} & \textbf{$statExprGas(e)$} & \textbf{Remarks} \\ \hline
+		\textbf{\texttt{\textcolor{teal}{Literal}}}  & \multirow{9}{*}{1}  & \\
+		\cline{1-1} \cline{3-3}
+		\textbf{\texttt{\textcolor{teal}{Var}}}  &  & \\ \cline{1-1}\cline{3-3}
+
+		\textbf{\texttt{\textcolor{teal}{Let}}}  &  & \\ \cline{1-1}\cline{3-3}
+
+		\textbf{\texttt{\textcolor{teal}{Message}}}  &  & \\ \cline{1-1}\cline{3-3}
+		\textbf{\texttt{\textcolor{teal}{Fun}}}  &  & A function declaration, e.g., \texttt{\textbf{\textcolor{violet}{fun}} (x : \textbf{\textcolor{orange}{T}}) => e}. \\ \cline{1-1} \cline{3-3}
+		\textbf{\texttt{\textcolor{teal}{App}}}  &  & A function application, e.g.,
+			\texttt{\textbf{\textcolor{violet}{f}} <x\_i>}. \\ \cline{1-1}\cline{3-3}
+
+			\textbf{\texttt{\textcolor{teal}{TFun}}}  &  & A type function of
+			the form: \texttt{\textbf{\textcolor{violet}{tfun}} $\alpha$ => e}. \\ \cline{1-1}\cline{3-3}
+
+			\textbf{\texttt{\textcolor{teal}{TApp}}}  &  & A type
+			instantiation: \texttt{\textbf{\textcolor{violet}{@}}x
+			\textbf{\textcolor{orange}{T}}}. \\ \cline{1-1}\cline{3-3}
+
+			\textbf{\texttt{\textcolor{teal}{Constr}}}  &  & Constructors. \\ \hline
+			\textbf{\texttt{\textcolor{teal}{MatchExpr}}}  & $nbClauses(e)$
+		&$nbClauses(\cdot)$ returns the number of clauses in the pattern match.
+		 \\ \hline
+	   \textbf{\texttt{\textcolor{teal}{Fixpoint}}}  & 1  & Rest of the gas is
+		accounted during recursive evaluation. \\ \hline
+		\textbf{\texttt{\textcolor{teal}{Builtin}}}  & 0 & Purely dynamic gas
+		accounting. For more details see~\autoref{tab:gas_builtins}. \\ \hline
+	\end{tabular}
+	\end{table}
+ 
+
+\subsection{Executing Statements}
+
+State changes and other operations that entail side-effects such as reading the
+current state of the blockchain or invoking message calls to other contracts
+are performed via \textsc{Scilla} \emph{statements}. \autoref{tab:statements}
+presents the gas consumed for statements. In the table, $l$ is the literal
+being handled and $stateGas(\ell)$ is the required gas. Note that the
+$litGas(\cdot)$ function used below comes from~\autoref{tab:storage}.
+
+\begin{table}[!hbt]
+	\caption{Gas for statements. \label{tab:statements} }
+\centering
+	\begin{tabular}{|l|p{8cm}|p{4cm}|}
+	\hline
+		\textbf{Statement $(l)$} & \textbf{$stateGas(l)$} & \textbf{Remarks} \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_Load}}}  & $litGas(l)$  & \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_Store}}}  & $\max\{litGas(l_{old}),
+		litGas(l_{new})\} + litGas(l_{new}) -
+		litGas(l_{old})$  & $\ell_{old}$ is the existing literal, while, $\ell_{new}$ is the
+		new literal to be stored. Note that gas for the store statement can be 0.  \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_Bind}}}  & 1 & \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_MatchStmt}}}  & $nbclauses(l)$  & \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_ReadFromBC}}}  & 1  & Gas to read
+		current blockchain values such as
+		\textbf{\textcolor{magenta}{\texttt{BLOCKNUMBER}}} (previous block
+		number).  \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_AcceptPayment}}}  & 1  & \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_SendMsgs}}}  & For $t = [\{s_{1}^{1} :
+		v_{1}^{1}; \ldots, s_n^1 : v_n^1\}, \{s_1^2 : v_1^2; \ldots, s_n^2 :
+		v_n^2\}, \ldots, \{s_1^m : v_1^m; \ldots, s_n^2 : v_n^m\}] $: $$
+		\sum_{\ell \in t} litGas(l) $$ &
+		\textbf{\texttt{\textcolor{teal}{G\_SendMsgs}}} takes a list of
+		\textbf{\texttt{\textcolor{teal}{Messsage}}} as an input. Hence, gas
+		required  is the sum of $litGas(\cdot)$ for each individual
+		\textbf{\texttt{\textcolor{teal}{Messsage}}} in the list. \\ \hline
+		\textbf{\texttt{\textcolor{teal}{G\_CreateEvent}}}  & $litGas(\ell)$ & \\ \hline
+	\end{tabular}
+\end{table}
+
+
+\subsection{Builtins}
+
+In~\autoref{tab:gas_builtins}, we present the dynamic gas associated with
+\textbf{\texttt{\textcolor{teal}{Builtin}}} operators in \textsc{Scilla}. The
+gas consumed often depends on the operator and operand types, etc. In the table
+below, we group \textbf{\texttt{\textcolor{teal}{Builtin}}} in categories which
+are self-explanatory.
+
+
+\begin{tabularx}{\linewidth}{|l|p{4.1cm}|p{4cm}|p{4cm}|}
+	\caption{Gas required for Builtin operations.} \label{tab:gas_builtins} \\
+\hline
+	\textbf{Category} & \textbf{Operation} & \textbf{$builtinGas$} & \textbf{Remarks} \\ \hline
+\hline
+\endfirsthead
+\hline
+	\textbf{Category} & \textbf{Operation} & \textbf{$builtinGas$} & \textbf{Remarks} \\ \hline
+\hline
+\endhead
+%\midrule
+\hline
+\multicolumn{4}{r}{\footnotesize( To be continued)}
+\endfoot
+%\bottomrule
+\endlastfoot
+		\multirow{3}{*}{\textbf{\texttt{\textcolor{teal}{String}}}} &
+		\textbf{\texttt{\textcolor{magenta}{eq}}} & For \textbf{
+			\texttt{\textcolor{magenta}{eq}}} $s_1\, s_2$: $$ \min \{len(s_1), len(s_2)\} $$ 
+		& \multirow{14}{4cm}{$len(\cdot)$ computes the length of an input string, e.g.,
+  		$len(\texttt{"Hello"})$ = 5.} \\
+		\cline{2-3}
+		 & \texttt{\textbf{\textcolor{magenta}{concat}}} & For \textbf{
+			\texttt{\textcolor{magenta}{concat}}} $s_1\, s_2$: $$ len(s_1) + len(s_2) $$   & \\ \cline{2-3}
+		 & \textbf{\texttt{\textcolor{magenta}{substr}}} &
+		 For \textbf{
+			\texttt{\textcolor{magenta}{substr}}} $s \, \, i_1 \, i_2$: $$ i_1 +
+		\min \{len(s) - i_1, i_2\} $$ 
+		  & \\ \hline \hline
+		\multirow{5}{*}{\textbf{\texttt{\textcolor{teal}{Hashing}}}} &
+		  \textbf{\texttt{\textcolor{magenta}{eq}}} & For
+		  \textbf{\texttt{\textcolor{magenta}{eq}}} $d_1 \, d_2$: $$width(d_i)
+		  $$  & $width(\cdot)$
+		  returns the size in number of bytes of the input. Note that the
+		  operator expects two inputs of the same size.  \\ \cline{2-4}
+		 & \textbf{\texttt{\textcolor{magenta}{dist}}} & $32$  &
+		 \textbf{\texttt{\textcolor{magenta}{dist}}} computes the distance
+		 between two \textbf{\textcolor{orange}{\texttt{ByStr32}}} values. \\ \cline{2-4}
+		 & \textbf{\texttt{\textcolor{magenta}{ripemd160hash}}} & For
+		 \textbf{\texttt{\textcolor{magenta}{ripemd160hash}}} $x$:   $$ 10
+		 \times \left\lceil
+		 \frac{size(x)}{64}\right \rceil $$ & \multirow{3}{4cm}{\justify{$size(\cdot)$
+		 returns the size of the serialized input in bytes. Gas consumed is
+		 dependent on the input size and the block size of the hash function.
+		 Block sizes of  \textbf{\texttt{\textcolor{magenta}{ripemd160hash}}},
+		 \textbf{\texttt{\textcolor{magenta}{sha256hash}}} and
+		 \textbf{\texttt{\textcolor{magenta}{keccak256hash}}} are 64, 64 and
+		 136 bytes respectively.}}   \\
+		\cline{2-3}
+		 & \textbf{\texttt{\textcolor{magenta}{sha256hash}}} & For
+		 \textbf{\texttt{\textcolor{magenta}{sha256hash}}} $x$:  $$15 \times \left\lceil
+		 \frac{size(x)}{64}\right \rceil  $$  & \\ \cline{2-3}
+		 & \textbf{\texttt{\textcolor{magenta}{keccak256hash}}} &
+		  For
+		 \textbf{\texttt{\textcolor{magenta}{keccak256hash}}} $x$:  $$ 15
+		 \times \left\lceil  \frac{size(x)}{136}\right \rceil $$ 
+		   & \\ \hline
+		 \hline
+		\multirow{4}{*}{\textbf{\texttt{\textcolor{teal}{Signing}}}} &
+		\textbf{\texttt{\textcolor{magenta}{schnorr\_gen\_key\_pair}}} & $ 20 $  & \\
+		\cline{2-4}
+		 & \textbf{\texttt{\textcolor{magenta}{schnorr\_sign}}} & For~\textbf{\texttt{\textcolor{magenta}{schnorr\_sign}}} $k_{priv} \,
+		 k_{pub}
+		 \, m:$ $$350 + 15
+		 \times \left\lceil
+		 \frac{66+size(m)}{64}\right \rceil  $$ & Signing requires computing hash
+		 of the input message and other parameters (of size 66 bytes). The
+		 constant cost of 350 is for elliptic curve operations and other base
+		 field operations. \\ \cline{2-4}
+		 & \textbf{\texttt{\textcolor{magenta}{schnorr\_verify}}} &
+		 For~\textbf{\texttt{\textcolor{magenta}{schnorr\_verify}}} $
+		 k_{pub} 
+		 \, m \, sig:$ $$250 + 15
+		 \times \left\lceil
+		 \frac{66+size(m)}{64}\right \rceil  $$  & Verification also requires computing hash
+		 of the input message and other parameters (of size 66 bytes). The
+		 constant cost of 250 is for elliptic curve operations and other base
+		 field operations. Verification is cheaper than signing. \\
+		 \hline \hline
+		 \textbf{\texttt{\textcolor{teal}{ByStrX}}} &
+		 \textbf{\texttt{\textcolor{magenta}{to\_bystr}}} & $width(a)$  &
+		 \textbf{\texttt{\textcolor{magenta}{to\_bystr}}} is a conversion utility to
+		 convert from \textbf{\texttt{\textcolor{teal}{ByStrX}}} to
+		 \textbf{\texttt{\textcolor{teal}{ByStr}}}.   $width(\cdot)$
+		 returns
+		 the number of
+		 bytes represented
+		 by the input.\\ \hline
+		 \hline
+		\multirow{2}{*}{\textbf{\texttt{\textcolor{teal}{Map}}}} &
+		\textbf{\texttt{\textcolor{magenta}{contains}}},
+		\textbf{\texttt{\textcolor{magenta}{get}}}  & $1$ & Requires constant
+		time.  \\
+		\cline{2-4}
+		 & \textbf{\texttt{\textcolor{magenta}{put}}},
+		 \textbf{\texttt{\textcolor{magenta}{remove}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_list}}},
+		 \textbf{\texttt{\textcolor{magenta}{size}}}    & $ 1 +
+		 lenOfMap$  & $lenOfMap$ is the number of keys in the map. \\
+		 \hline \hline
+		\multirow{4}{*}{\textbf{\texttt{\textcolor{teal}{Nat}}}} &
+		\textbf{\texttt{\textcolor{magenta}{to\_nat}}} & For
+		\textbf{\texttt{\textcolor{magenta}{to\_nat}}} $i$: $$i$$  & \\ \hline \hline
+		\multirow{4}{*}{\textbf{\texttt{\textcolor{teal}{Int32}}},
+		\textbf{\texttt{\textcolor{teal}{Uint32}}}} &
+		\textbf{\texttt{\textcolor{magenta}{mul}}},
+		 \textbf{\texttt{\textcolor{magenta}{div}}},
+		 \textbf{\texttt{\textcolor{magenta}{rem}}} &
+		 $ 20  $  & \\ \cline{2-4}
+		 & \textbf{\texttt{\textcolor{magenta}{eq}}},
+		 \textbf{\texttt{\textcolor{magenta}{lt}}},
+		 \textbf{\texttt{\textcolor{magenta}{add}}},
+		 \textbf{\texttt{\textcolor{magenta}{sub}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_nat}}}
+		 & $4$  & \\ \hline \hline
+		\multirow{4}{*}{\textbf{\texttt{\textcolor{teal}{Int64}}},
+		\textbf{\texttt{\textcolor{teal}{Uint64}}}} &
+		\textbf{\texttt{\textcolor{magenta}{mul}}},
+		 \textbf{\texttt{\textcolor{magenta}{div}}},
+		 \textbf{\texttt{\textcolor{magenta}{rem}}} &
+		 $ 20 $  & \\ \cline{2-4}
+		 & 
+		 \textbf{\texttt{\textcolor{magenta}{eq}}},
+		 \textbf{\texttt{\textcolor{magenta}{lt}}},
+		 \textbf{\texttt{\textcolor{magenta}{add}}},
+		 \textbf{\texttt{\textcolor{magenta}{sub}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_nat}}}
+		 & $4$  & \\ \hline \hline
+		\multirow{4}{*}{\textbf{\texttt{\textcolor{teal}{Int128}}},
+		\textbf{\texttt{\textcolor{teal}{Uint128}}}} &
+		\textbf{\texttt{\textcolor{magenta}{mul}}},
+		 \textbf{\texttt{\textcolor{magenta}{div}}},
+		 \textbf{\texttt{\textcolor{magenta}{rem}}} &
+		 $ 40 $  & \\ \cline{2-4}
+		 & 
+		 \textbf{\texttt{\textcolor{magenta}{eq}}},
+		 \textbf{\texttt{\textcolor{magenta}{lt}}},
+		 \textbf{\texttt{\textcolor{magenta}{add}}},
+		 \textbf{\texttt{\textcolor{magenta}{sub}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_nat}}}
+		 & $8$  & \\ \hline \hline
+		\multirow{4}{*}{\textbf{\texttt{\textcolor{teal}{Int256}}},
+		\textbf{\texttt{\textcolor{teal}{Uint256}}}} &
+		\textbf{\texttt{\textcolor{magenta}{mul}}},
+		 \textbf{\texttt{\textcolor{magenta}{div}}},
+		 \textbf{\texttt{\textcolor{magenta}{rem}}} &
+		 $ 80 $  & \\ \cline{2-4}
+		 &
+		 \textbf{\texttt{\textcolor{magenta}{eq}}},
+		 \textbf{\texttt{\textcolor{magenta}{lt}}},
+		 \textbf{\texttt{\textcolor{magenta}{add}}},
+		 \textbf{\texttt{\textcolor{magenta}{sub}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint32}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint64}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint128}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_int256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_uint256}}},
+		 \textbf{\texttt{\textcolor{magenta}{to\_nat}}}
+		 & $ 16 $  & \\ \hline \hline
+		\textbf{\texttt{\textcolor{teal}{BNum}}} &
+		\textbf{\texttt{\textcolor{magenta}{eq}}},
+		\textbf{\texttt{\textcolor{magenta}{blt}}},
+		\textbf{\texttt{\textcolor{magenta}{badd}}} & $32$  & \\ \hline 
+\end{tabularx}
+
+\section{Contract Deployment and Transition Invocation}
+
+In addition to the above gas, there is an upfront cost for contract deployment and
+transition invocations. The goal of these costs is to prevent spam attacks. 
+
+At the time of contract deployment, an end user will provide two input files:
+one containing the contract (a \texttt{.scilla} file) and the other containing
+the value of the immutable parameters (a JSON file). The upfront gas consumed
+for contract deployment is equal to the size (in bytes) of the \textsc{Scilla}
+file plus that of the JSON file.  
+
+In a similar manner, at the time of contract invocation, and end user (as a
+part of a transaction) or a contract (as a part of a message call)  will supply
+a JSON file that will contain information on which transition needs to be
+invoked and the parameters to pass. Gas associated with such transition calls
+is equal to the size of this JSON file. 
+
+%\section{Importing Standard Libraries}
+
+
+
+\end{document}

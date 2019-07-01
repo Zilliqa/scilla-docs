@@ -516,7 +516,7 @@ same name must have the same entry names and types.
    the blockchain before the transition has completed.
 
 Run-time Errors
-**************
+***************
 
 A contract can raise errors by throwing exceptions. Any error
 in the execution of a transition (including those due to thrown
@@ -538,6 +538,13 @@ the location of where the ``throw`` happened without more information.
 .. note::
 
   We do not currently support catching exceptions and may add this in the future.
+
+Gas consumption in Scilla
+*************************
+
+Deploying contracts and executing transitions in them cost gas. The detailed
+cost mechanism is explained `here 
+<https://github.com/Zilliqa/scilla-docs/tree/master/docs/texsources/gas-costs/gas-doc.pdf>`_.
 
 Primitive Data Types & Operations
 #################################
