@@ -688,11 +688,13 @@ any one of ``String``, ``IntX``, ``UintX``, ``ByStrX`` or
 
 Scilla supports the following built-in operations on maps:
 
-- ``builtin put m k v``: Insert a key ``k`` and a value ``v`` into a map
+- ``builtin put m k v``: Insert a key ``k`` bound to a value ``v`` into a map
   ``m``. Returns a new map which is a copy of the ``m`` but with ``k``
-  associated with ``v``. The value of ``m`` is unchanged. The ``put``
-  function is typically used in library functions. Note that ``put``
-  makes a copy of ``m`` before inserting the key-value pair.
+  associated with ``v``. If ``m`` already contains key ``k``,
+  the old value bound to ``k`` gets replaced by ``v`` in the result map.
+  The value of ``m`` is unchanged.
+  The ``put`` function is typically used in library functions.
+  Note that ``put`` makes a copy of ``m`` before inserting the key-value pair.
 
 - ``m[k] := v``: *In-place* insert operation, i.e., identical to
   ``put``, but without making a copy of ``m``. ``m`` must refer to a
@@ -729,10 +731,11 @@ Scilla supports the following built-in operations on maps:
 
 - ``builtin remove m k``: Remove a key ``k`` and its associated value from the
   map ``m``. Returns a new map which is a copy of ``m`` but with ``k``
-  being unassociated with a value. The value of ``m`` is
-  unchanged. The ``remove`` function is typically used in library
-  functions. Note that ``remove`` makes a copy of ``m`` before
-  removing the key-value pair.
+  being unassociated with a value. The value of ``m`` is unchanged.
+  If ``m`` does not contain key ``k`` the ``remove`` function simply returns
+  a copy of ``m`` with no indication that ``k`` is missing.
+  The ``remove`` function is typically used in library functions.
+  Note that ``remove`` makes a copy of ``m`` before removing the key-value pair.
 
 - ``delete m[k]``: *In-place* remove operation, i.e., identical to
   ``remove``, but without making a copy of ``m``. ``m`` must refer to
@@ -749,6 +752,12 @@ Scilla supports the following built-in operations on maps:
 
 - ``builtin size m``: Return the number of bindings in map ``m``.
   The result type is ``Uint32``.
+
+.. note::
+
+   Builtin functions ``put`` and ``remove`` return a new map, which is
+   a possibly modified copy of the original map. This may affect performance!
+
 
 Addresses
 *********
