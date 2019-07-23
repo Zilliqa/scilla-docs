@@ -1587,6 +1587,26 @@ IntUtils
 
 - ``intX_eq : IntX -> IntX -> Bool``: Equality operator specialised
   for each ``IntX`` type.
+
+.. code-block:: ocaml
+
+  let int_list_eq = @list_eq Int64 in
+
+  let one = Int64 1 in
+  let two = Int64 2 in
+  let ten = Int64 10 in
+  let eleven = Int64 11 in
+
+  let nil = Nil {Int64} in
+  let l1 = Cons {Int64} eleven nil in
+  let l2 = Cons {Int64} ten l1 in
+  let l3 = Cons {Int64} two l2 in
+  let l4 = Cons {Int64} one l3 in
+
+  let f = int64_eq in
+  (* See if [2,10,11] = [1,2,10,11] *)
+  int_list_eq f l3 l4
+
 - ``uintX_eq : UintX -> UintX -> Bool``: Equality operator specialised
   for each ``UintX`` type.
 
@@ -1873,6 +1893,15 @@ PairUtils
 ************
 
 - ``fst : Pair 'A 'B -> 'A``: Extract the first element of a Pair.
+
+.. code-block:: ocaml
+
+  let fst_strings = @fst String String in
+  let nick_name = "toby" in
+  let dog = "dog" in
+  let tobias = Pair {String String} nick_name dog in
+  fst_strings tobias
+
 - ``snd : Pair 'A 'B -> 'B``: Extract the second element of a Pair.
 
 
