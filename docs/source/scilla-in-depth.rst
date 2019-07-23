@@ -911,7 +911,7 @@ so that the final list is ``[11; 10; 2; 1]``:
   let l3 = Cons {Int32} ten l2 in
     Cons {Int32} eleven l3
 
-Scilla provides two structural recursion primitives for lists, which
+Scilla provides three structural recursion primitives for lists, which
 can be used to traverse all the elements of any list:
 
 - ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
@@ -939,6 +939,29 @@ can be used to traverse all the elements of any list:
   to front. Notice also that the processing function takes the list
   element and the accumulator in the opposite order from the order in
   ``list_foldl``.
+
+- ``list_foldk: ('B -> 'A -> ('B -> 'B) -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  Recursively process the elements in a list according to a *fold
+  description*, while keeping track of an *accumulator*.
+  ``list_foldk`` takes three arguments, which all
+  depend on the two type variables ``'A`` and ``'B``:
+
+  - The function ``c`` describing the fold step. This function takes three
+    arguments. The first argument is the current value of the
+    accumulator (of type ``'B``). The second argument is the next list
+    element to be processed (of type ``'A``). The third argument is
+    the recursive call (of type ``'B -> 'B``). The result of the
+    function is the next value of the accumulator (of type ``'B``).
+
+  - The initial value of the accumulator ``z`` (of type ``'B``).
+
+  - The list of elements to be processed (of type ``List 'A``).
+
+  In the case of a non-empty last argument with head ``x`` and tail ``xs``
+  we apply to ``c`` the arguments ``z``, ``x`` and
+  ``λk. list_foldk c k xs``. For an empty last argument we return ``z``,
+  the accumulator.
+
 
 .. note::
 
@@ -1257,9 +1280,9 @@ More ADT examples
 #################
 
 To further illustrate how ADTs can be used, we provide two more
-examples and describe them in detail. Both the functions described
-below can be found in the ``ListUtils`` part of the Scilla standard
-library_.
+examples and describe them in detail. Versions of both the functions
+described below can be found in the ``ListUtils`` part of the Scilla
+standard library_.
 
 Computing the Head of a List
 ******************************
@@ -1413,6 +1436,103 @@ Omitted in line 27 is building the same list ``l3`` as in the previous
 example. In line 30 we apply the instantiated ``list_exists`` to the
 predicate and the list.
 
+Zipping two lists with a function
+*********************************
+
+The function ``list_zip_with`` combines two lists element by element using
+a combining function. It takes the combining function, the first list and
+the last list.
+
+A combining function is of type ``'A -> 'B -> 'C``, this matches with
+the first list being of type ``List 'A`` and the second list of type
+``List 'B``.
+
+``list_zip_with`` in the case of a longer list of the two effectively
+truncates the longer list so they are of equal length.
+
+The following code shows the implementation of ``list_zip_with`` and the
+more specific version as an example.
+
+.. code-block:: OCaml
+  :linenos:
+
+  let list_zip_with : forall 'A. forall 'B. forall 'C. ('A -> 'B -> 'C) ->
+  List 'A -> List 'B -> List 'C =
+  tfun 'A =>
+  tfun 'B =>
+  tfun 'C =>
+  fun (f : 'A -> 'B -> 'C) =>
+  fun (l1: List 'A) =>
+  fun (l2: List 'B) =>
+  (* Fail when l1 empty, empty l2 case done by foldk *)
+  let zip_step = fun (state : Pair (List 'C) (List 'A)) =>
+  fun (y : 'B) =>
+    match state with
+    | Pair res_rev rest_a =>
+      match rest_a with
+      | Cons x xs => let next = f x y in
+                     let next_res_rev = Cons {'C} next res_rev in
+                     let next_rest_a = Pair { (List 'C) (List 'A) } next_res_rev xs in
+                     Some {(Pair (List 'C) (List 'A))} next_rest_a
+      | Nil => None {(Pair (List 'C) (List 'A))}
+        end
+      end in
+  let folder = @list_foldl_while 'B (Pair (List 'C) (List 'A)) in
+  let nil = Nil {'C} in
+  let init = Pair {(List 'C) (List 'A)} nil l1 in
+  let zipped_accompanied = folder zip_step init l2 in
+  let zipped = match zipped_accompanied with
+  | Pair l _ => l
+  end in
+  let reverse = @list_reverse 'C in
+  reverse zipped
+
+  let list_zip : forall 'A. forall 'B. List 'A -> List 'B -> List (Pair 'A 'B) =
+  tfun 'A =>
+  tfun 'B =>
+  let zip_with = @list_zip_with 'A 'B (Pair 'A 'B) in
+  let pair_up = fun (a : 'A) => fun (b : 'B) =>
+    let res = Pair {'A 'B} a b in res in
+  zip_with pair_up
+
+We have a type signature here on the first line, this is optional.
+The function takes three type parameters (lines 3 to 5) ``'A``, ``'B`` and ``'C``.
+Then it takes the combining function ``f : 'A -> 'B -> 'C`` and the two lists.
+
+We next write a function for fold while,
+``zip_step : Pair (List 'C) (List 'A) -> 'B -> Option (Pair (List 'C) (List 'A))``.
+Lets call the first argument ``state = (res_rev, rest_a)`` in pseudo-code, where
+``rest_a`` is our pool of elements from the first list to be combined and
+``res_rev`` is our progress so far in combining the elements. This function
+will check if ``rest_a`` is empty then terminate early as it can no longer combine,
+it does so by passing ``None``. Otherwise the function passes some pair
+where the pair has the new combined element and the tail of ``rest_a``.
+
+Line 13 pattern matches on the pair to get us ``res_rev`` and ``rest_a``.
+Lines 15 to 18 cover the case of combining to get a new element to
+put at the front of ``res_rev`` when non-empty ``rest_a``.
+Line 19 is the early termination for empty ``rest_a``.
+
+Line 22 is the instantiation of a typed ``list_foldl_while`` so we can
+use it given our types. The first argument is the element to be processed
+type and the second argument is the result type.
+
+We then fold with ``([],l1)`` in pseudo-code as the accumulator, using an empty list
+to store combined elements. Line 25 we apply the fold to get a pair with the
+combined elements and rest of ``l1``. Lines 26 to 28 retrieve the combined elements with
+pattern matching.
+
+Then we must reverse the list as we combined from two lists to get the first element
+and then put it into a list but put the second combined element in front of that.
+The problem lies in that the second element and so on is put at the front
+rather than the back if they exist, so a reversal is necessary.
+
+On line 29 we must instantiate the list_reverse with our type before use,
+then this function is used to return the final result.
+
+For the use of ``list_zip_with`` after instantiating the types
+we just pass a function (lines 36 to 37) that creates pairs.
+We stop there as the partial application is all that is necessary.
 
 Standard Libraries
 #####################
@@ -1552,6 +1672,38 @@ ListUtils
     ``l`` is a non-empty list of the form ``Cons h t``, then the
     result is ``Some t``. If ``l`` is empty, then the result is
     ``None``.
+
+- ``list_foldl_while : ('B -> 'A -> Option 'B) -> 'B -> List 'A -> 'B``
+
+  | Given a function ``f : 'B -> 'A -> Option 'B``, accumulator ``z : 'B``
+    and list ``ls : List 'A`` execute a left fold when our given function
+    returns ``Some x : Option 'B`` using ``f z x : 'B`` or list is empty
+    but in the case of ``None : Option 'B`` terminate early, returning ``z``.
+
+.. code-block:: ocaml
+
+  (* assume zero = 0, one = 1, negb is in scope and ls = [10,12,9,7]
+   given a max and list with elements a_0, a_1, ..., a_m
+   find largest n s.t. sum of i from 0 to (n-1) a_i <= max *)
+  let prefix_step = fun (len_limit : Pair Uint32 Uint32) => fun (x : Uint32) =>
+    match len_limit with
+    | Pair len limit => let limit_lt_x = builtin lt limit x in
+      let x_leq_limit = negb limit_lt_x in
+      match x_leq_limit with
+      | True => let len_succ = builtin add len one in let l_sub_x = builtin sub limit x in
+        let res = Pair {Uint32 Uint32} len_succ l_sub_x in
+        Some {(Pair Uint32 Uint32)} res
+      | False => None {(Pair Uint32 Uint32)}
+      end
+    end in
+  let fold_while = @list_foldl_while Uint32 (Pair Uint32 Uint32) in
+  let max = Uint32 31 in
+  let init = Pair {Uint32 Uint32} zero max in
+  let prefix_length = fold_while prefix_step init ls in
+  match prefix_length with
+  | Pair length _ => length
+  end
+
 
 - ``list_append : (List 'A -> List 'A ->  List 'A)``.
 
