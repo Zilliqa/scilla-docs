@@ -941,27 +941,7 @@ can be used to traverse all the elements of any list:
   ``list_foldl``.
 
 - ``list_foldk: ('B -> 'A -> ('B -> 'B) -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  Recursively process the elements in a list according to a *fold
-  description*, while keeping track of an *accumulator*.
-  ``list_foldk`` takes three arguments, which all
-  depend on the two type variables ``'A`` and ``'B``:
-
-  - The function ``c`` describing the fold step. This function takes three
-    arguments. The first argument is the current value of the
-    accumulator (of type ``'B``). The second argument is the next list
-    element to be processed (of type ``'A``). The third argument is
-    the recursive call (of type ``'B -> 'B``). The result of the
-    function is the next value of the accumulator (of type ``'B``).
-
-  - The initial value of the accumulator ``z`` (of type ``'B``).
-
-  - The list of elements to be processed (of type ``List 'A``).
-
-  In the case of a non-empty last argument with head ``x`` and tail ``xs``
-  we apply to ``c`` the arguments ``z``, ``x`` and
-  ``λk. list_foldk c k xs``. For an empty last argument we return ``z``,
-  the accumulator.
-
+  See the example list_find_.
 
 .. note::
 
@@ -1112,7 +1092,7 @@ to the integer 3:
     let two  = Succ one in
     Succ two
 
-Scilla provides one structural recursion primitive for Peano numbers,
+Scilla provides two structural recursion primitives for Peano numbers,
 which can be used to traverse all the Peano numbers from a given
 ``Nat`` down to ``Zero``:
 
@@ -1135,7 +1115,63 @@ which can be used to traverse all the Peano numbers from a given
   (of type ``'A``) when all Peano numbers down to ``Zero`` have been
   processed.
 
+- ``nat_foldk: ('A -> Nat -> ('A -> 'A) -> 'A) -> 'A -> Nat -> 'A``:
+  See below for an example and explanation.
 
+To better understand ``nat_foldk``, we explain how ``nat_eq`` works.
+``nat_eq`` checks to see if two Peano numbers are equivalent. Below
+is the program, with line numbers and an explanation.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let nat_eq : Nat -> Nat -> Bool =
+  fun (n : Nat) => fun (m : Nat) =>
+    let foldk = @nat_foldk Nat in
+    let iter =
+      fun (n : Nat) => fun (ignore : Nat) => fun (recurse : Nat -> Nat) =>
+        match n with
+        | Succ n_pred => recurse n_pred
+        | Zero => m   (* m is not zero in this context *)
+        end in
+    let remaining = foldk iter n m in
+    match remaining with
+    | Zero => True
+    |   _ => False
+    end
+
+Line 2 specifies that we take two Peano numbers ``m`` and ``n``.
+Line 3 instantiates the type of ``nat_foldk``, we give it ``Nat``
+because we will be passing a ``Nat`` value as the fold accumulator.
+
+Lines 4 to 8 specify the fold description, this is the first argument
+that ``nat_foldk`` takes usually of type ``'A -> Nat -> ('A -> 'A) -> 'A``
+but we have specified that ``'A`` is ``Nat`` in this case. Our function
+takes the accumulator ``n`` and ``ignore : Nat`` is the Peano number to
+be processed. In the case that ``ignore`` is zero ``recurse x`` returns
+``x``. In other case, let ``ignore_pred`` be the predecessor of ``ignore``
+then we call ``iter`` with the arguments ``x``, ``ignore_pred`` and
+a new ``recurse``.
+
+Essentially each call of the recursion gives us the next number down
+so to check for equality we take the predecessor and repeat the process.
+Only if the two numbers are equal, both numbers end up at
+``Zero`` at the same time, given this process. If the number that
+we are actively taking the predecessor of is ``Zero`` then return
+``m`` since this number must be non-zero for ``iter`` to ever be
+called. At the end we will be checking to see if our accumulator
+ended up at ``Zero`` to say if they are equal.
+
+Line 6 covers this predecessor existing case and line 7 covers
+the case of early termination for inequality by passing a known
+non-zero number.
+
+On line 10, create the fold acting according to the process described
+above by passing ``iter`` to ``foldk``. Then we supply our arguments
+``m`` and ``n``.
+
+The last lines, return ``True`` when the result of the fold is ``Zero``
+and ``False`` otherwise as described above.
 
 User-defined ADTs
 *****************
@@ -1450,7 +1486,7 @@ the first list being of type ``List 'A`` and the second list of type
 ``list_zip_with`` in the case of a longer list of the two effectively
 truncates the longer list so they are of equal length.
 
-The following code shows the implementation of ``list_zip_with`` and the
+The following code shows an implementation of ``list_zip_with`` and the
 more specific version as an example.
 
 .. code-block:: OCaml
@@ -1929,6 +1965,12 @@ NatUtils
   than the current one. If the current number is ``Zero``, the result
   is ``None``. If the current number is ``Succ x``, then the result is
   ``Some x``.
+
+- ``nat_fold_while : ('T -> Nat -> Option 'T) -> 'T -> Nat -> 'T``:
+  Takes arguments ``f : 'T -> Nat -> Option 'T``, ``z : `T`` and
+  ``m : Nat``. This is ``nat_fold`` with early termination. Continues
+  recursing so long as ``f`` returns ``Some y`` with new accumulator
+  ``y``. Once ``f`` returns ``None``, the recursion terminates.
 
 - ``is_some_zero : Nat -> Bool``: Zero check for Peano numbers.
 
