@@ -976,7 +976,7 @@ can be used to traverse all the elements of any list:
 
 To further illustrate the ``List`` type in Scilla, we show a small
 example using ``list_foldl`` to count the number of elements in a
-list.
+list. For an example of ``list_foldk`` see list_find_.
 
 .. code-block:: ocaml
   :linenos:
@@ -1533,6 +1533,65 @@ then this function is used to return the final result.
 For the use of ``list_zip_with`` after instantiating the types
 we just pass a function (lines 36 to 37) that creates pairs.
 We stop there as the partial application is all that is necessary.
+
+.. _list_find:
+
+Finding the first occurence satisfying a predicate
+**************************************************
+
+The function ``list_find`` searches for the first occurence in a
+list that satisfies some predicate ``p : 'A -> Bool``. It takes
+the predicate and the list, returning ``Some {'A} x :: Option 'A`` if
+``x`` is the first element such that ``p x`` and ``None {'A} :: Option 'A``
+otherwise.
+
+Below we have an implementation of ``list_find`` that illustrates
+how to use ``list_foldk``.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_find : forall 'A. ('A -> Bool) -> List 'A -> Option 'A =
+  tfun 'A =>
+  fun (p : 'A -> Bool) =>
+    let foldk = @list_foldk 'A (Option 'A) in
+    let init = None {'A} in
+    (* continue fold on None, exit fold when Some compare st. p(compare) *)
+    let predicate_step =
+      fun (ignore : Option 'A) => fun (x : 'A) =>
+      fun (recurse: Option 'A -> Option 'A) =>
+        let p_x = p x in
+        match p_x with
+        | True => Some {'A} x
+        | False => recurse init
+        end in
+    foldk predicate_step init
+
+Like before, we take a type variable ``'A`` on line 2 and take the predicate
+on the next line. We begin by using this type variable to instantiate foldk,
+by giving it our processing type and return type. The processing type being
+the list element type and the result type being ``Option 'A``. The next line
+is our accumulator, we assume that at the start of the search there is no
+satisfier.
+
+On line 7, we write a fold description for foldk. This embodies the order of
+the recursion and conditions for recursion. ``predicate_step`` has the
+type ``Option 'A -> 'A -> (Option 'A -> Option 'A) -> Option 'A``.
+The first argument is the accumulator, the second ``x`` is the next element to
+process and the third ``recurse`` is the recursive call. We do not care what
+the accumulator ``ignore`` is since if it mattered we will have already
+terminated.
+
+On lines 10 to 12 check for ``p x`` and if so return ``Some {'A} x``. In the case
+that ``p x`` does not hold, try again from scratch with the next element and
+so on via recursion. ``recurse init`` is in pseudo-code equal to
+``λk. foldk predicate_step init k xs`` where ``xs`` is the tail of our list of
+to be processed elements.
+
+With the final line we partially apply ``foldk`` so that it just takes a list
+argument and gives us our final answer. The first argument of ``foldk`` gives
+us the specific fold we want, for example if you wanted a left fold you
+would replace ``predicate_step`` with something else.
 
 Standard Libraries
 #####################
