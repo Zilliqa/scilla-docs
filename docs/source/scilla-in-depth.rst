@@ -941,7 +941,25 @@ can be used to traverse all the elements of any list:
   ``list_foldl``.
 
 - ``list_foldk: ('B -> 'A -> ('B -> 'B) -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  See the example list_find_.
+  Recursively process the elements in a list according to a *fold
+  description*, while keeping track of an *accumulator*.
+  ``list_foldk`` takes three arguments, which all
+  depend on the two type variables ``'A`` and ``'B``:
+
+  - The function describing the fold step. This function takes three
+    arguments. The first argument is the current value of the
+    accumulator (of type ``'B``). The second argument is the next list
+    element to be processed (of type ``'A``). The third argument represents
+    the postponed recursive call (of type ``'B -> 'B``). The result of the
+    function is the next value of the accumulator (of type ``'B``).
+    The computation *terminates* if the programmer does not invoke
+    the postponed recursive call. This is a major difference between
+    ``list_foldk`` and the left and right folds which process their input
+    lists from the beginning to the end unconditionally.
+
+  - The initial value of the accumulator ``z`` (of type ``'B``).
+
+  - The list of elements to be processed (of type ``List 'A``).
 
 .. note::
 
@@ -961,18 +979,18 @@ list. For an example of ``list_foldk`` see list_find_.
 .. code-block:: ocaml
   :linenos:
 
-  let list_length =
+  let list_length : forall 'A. List 'A -> Uint32 =
      tfun 'A =>
      fun (l : List 'A) =>
-     let folder = @list_foldl 'A Uint32 in
+     let foldl = @list_foldl 'A Uint32 in
      let init = Uint32 0 in
+     let one = Uint32 1 in
      let iter =
        fun (z : Uint32) =>
        fun (h : 'A) =>
-         let one = Uint32 1 in
          builtin add one z
      in
-       folder iter init l
+       foldl iter init l
 
 ``list_length`` defines a function that takes a type argument ``'A``,
 and a normal (value) argument ``l`` of type ``List 'A``.
