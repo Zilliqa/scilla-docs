@@ -1335,7 +1335,7 @@ a match expression:
 More ADT examples
 #################
 
-To further illustrate how ADTs can be used, we provide two more
+To further illustrate how ADTs can be used, we provide some more
 examples and describe them in detail. Versions of both the functions
 described below can be found in the ``ListUtils`` part of the Scilla
 standard library_.
