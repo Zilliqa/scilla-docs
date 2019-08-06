@@ -941,8 +941,10 @@ can be used to traverse all the elements of any list:
   ``list_foldl``.
 
 - ``list_foldk: ('B -> 'A -> ('B -> 'B) -> 'B) -> 'B -> (List 'A) -> 'B`` :
-  Recursively process the elements in a list according to a *fold
-  description*, while keeping track of an *accumulator*.
+  Recursively process the elements in a list according to a *folding
+  function*, while keeping track of an *accumulator*.
+  ``list_foldk`` is a more general version of the left and right folds,
+  which, by the way, can be both implemented in terms of it.
   ``list_foldk`` takes three arguments, which all
   depend on the two type variables ``'A`` and ``'B``:
 
