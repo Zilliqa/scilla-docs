@@ -1139,7 +1139,7 @@ which can be used to traverse all the Peano numbers from a given
   Recursively process the Peano numbers down to zero according to
   a *folding function*, while keeping track of an *accumulator*.
   ``nat_foldk`` is a more general version of the left fold allowing
-  for early termination. It takes three arguments, one depending on
+  for early termination. It takes three arguments, two depending on
   the type variable ``'A``.
  
   - The function describing the fold step. This function takes three
