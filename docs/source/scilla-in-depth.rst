@@ -1136,7 +1136,26 @@ which can be used to traverse all the Peano numbers from a given
   processed.
 
 - ``nat_foldk: ('A -> Nat -> ('A -> 'A) -> 'A) -> 'A -> Nat -> 'A``:
-  See below for an example and explanation.
+  Recursively process the Peano numbers down to zero according to
+  a *folding function*, while keeping track of an *accumulator*.
+  ``nat_foldk`` is a more general version of the left fold allowing
+  for early termination. It takes three arguments, one depending on
+  the type variable ``'A``.
+ 
+  - The function describing the fold step. This function takes three
+    arguments. The first argument is the current value of the
+    accumulator (of type ``'A``). The second argument is the next
+    Peano number to be processed (of type ``Nat``). The third argument
+    represents the postponed recursive call (of type ``'A -> 'A``).
+    The result of the function is the next value of the accumulator
+    (of type ``'A``). The computation *terminates* if the programmer
+    does not invoke the postponed recursive call. Left folds
+    inevitably process the whole list whereas ``nat_foldk`` can differ
+    in this regard.
+
+  - The initial value of the accumulator ``z`` (of type ``'A``).
+
+  - The Peano number to be processed (of type ``Nat``).
 
 To better understand ``nat_foldk``, we explain how ``nat_eq`` works.
 ``nat_eq`` checks to see if two Peano numbers are equivalent. Below
@@ -1169,9 +1188,14 @@ that ``nat_foldk`` takes usually of type ``'A -> Nat -> ('A -> 'A) -> 'A``
 but we have specified that ``'A`` is ``Nat`` in this case. Our function
 takes the accumulator ``n`` and ``ignore : Nat`` is the Peano number to
 be processed. In the case that ``ignore`` is zero ``recurse x`` returns
-``x``. In other case, let ``ignore_pred`` be the predecessor of ``ignore``
-then we call ``iter`` with the arguments ``x``, ``ignore_pred`` and
-a new ``recurse``.
+``x``. ``ignore`` is named this way because the specific value is never
+used explicitly, all that is checked for is if it is ``Zero`` and
+terminates early in that case.
+
+Suppose that ``ignore`` is non-zero then there is a ``recurse`` call
+with the predecessor of ``n`` as the accumulator. When used with ``nat_foldk``
+this call is a recursive call to itself each time but replacing ``ignore``
+with its predecessor.
 
 Essentially each call of the recursion gives us the next number down
 so to check for equality we take the predecessor and repeat the process.
@@ -1400,7 +1424,127 @@ Line 11 instantiates the ``list_head`` function for the type
 line 21 invokes the instantiated ``list_head`` function on the list
 that was built.
 
+Computing a Left Fold
+*********************
 
+The function ``list_foldl`` returns the result of a left fold given a function
+``f : 'B -> 'A -> 'B``, accumulator ``z : 'B`` and list ``xs : List 'A``.
+This can be implemented as a recursion primitive or a list utility function.
+
+A left fold is a recursive application of an accumulator ``z`` and next
+list element ``x : 'A`` with ``f`` repetitively until there are no more list
+elements. For example the left fold on ``[1,2,3]`` using subtraction starting with
+accumulator 0 would be ``((0-1)-2)-3 = -6``. The left fold is explained in
+pseudocode below, note that the result is always the accumulator type.
+
+.. code-block:: haskell
+  :linenos:
+
+  list_foldl _ z [] = z
+  list_foldl f z (x:xs) = list_foldl f (f z x) xs
+
+The same can be achieved with ``list_foldk`` by partially applying a left fold
+description; this avoids illegal direct recursion. Our fold description
+``left_f : 'B -> 'A -> ('B -> 'B) -> 'B`` takes arguments accumulator,
+next list element and recursive call. The recursive call will be supplied
+by the ``list_foldk`` function. An implementation is explained below.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_foldl : forall 'A. forall 'B. ( 'B -> 'A -> 'B) -> 'B -> List 'A -> 'B =
+  tfun 'A => tfun 'B =>
+  fun (f : 'B -> 'A -> 'B) =>
+  let left_f = fun (z: 'B) => fun (x: 'A) =>
+    fun (recurse : 'B -> 'B) => let res = f z x in
+    recurse res in
+  let folder = @list_foldk 'A 'B in
+  folder left_f
+
+On line 1, we declare the name and type signature as according to the first
+paragraph. On the second line, we say that the function takes two types as arguments
+``'A`` and ``'B``. The third line says that we take some function ``f`` to process the list element
+and accumulator, as in paragraph two.
+
+On line 4, we define the fold description using ``f``. The fold description does not
+take a function but instead it should be implemented in terms of some function, as
+according to the type signature, ``left_f : 'B -> 'A -> ('B -> 'B) -> 'B``.
+``left_f`` takes arguments as described in paragraph two. We calculate the new
+accumulator ``f z x`` and call it ``res``. Then we recursively call with the new
+accumulator.
+
+On line 7, we instantiate an instance of ``list_foldk`` that has the right types
+for the job using a type application.
+
+On line 8, we partially apply ``folder`` with the left fold description.
+. What is significant about ``list_foldk`` is that when calling the description,
+it provides a recursive call to itself, changing to the next element
+in the list and respective tail each time. This results in a function that
+just needs the user to provide the updated accumulator in the description.
+
+Computing a Right Fold
+**********************
+
+The function ``list_foldr`` returns the result of a right fold given some
+function ``f : 'A -> 'B -> 'B``, accumulator ``z : 'B`` and
+list ``xs : List 'A``. Like ``list_foldl``, this can be a recursion primitive
+or a list utility function.
+
+A right fold is similar to a left fold but is reversed in a way.
+The right fold applies a function ``f`` with an accumulator ``z`` starting from
+the end and then combines with the second last element, third last element,
+etc... until it reaches the beginning. For example a right fold on
+the list ``[1,2,3]`` with subtraction starting with accumulator 0 would
+be equal to ``1-(2-(3-0)) = 2``. It is listed below in pseudocode,
+note that the result is always the accumulator type.
+
+.. code-block:: haskell
+  :linenos:
+
+  list_foldr _ z [] = z
+  list_foldr f z (x:xs) = f x (list_foldr f z xs)
+
+Like before, the same can be achieved with ``list_foldk`` by partially
+applying a right fold description. The fold description takes arguments
+accumulator ``z : 'B``, next list element ``x : 'A`` and recursive call
+``recurse : 'B -> 'B``. The recursive call will be supplied by the
+``list_foldk`` function. An implementation is explained below.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_foldr : forall 'A. forall 'B. ('A -> 'B -> 'B) -> 'B -> List 'A -> 'B =
+  tfun 'A => tfun 'B =>
+  fun (f : 'A -> 'B -> 'B) =>
+  let right_f = fun (z: 'B) => fun (x: 'A) =>
+    fun (recurse : 'B -> 'B) => let res = recurse z in f x res in
+  let folder = @list_foldk 'A 'B in
+  folder right_f
+
+This is very similar to before. On line 1 we declare the name and type
+signature, according to the first paragraph. On line 2, we take two
+type arguments ``'A`` and ``'B``. The third line says that we take some
+function ``f`` to process the list element ``x : 'A`` and accumulator ``z``.
+The argument order is necessarily different to that of a left fold.
+
+Following that we write a fold description like before. Here we call the
+combining function indirectly with the supplied recursive call, by calling it
+indirectly we preserve the original accumulator until the very end. Once the recursive
+call reaches an empty list it returns the original accumulator. Then the function calls
+will evaluate outwards combining from the end to the beginning, see paragraph two.
+Note that this function is not inherently recursive, using it with ``list_foldk``
+provides the recursion.
+
+On line 5, ``res`` stores this recursive call ``recurse z``. It may seem to be the
+same each time but what is changing is the list element we process. Then lastly
+it returns the result of ``f x res``.
+
+On line 6, we instantiate ``list_foldk`` by applying the types ``'A`` and ``'B`` to make
+a type-specific function. The last line we partially apply ``folder`` with the
+right fold description. Like before what is special about ``list_foldk`` is that it calls
+this function with a recursive call to itself that each time slightly truncates the list;
+this provides the recursion.
+ 
 Checking for Existence in a List
 *********************************
 
