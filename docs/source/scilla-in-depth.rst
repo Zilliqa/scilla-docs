@@ -1529,17 +1529,17 @@ type arguments ``'A`` and ``'B``. The third line says that we take some
 function ``f`` to process the list element ``x : 'A`` and accumulator ``z``.
 The argument order is necessarily different to that of a left fold.
 
-Following that we write a fold description like before. Here we call the
-combining function indirectly with the supplied recursive call, by calling it
-indirectly we preserve the original accumulator until the very end. Once the recursive
-call reaches an empty list it returns the original accumulator. Then the function calls
-will evaluate outwards combining from the end to the beginning, see paragraph two.
-Note that this function is not inherently recursive, using it with ``list_foldk``
-provides the recursion.
+Following that we write a fold description like before.
+``list_foldk`` processes lists from left to right.
+But we need ``list_foldr`` to emulate the right-to-left traversal.
+By calling ``recurse z`` on line 5 as our first action, we postpone actual computation
+with the combining function ``f`` preserving the original accumulator until the very end.
+Once the recursive call reaches an empty list it returns the original accumulator.
+Then the function calls ``f x res`` (line 5) will evaluate outwards combining
+from the end to the beginning, see paragraph two.
 
-On line 5, ``res`` stores this recursive call ``recurse z``. It may seem to be the
-same each time but what is changing is the list element we process. Then lastly
-it returns the result of ``f x res``.
+The recursive call ``recurse z`` on line 5 may seem to be the same each time but what is changing
+is the list element we process.
 
 On line 6, we instantiate ``list_foldk`` by applying the types ``'A`` and ``'B`` to make
 a type-specific function. The last line we partially apply ``folder`` with the
