@@ -1124,8 +1124,10 @@ which can be used to traverse all the Peano numbers from a given
   - The function processing the numbers. This function takes two
     arguments. The first argument is the current value of the
     accumulator (of type ``'A``). The second argument is the next
-    Peano number to be processed (of type ``Nat``). The result of the
-    function is the next value of the accumulator (of type ``'A``).
+    Peano number to be processed (of type ``Nat``). Incidentally,
+    the next number to be processed is the predecessor of the current
+    number being processed. The result of the function is the next
+    value of the accumulator (of type ``'A``).
 
   - The initial value of the accumulator (of type ``'A``).
 
@@ -1144,9 +1146,10 @@ which can be used to traverse all the Peano numbers from a given
  
   - The function describing the fold step. This function takes three
     arguments. The first argument is the current value of the
-    accumulator (of type ``'A``). The second argument is the next
-    Peano number to be processed (of type ``Nat``). The third argument
-    represents the postponed recursive call (of type ``'A -> 'A``).
+    accumulator (of type ``'A``). The second argument is the predecessor
+    of the Peano number being processed (of type ``Nat``).
+    The third argument represents the postponed recursive call
+    (of type ``'A -> 'A``).
     The result of the function is the next value of the accumulator
     (of type ``'A``). The computation *terminates* if the programmer
     does not invoke the postponed recursive call. Left folds
@@ -1186,36 +1189,35 @@ because we will be passing a ``Nat`` value as the fold accumulator.
 Lines 4 to 8 specify the fold description, this is the first argument
 that ``nat_foldk`` takes usually of type ``'A -> Nat -> ('A -> 'A) -> 'A``
 but we have specified that ``'A`` is ``Nat`` in this case. Our function
-takes the accumulator ``n`` and ``ignore : Nat`` is the Peano number to
-be processed. In the case that ``ignore`` is zero ``recurse x`` returns
-``x``. ``ignore`` is named this way because the specific value is never
-used explicitly, all that is checked for is if it is ``Zero`` and
-terminates early in that case.
+takes the accumulator ``n`` and ``ignore : Nat`` is the predecessor of
+the number being processed which we don't care about in this particular case.
 
-Suppose that ``ignore`` is non-zero then there is a ``recurse`` call
-with the predecessor of ``n`` as the accumulator. When used with ``nat_foldk``
-this call is a recursive call to itself each time but replacing ``ignore``
-with its predecessor.
-
-Essentially each call of the recursion gives us the next number down
-so to check for equality we take the predecessor and repeat the process.
-Only if the two numbers are equal, both numbers end up at
-``Zero`` at the same time, given this process. If the number that
-we are actively taking the predecessor of is ``Zero`` then return
-``m`` since this number must be non-zero for ``iter`` to ever be
-called. At the end we will be checking to see if our accumulator
-ended up at ``Zero`` to say if they are equal.
-
-Line 6 covers this predecessor existing case and line 7 covers
-the case of early termination for inequality by passing a known
-non-zero number.
-
-On line 10, create the fold acting according to the process described
-above by passing ``iter`` to ``foldk``. Then we supply our arguments
-``m`` and ``n``.
-
+Essentially, we start accumulating the end result from ``n`` and iterate
+at most ``m`` times (see line 10), decrementing both ``n`` and ``m``
+at each recursive step (lines 4 - 9).
+The ``m`` variable gets decremented implicitly because this is how ``nat_foldk``
+works under the hood.
+And we explicitly decrement ``n`` using pattern matching (lines 6, 7).
+To continue iteratively decrement both ``m`` and ``n`` we use ``recurse`` on line 7.
+If the two input numbers are equal, we will get the accumulator (``n``) equal to
+zero in the end.
+We call the final value of the accumulator ``remaining`` on line 10.
+At the end we will be checking to see if our accumulator
+ended up at ``Zero`` to say if the input numbers are equal.
 The last lines, return ``True`` when the result of the fold is ``Zero``
 and ``False`` otherwise as described above.
+
+In the case when accumulator ``n`` reaches zero (line 8) while ``m``
+still has not been fully processed, we stop iteration
+(hence no ``recurse`` on that line) and return a non-zero natural number
+to indicate inequality.
+Any number (e.g. ``Succ Zero``) would do, but to make the code concise
+we return the original input number ``m`` because we know ``iter``
+gets called on ``m`` only if it's not zero.
+
+In the symmetrical case when ``m`` reaches zero while the accumulator ``n``
+is still strictly positive, we indicate inequality, because ``remaining``
+gets this final value of ``n``.
 
 User-defined ADTs
 *****************
