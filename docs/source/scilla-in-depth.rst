@@ -911,7 +911,7 @@ so that the final list is ``[11; 10; 2; 1]``:
   let l3 = Cons {Int32} ten l2 in
     Cons {Int32} eleven l3
 
-Scilla provides two structural recursion primitives for lists, which
+Scilla provides three structural recursion primitives for lists, which
 can be used to traverse all the elements of any list:
 
 - ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
@@ -940,6 +940,29 @@ can be used to traverse all the elements of any list:
   element and the accumulator in the opposite order from the order in
   ``list_foldl``.
 
+- ``list_foldk: ('B -> 'A -> ('B -> 'B) -> 'B) -> 'B -> (List 'A) -> 'B`` :
+  Recursively process the elements in a list according to a *folding
+  function*, while keeping track of an *accumulator*.
+  ``list_foldk`` is a more general version of the left and right folds,
+  which, by the way, can be both implemented in terms of it.
+  ``list_foldk`` takes three arguments, which all
+  depend on the two type variables ``'A`` and ``'B``:
+
+  - The function describing the fold step. This function takes three
+    arguments. The first argument is the current value of the
+    accumulator (of type ``'B``). The second argument is the next list
+    element to be processed (of type ``'A``). The third argument represents
+    the postponed recursive call (of type ``'B -> 'B``). The result of the
+    function is the next value of the accumulator (of type ``'B``).
+    The computation *terminates* if the programmer does not invoke
+    the postponed recursive call. This is a major difference between
+    ``list_foldk`` and the left and right folds which process their input
+    lists from the beginning to the end unconditionally.
+
+  - The initial value of the accumulator ``z`` (of type ``'B``).
+
+  - The list of elements to be processed (of type ``List 'A``).
+
 .. note::
 
    When an ADT takes type arguments (such as ``List 'A``), and occurs
@@ -953,23 +976,23 @@ can be used to traverse all the elements of any list:
 
 To further illustrate the ``List`` type in Scilla, we show a small
 example using ``list_foldl`` to count the number of elements in a
-list.
+list. For an example of ``list_foldk`` see list_find_.
 
 .. code-block:: ocaml
   :linenos:
 
-  let list_length =
+  let list_length : forall 'A. List 'A -> Uint32 =
      tfun 'A =>
      fun (l : List 'A) =>
-     let folder = @list_foldl 'A Uint32 in
+     let foldl = @list_foldl 'A Uint32 in
      let init = Uint32 0 in
+     let one = Uint32 1 in
      let iter =
        fun (z : Uint32) =>
        fun (h : 'A) =>
-         let one = Uint32 1 in
          builtin add one z
      in
-       folder iter init l
+       foldl iter init l
 
 ``list_length`` defines a function that takes a type argument ``'A``,
 and a normal (value) argument ``l`` of type ``List 'A``.
@@ -1089,7 +1112,7 @@ to the integer 3:
     let two  = Succ one in
     Succ two
 
-Scilla provides one structural recursion primitive for Peano numbers,
+Scilla provides two structural recursion primitives for Peano numbers,
 which can be used to traverse all the Peano numbers from a given
 ``Nat`` down to ``Zero``:
 
@@ -1101,8 +1124,10 @@ which can be used to traverse all the Peano numbers from a given
   - The function processing the numbers. This function takes two
     arguments. The first argument is the current value of the
     accumulator (of type ``'A``). The second argument is the next
-    Peano number to be processed (of type ``Nat``). The result of the
-    function is the next value of the accumulator (of type ``'A``).
+    Peano number to be processed (of type ``Nat``). Incidentally,
+    the next number to be processed is the predecessor of the current
+    number being processed. The result of the function is the next
+    value of the accumulator (of type ``'A``).
 
   - The initial value of the accumulator (of type ``'A``).
 
@@ -1112,7 +1137,87 @@ which can be used to traverse all the Peano numbers from a given
   (of type ``'A``) when all Peano numbers down to ``Zero`` have been
   processed.
 
+- ``nat_foldk: ('A -> Nat -> ('A -> 'A) -> 'A) -> 'A -> Nat -> 'A``:
+  Recursively process the Peano numbers down to zero according to
+  a *folding function*, while keeping track of an *accumulator*.
+  ``nat_foldk`` is a more general version of the left fold allowing
+  for early termination. It takes three arguments, two depending on
+  the type variable ``'A``.
+ 
+  - The function describing the fold step. This function takes three
+    arguments. The first argument is the current value of the
+    accumulator (of type ``'A``). The second argument is the predecessor
+    of the Peano number being processed (of type ``Nat``).
+    The third argument represents the postponed recursive call
+    (of type ``'A -> 'A``).
+    The result of the function is the next value of the accumulator
+    (of type ``'A``). The computation *terminates* if the programmer
+    does not invoke the postponed recursive call. Left folds
+    inevitably process the whole list whereas ``nat_foldk`` can differ
+    in this regard.
 
+  - The initial value of the accumulator ``z`` (of type ``'A``).
+
+  - The Peano number to be processed (of type ``Nat``).
+
+To better understand ``nat_foldk``, we explain how ``nat_eq`` works.
+``nat_eq`` checks to see if two Peano numbers are equivalent. Below
+is the program, with line numbers and an explanation.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let nat_eq : Nat -> Nat -> Bool =
+  fun (n : Nat) => fun (m : Nat) =>
+    let foldk = @nat_foldk Nat in
+    let iter =
+      fun (n : Nat) => fun (ignore : Nat) => fun (recurse : Nat -> Nat) =>
+        match n with
+        | Succ n_pred => recurse n_pred
+        | Zero => m   (* m is not zero in this context *)
+        end in
+    let remaining = foldk iter n m in
+    match remaining with
+    | Zero => True
+    |   _ => False
+    end
+
+Line 2 specifies that we take two Peano numbers ``m`` and ``n``.
+Line 3 instantiates the type of ``nat_foldk``, we give it ``Nat``
+because we will be passing a ``Nat`` value as the fold accumulator.
+
+Lines 4 to 8 specify the fold description, this is the first argument
+that ``nat_foldk`` takes usually of type ``'A -> Nat -> ('A -> 'A) -> 'A``
+but we have specified that ``'A`` is ``Nat`` in this case. Our function
+takes the accumulator ``n`` and ``ignore : Nat`` is the predecessor of
+the number being processed which we don't care about in this particular case.
+
+Essentially, we start accumulating the end result from ``n`` and iterate
+at most ``m`` times (see line 10), decrementing both ``n`` and ``m``
+at each recursive step (lines 4 - 9).
+The ``m`` variable gets decremented implicitly because this is how ``nat_foldk``
+works under the hood.
+And we explicitly decrement ``n`` using pattern matching (lines 6, 7).
+To continue iteratively decrement both ``m`` and ``n`` we use ``recurse`` on line 7.
+If the two input numbers are equal, we will get the accumulator (``n``) equal to
+zero in the end.
+We call the final value of the accumulator ``remaining`` on line 10.
+At the end we will be checking to see if our accumulator
+ended up at ``Zero`` to say if the input numbers are equal.
+The last lines, return ``True`` when the result of the fold is ``Zero``
+and ``False`` otherwise as described above.
+
+In the case when accumulator ``n`` reaches zero (line 8) while ``m``
+still has not been fully processed, we stop iteration
+(hence no ``recurse`` on that line) and return a non-zero natural number
+to indicate inequality.
+Any number (e.g. ``Succ Zero``) would do, but to make the code concise
+we return the original input number ``m`` because we know ``iter``
+gets called on ``m`` only if it's not zero.
+
+In the symmetrical case when ``m`` reaches zero while the accumulator ``n``
+is still strictly positive, we indicate inequality, because ``remaining``
+gets this final value of ``n``.
 
 User-defined ADTs
 *****************
@@ -1256,10 +1361,10 @@ a match expression:
 More ADT examples
 #################
 
-To further illustrate how ADTs can be used, we provide two more
-examples and describe them in detail. Both the functions described
-below can be found in the ``ListUtils`` part of the Scilla standard
-library_.
+To further illustrate how ADTs can be used, we provide some more
+examples and describe them in detail. Versions of both the functions
+described below can be found in the ``ListUtils`` part of the Scilla
+standard library_.
 
 Computing the Head of a List
 ******************************
@@ -1321,7 +1426,127 @@ Line 11 instantiates the ``list_head`` function for the type
 line 21 invokes the instantiated ``list_head`` function on the list
 that was built.
 
+Computing a Left Fold
+*********************
 
+The function ``list_foldl`` returns the result of a left fold given a function
+``f : 'B -> 'A -> 'B``, accumulator ``z : 'B`` and list ``xs : List 'A``.
+This can be implemented as a recursion primitive or a list utility function.
+
+A left fold is a recursive application of an accumulator ``z`` and next
+list element ``x : 'A`` with ``f`` repetitively until there are no more list
+elements. For example the left fold on ``[1,2,3]`` using subtraction starting with
+accumulator 0 would be ``((0-1)-2)-3 = -6``. The left fold is explained in
+pseudocode below, note that the result is always the accumulator type.
+
+.. code-block:: haskell
+  :linenos:
+
+  list_foldl _ z [] = z
+  list_foldl f z (x:xs) = list_foldl f (f z x) xs
+
+The same can be achieved with ``list_foldk`` by partially applying a left fold
+description; this avoids illegal direct recursion. Our fold description
+``left_f : 'B -> 'A -> ('B -> 'B) -> 'B`` takes arguments accumulator,
+next list element and recursive call. The recursive call will be supplied
+by the ``list_foldk`` function. An implementation is explained below.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_foldl : forall 'A. forall 'B. ( 'B -> 'A -> 'B) -> 'B -> List 'A -> 'B =
+  tfun 'A => tfun 'B =>
+  fun (f : 'B -> 'A -> 'B) =>
+  let left_f = fun (z: 'B) => fun (x: 'A) =>
+    fun (recurse : 'B -> 'B) => let res = f z x in
+    recurse res in
+  let folder = @list_foldk 'A 'B in
+  folder left_f
+
+On line 1, we declare the name and type signature as according to the first
+paragraph. On the second line, we say that the function takes two types as arguments
+``'A`` and ``'B``. The third line says that we take some function ``f`` to process the list element
+and accumulator, as in paragraph two.
+
+On line 4, we define the fold description using ``f``. The fold description does not
+take a function but instead it should be implemented in terms of some function, as
+according to the type signature, ``left_f : 'B -> 'A -> ('B -> 'B) -> 'B``.
+``left_f`` takes arguments as described in paragraph two. We calculate the new
+accumulator ``f z x`` and call it ``res``. Then we recursively call with the new
+accumulator.
+
+On line 7, we instantiate an instance of ``list_foldk`` that has the right types
+for the job using a type application.
+
+On line 8, we partially apply ``folder`` with the left fold description.
+. What is significant about ``list_foldk`` is that when calling the description,
+it provides a recursive call to itself, changing to the next element
+in the list and respective tail each time. This results in a function that
+just needs the user to provide the updated accumulator in the description.
+
+Computing a Right Fold
+**********************
+
+The function ``list_foldr`` returns the result of a right fold given some
+function ``f : 'A -> 'B -> 'B``, accumulator ``z : 'B`` and
+list ``xs : List 'A``. Like ``list_foldl``, this can be a recursion primitive
+or a list utility function.
+
+A right fold is similar to a left fold but is reversed in a way.
+The right fold applies a function ``f`` with an accumulator ``z`` starting from
+the end and then combines with the second last element, third last element,
+etc... until it reaches the beginning. For example a right fold on
+the list ``[1,2,3]`` with subtraction starting with accumulator 0 would
+be equal to ``1-(2-(3-0)) = 2``. It is listed below in pseudocode,
+note that the result is always the accumulator type.
+
+.. code-block:: haskell
+  :linenos:
+
+  list_foldr _ z [] = z
+  list_foldr f z (x:xs) = f x (list_foldr f z xs)
+
+Like before, the same can be achieved with ``list_foldk`` by partially
+applying a right fold description. The fold description takes arguments
+accumulator ``z : 'B``, next list element ``x : 'A`` and recursive call
+``recurse : 'B -> 'B``. The recursive call will be supplied by the
+``list_foldk`` function. An implementation is explained below.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_foldr : forall 'A. forall 'B. ('A -> 'B -> 'B) -> 'B -> List 'A -> 'B =
+  tfun 'A => tfun 'B =>
+  fun (f : 'A -> 'B -> 'B) =>
+  let right_f = fun (z: 'B) => fun (x: 'A) =>
+    fun (recurse : 'B -> 'B) => let res = recurse z in f x res in
+  let folder = @list_foldk 'A 'B in
+  folder right_f
+
+This is very similar to before. On line 1 we declare the name and type
+signature, according to the first paragraph. On line 2, we take two
+type arguments ``'A`` and ``'B``. The third line says that we take some
+function ``f`` to process the list element ``x : 'A`` and accumulator ``z``.
+The argument order is necessarily different to that of a left fold.
+
+Following that we write a fold description like before.
+``list_foldk`` processes lists from left to right.
+But we need ``list_foldr`` to emulate the right-to-left traversal.
+By calling ``recurse z`` on line 5 as our first action, we postpone actual computation
+with the combining function ``f`` preserving the original accumulator until the very end.
+Once the recursive call reaches an empty list it returns the original accumulator.
+Then the function calls ``f x res`` (line 5) will evaluate outwards combining
+from the end to the beginning, see paragraph two.
+
+The recursive call ``recurse z`` on line 5 may seem to be the same each time but what is changing
+is the list element we process.
+
+On line 6, we instantiate ``list_foldk`` by applying the types ``'A`` and ``'B`` to make
+a type-specific function. The last line we partially apply ``folder`` with the
+right fold description. Like before what is special about ``list_foldk`` is that it calls
+this function with a recursive call to itself that each time slightly truncates the list;
+this provides the recursion.
+ 
 Checking for Existence in a List
 *********************************
 
@@ -1413,6 +1638,64 @@ Omitted in line 27 is building the same list ``l3`` as in the previous
 example. In line 30 we apply the instantiated ``list_exists`` to the
 predicate and the list.
 
+.. _list_find:
+
+Finding the first occurence satisfying a predicate
+**************************************************
+
+The function ``list_find`` searches for the first occurence in a
+list that satisfies some predicate ``p : 'A -> Bool``. It takes
+the predicate and the list, returning ``Some {'A} x :: Option 'A`` if
+``x`` is the first element such that ``p x`` and ``None {'A} :: Option 'A``
+otherwise.
+
+Below we have an implementation of ``list_find`` that illustrates
+how to use ``list_foldk``.
+
+.. code-block:: ocaml
+  :linenos:
+
+  let list_find : forall 'A. ('A -> Bool) -> List 'A -> Option 'A =
+  tfun 'A =>
+  fun (p : 'A -> Bool) =>
+    let foldk = @list_foldk 'A (Option 'A) in
+    let init = None {'A} in
+    (* continue fold on None, exit fold when Some compare st. p(compare) *)
+    let predicate_step =
+      fun (ignore : Option 'A) => fun (x : 'A) =>
+      fun (recurse: Option 'A -> Option 'A) =>
+        let p_x = p x in
+        match p_x with
+        | True => Some {'A} x
+        | False => recurse init
+        end in
+    foldk predicate_step init
+
+Like before, we take a type variable ``'A`` on line 2 and take the predicate
+on the next line. We begin by using this type variable to instantiate foldk,
+by giving it our processing type and return type. The processing type being
+the list element type and the result type being ``Option 'A``. The next line
+is our accumulator, we assume that at the start of the search there is no
+satisfier.
+
+On line 7, we write a fold description for foldk. This embodies the order of
+the recursion and conditions for recursion. ``predicate_step`` has the
+type ``Option 'A -> 'A -> (Option 'A -> Option 'A) -> Option 'A``.
+The first argument is the accumulator, the second ``x`` is the next element to
+process and the third ``recurse`` is the recursive call. We do not care what
+the accumulator ``ignore`` is since if it mattered we will have already
+terminated.
+
+On lines 10 to 12 check for ``p x`` and if so return ``Some {'A} x``. In the case
+that ``p x`` does not hold, try again from scratch with the next element and
+so on via recursion. ``recurse init`` is in pseudo-code equal to
+``λk. foldk predicate_step init k xs`` where ``xs`` is the tail of our list of
+to be processed elements.
+
+With the final line we partially apply ``foldk`` so that it just takes a list
+argument and gives us our final answer. The first argument of ``foldk`` gives
+us the specific fold we want, for example if you wanted a left fold you
+would replace ``predicate_step`` with something else.
 
 Standard Libraries
 #####################
@@ -1467,6 +1750,26 @@ IntUtils
 
 - ``intX_eq : IntX -> IntX -> Bool``: Equality operator specialised
   for each ``IntX`` type.
+
+.. code-block:: ocaml
+
+  let int_list_eq = @list_eq Int64 in
+
+  let one = Int64 1 in
+  let two = Int64 2 in
+  let ten = Int64 10 in
+  let eleven = Int64 11 in
+
+  let nil = Nil {Int64} in
+  let l1 = Cons {Int64} eleven nil in
+  let l2 = Cons {Int64} ten l1 in
+  let l3 = Cons {Int64} two l2 in
+  let l4 = Cons {Int64} one l3 in
+
+  let f = int64_eq in
+  (* See if [2,10,11] = [1,2,10,11] *)
+  int_list_eq f l3 l4
+
 - ``uintX_eq : UintX -> UintX -> Bool``: Equality operator specialised
   for each ``UintX`` type.
 
@@ -1552,6 +1855,38 @@ ListUtils
     ``l`` is a non-empty list of the form ``Cons h t``, then the
     result is ``Some t``. If ``l`` is empty, then the result is
     ``None``.
+
+- ``list_foldl_while : ('B -> 'A -> Option 'B) -> 'B -> List 'A -> 'B``
+
+  | Given a function ``f : 'B -> 'A -> Option 'B``, accumulator ``z : 'B``
+    and list ``ls : List 'A`` execute a left fold when our given function
+    returns ``Some x : Option 'B`` using ``f z x : 'B`` or list is empty
+    but in the case of ``None : Option 'B`` terminate early, returning ``z``.
+
+.. code-block:: ocaml
+
+  (* assume zero = 0, one = 1, negb is in scope and ls = [10,12,9,7]
+   given a max and list with elements a_0, a_1, ..., a_m
+   find largest n s.t. sum of i from 0 to (n-1) a_i <= max *)
+  let prefix_step = fun (len_limit : Pair Uint32 Uint32) => fun (x : Uint32) =>
+    match len_limit with
+    | Pair len limit => let limit_lt_x = builtin lt limit x in
+      let x_leq_limit = negb limit_lt_x in
+      match x_leq_limit with
+      | True => let len_succ = builtin add len one in let l_sub_x = builtin sub limit x in
+        let res = Pair {Uint32 Uint32} len_succ l_sub_x in
+        Some {(Pair Uint32 Uint32)} res
+      | False => None {(Pair Uint32 Uint32)}
+      end
+    end in
+  let fold_while = @list_foldl_while Uint32 (Pair Uint32 Uint32) in
+  let max = Uint32 31 in
+  let init = Pair {Uint32 Uint32} zero max in
+  let prefix_length = fold_while prefix_step init ls in
+  match prefix_length with
+  | Pair length _ => length
+  end
+
 
 - ``list_append : (List 'A -> List 'A ->  List 'A)``.
 
@@ -1699,6 +2034,12 @@ NatUtils
   is ``None``. If the current number is ``Succ x``, then the result is
   ``Some x``.
 
+- ``nat_fold_while : ('T -> Nat -> Option 'T) -> 'T -> Nat -> 'T``:
+  Takes arguments ``f : 'T -> Nat -> Option 'T``, ``z : `T`` and
+  ``m : Nat``. This is ``nat_fold`` with early termination. Continues
+  recursing so long as ``f`` returns ``Some y`` with new accumulator
+  ``y``. Once ``f`` returns ``None``, the recursion terminates.
+
 - ``is_some_zero : Nat -> Bool``: Zero check for Peano numbers.
 
 - ``nat_eq : Nat -> Nat -> Bool``: Equality check specialised for the
@@ -1721,6 +2062,15 @@ PairUtils
 ************
 
 - ``fst : Pair 'A 'B -> 'A``: Extract the first element of a Pair.
+
+.. code-block:: ocaml
+
+  let fst_strings = @fst String String in
+  let nick_name = "toby" in
+  let dog = "dog" in
+  let tobias = Pair {String String} nick_name dog in
+  fst_strings tobias
+
 - ``snd : Pair 'A 'B -> 'B``: Extract the second element of a Pair.
 
 
