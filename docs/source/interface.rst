@@ -59,17 +59,17 @@ contract definition is free of syntax errors.
 Initializing the Immutable State
 ################################
 
-``init.json`` defines the values of the immutable paramters of a contract.
+``init.json`` defines the values of the immutable parameters of a contract.
 It does not change between invocations.  The JSON is an array of
 objects, each of which contains the following fields:
 
 =====  ==========================================
 Field      Description
-=====  ==========================================  
+=====  ==========================================
 vname  Name of the immutable contract parameter
 type   Type of the immutable contract parameter
 value  Value of the immutable contract parameter
-=====  ==========================================  
+=====  ==========================================
 
 
 Example 1

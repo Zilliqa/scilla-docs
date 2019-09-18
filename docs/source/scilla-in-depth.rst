@@ -916,7 +916,7 @@ can be used to traverse all the elements of any list:
 
 - ``list_foldl: ('B -> 'A -> 'B) -> 'B -> (List 'A) -> 'B`` :
   Recursively process the elements in a list from front to back, while
-  keeping track of an *accumulator* (which can be though of as a
+  keeping track of an *accumulator* (which can be thought of as a
   running total). ``list_foldl`` takes three arguments, which all
   depend on the two type variables ``'A`` and ``'B``:
 
@@ -1267,7 +1267,7 @@ The pieces of the game can be defined using the following type
    | Rook
    | Bishop
 
-Each of the constructors represents a type of piece in the games. None
+Each of the constructors represents a type of piece in the game. None
 of the constructors take any arguments.
 
 The board is represented as a set of squares, where each square has
