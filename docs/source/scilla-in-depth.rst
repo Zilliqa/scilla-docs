@@ -1228,7 +1228,7 @@ user-defined ADTs.
 
 ADT definitions may only occur in the library parts of a program,
 either in the library part of the contract, or in an imported
-library. An ADT definiton is in scope in the entire library in which
+library. An ADT definition is in scope in the entire library in which
 it is defined, except that an ADT definition may only refer to other
 ADT definitions defined earlier in the same library, or in imported
 libraries. In particular, an ADT definition may not refer to itself in
@@ -1615,14 +1615,14 @@ function. The function takes two arguments:
 
 To traverse the elements of the input list ``l`` we use
 ``list_foldl``. In line 5 we instantiate ``list_foldl`` for lists with
-elements of type ``'A`` and for the accummulator type ``Bool``. In
-line 6 we set the initial accummulator value to ``False`` to indicate
+elements of type ``'A`` and for the accumulator type ``Bool``. In
+line 6 we set the initial accumulator value to ``False`` to indicate
 that no element satisfying the predicate has yet been seen.
 
 The processing function ``iter`` defined in lines 7-16 tests the
 predicate on the current list element, and returns an updated
-accummulator. If an element has been found which satisfies the
-predicate, the accummulator is set to ``True`` and remains so for the
+accumulator. If an element has been found which satisfies the
+predicate, the accumulator is set to ``True`` and remains so for the
 rest of the traversal.
 
 The final value of the accumulator is either ``True``, indicating that
@@ -1641,10 +1641,10 @@ predicate and the list.
 
 .. _list_find:
 
-Finding the first occurence satisfying a predicate
-**************************************************
+Finding the first occurrence satisfying a predicate
+***************************************************
 
-The function ``list_find`` searches for the first occurence in a
+The function ``list_find`` searches for the first occurrence in a
 list that satisfies some predicate ``p : 'A -> Bool``. It takes
 the predicate and the list, returning ``Some {'A} x :: Option 'A`` if
 ``x`` is the first element such that ``p x`` and ``None {'A} :: Option 'A``

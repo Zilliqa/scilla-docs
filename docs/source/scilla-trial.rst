@@ -50,7 +50,7 @@ Savant IDE comes with the following sample smart contracts written in Scilla:
   bid by invoking the transition ``AuctionEnd()``.
 
 + **FungibleToken** : Fungible token contract that  mimics an ERC20 style fungible
-  token standard. Defacto standard for tokenised utility tokens.
+  token standard. De facto standard for tokenised utility tokens.
 
 + **NonFungible Token** : Non fungible token contract that mimics an ERC721 style 
   NFT token standard for unique tokenised assets. Example use case could be in-game 

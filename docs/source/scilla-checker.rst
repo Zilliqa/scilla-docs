@@ -130,7 +130,7 @@ As an example, consider the annotation module ``TypecheckerERep``:
 
 The functor (parameterized structure) takes the annotation from the
 previous phase as the parameter ``R``. In the Scilla checker this
-previous phase is the parser, but any phase could be added inbetween
+previous phase is the parser, but any phase could be added in-between
 the two phases by specifying the phase in the top-level runner.
 
 The type ``rep`` specifies that the new annotation is a pair of a type
@@ -234,7 +234,7 @@ annotation.
 The Scilla typechecker takes the statement and expression annotations
 of the previous phase, and then instantiates ``TypeCheckerERep``
 (creating the new annotation type), ``ScillaSyntax`` (creating the
-abtract syntax type for the previous phase, which serves as input to
+abstract syntax type for the previous phase, which serves as input to
 the typechecker), and ``ScillaSyntax`` again (creating the abstract
 syntax type that the typechecker outputs).
 
