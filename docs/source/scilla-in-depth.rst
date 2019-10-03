@@ -617,15 +617,16 @@ The following code snippet declares a variable of type ``String``:
 Scilla supports the following built-in operations on strings:
 
 - ``builtin eq s1 s2`` : Is ``s1`` equal to ``s2``?
-  Returns a ``Bool``.
-- ``builtin concat s1 s2`` : Concatenate ``s1`` with ``s2``.
+  Returns a ``Bool``. ``s1`` and ``s2`` must be of type ``String``.
+- ``builtin concat s1 s2`` : Concatenate string ``s1`` with string ``s2``.
   Returns a ``String``.
-- ``builtin substr s1 i1 i2`` : Extract the substring of ``s1`` of
-  length ``i2`` starting from position ``i1`` with length. ``i1`` and
-  ``i2`` must be of type ``Uint32``. Character indices in strings
-  start from 0.  Returns a ``String``.
-- ``builtin to_string x1``: Convert ``x1`` to a string literal. Valid types of
-  ``x1`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``. Returns a ``String``.
+- ``builtin substr s idx len`` : Extract the substring of ``s`` of
+  length ``len`` starting from position ``idx``. ``idx`` and
+  ``len`` must be of type ``Uint32``. Character indices in strings
+  start from ``0``.  Returns a ``String`` or fails with a runtime error
+  if the combination of the input parameters results in an invalid substring.
+- ``builtin to_string x``: Convert ``x`` to a string literal. Valid types of
+  ``x`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``. Returns a ``String``.
 - ``builtin strlen s`` : Calculate the length of ``s`` (of type
   ``String``). Returns a ``Uint32``.
 
