@@ -370,7 +370,7 @@ Expressions
      value of ``x`` must be matched by a pattern. Additionally, every
      pattern must be reachable, i.e., for each pattern there must be a
      legal (type-safe) value of ``x`` that matches that pattern, and
-     which does not match any pattern preceeding it.
+     which does not match any pattern preceding it.
     
 Statements 
 ***********
@@ -999,7 +999,7 @@ list. For an example of ``list_foldk`` see list_find_.
 and a normal (value) argument ``l`` of type ``List 'A``.
 
 ``'A`` is a *type variable* which must be instantiated by the code
-that intends to use ``list_length``. The type varible is specified in
+that intends to use ``list_length``. The type variable is specified in
 line 2.
 
 In line 4 we instantiate the types for ``list_foldl``. Since we are
@@ -1228,7 +1228,7 @@ user-defined ADTs.
 
 ADT definitions may only occur in the library parts of a program,
 either in the library part of the contract, or in an imported
-library. An ADT definiton is in scope in the entire library in which
+library. An ADT definition is in scope in the entire library in which
 it is defined, except that an ADT definition may only refer to other
 ADT definitions defined earlier in the same library, or in imported
 libraries. In particular, an ADT definition may not refer to itself in
@@ -1615,14 +1615,14 @@ function. The function takes two arguments:
 
 To traverse the elements of the input list ``l`` we use
 ``list_foldl``. In line 5 we instantiate ``list_foldl`` for lists with
-elements of type ``'A`` and for the accummulator type ``Bool``. In
-line 6 we set the initial accummulator value to ``False`` to indicate
+elements of type ``'A`` and for the accumulator type ``Bool``. In
+line 6 we set the initial accumulator value to ``False`` to indicate
 that no element satisfying the predicate has yet been seen.
 
 The processing function ``iter`` defined in lines 7-16 tests the
 predicate on the current list element, and returns an updated
-accummulator. If an element has been found which satisfies the
-predicate, the accummulator is set to ``True`` and remains so for the
+accumulator. If an element has been found which satisfies the
+predicate, the accumulator is set to ``True`` and remains so for the
 rest of the traversal.
 
 The final value of the accumulator is either ``True``, indicating that
@@ -1641,10 +1641,10 @@ predicate and the list.
 
 .. _list_find:
 
-Finding the first occurence satisfying a predicate
-**************************************************
+Finding the first occurrence satisfying a predicate
+***************************************************
 
-The function ``list_find`` searches for the first occurence in a
+The function ``list_find`` searches for the first occurrence in a
 list that satisfies some predicate ``p : 'A -> Bool``. It takes
 the predicate and the list, returning ``Some {'A} x :: Option 'A`` if
 ``x`` is the first element such that ``p x`` and ``None {'A} :: Option 'A``
@@ -2151,7 +2151,7 @@ The ``init.json`` file
 In addition to the version specified in the contract source code, it
 is also required that the contract's ``init.json`` specifies the same
 version when the contract is deployed and when the contract's
-transitions are invoked. This eases the process for the blockhain
+transitions are invoked. This eases the process for the blockchain
 code to decide which interpreter to invoke.
 
 A mismatch in the versions specified in ``init.json`` and the source code

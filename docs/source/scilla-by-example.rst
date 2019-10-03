@@ -554,7 +554,7 @@ within ``()``, and then the statements of the procedure.
 In our example the ``Donate`` transition will issue an event in three
 situations: An error event if the donation happens after the deadline,
 another error event if the backer has donated money previously, and a
-non-error event indicating a succesful donation. Since much of the
+non-error event indicating a successful donation. Since much of the
 event issuing code is identical, we decide to define a procedure
 ``DonationEvent`` which is responsible for issuing the correct event:
 
