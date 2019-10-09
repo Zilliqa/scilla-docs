@@ -692,7 +692,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   and a scalar ``ByStr32`` value ``s`` and returns the sum of the point ``p`` taken ``s`` times. The result is a point
   on the curve.
 
-- ``builtin_alt_bn128_pairing_product pairs``. This builtin takes in a list of pairs ``pairs`` of points.
+- ``builtin alt_bn128_pairing_product pairs``. This builtin takes in a list of pairs ``pairs`` of points.
   Each pair consists of a point in group G1 (``Pair {Bystr32 ByStr32}``) as the first component and a point in
   group G2 (``Pair {Bystr64 ByStr64}``) as the second component. Hence the argument has type 
   ``List {(Pair (Pair ByStr32 ByStr32) (Pair ByStr64 ByStr64)) }``. The function applies a pairing function on each
