@@ -697,7 +697,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   group G2 (``Pair {Bystr64 ByStr64}``) as the second component. Hence the argument has type 
   ``List {(Pair (Pair ByStr32 ByStr32) (Pair ByStr64 ByStr64)) }``. The function applies a pairing function on each
   point to check for equality and returns ``True`` or ``False`` depending on whether the pairing check succeeds or fails.
-  Also see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-197
+  Also see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-197.md
 
 Maps
 ****
