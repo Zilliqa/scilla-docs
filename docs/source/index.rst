@@ -13,10 +13,10 @@ Scilla
 
 
 
-`Scilla` short for `Smart Contract Intermediate-Level LAnguage`  is an
-intermediate-level smart contract language being developed for `Zilliqa
-<https://zilliqa.com>`_.  Scilla has been designed as a principled language
-with smart contract safety in mind. 
+`Scilla` (short for `Smart Contract Intermediate-Level LAnguage`) is
+an intermediate-level smart contract language being developed for the
+`Zilliqa <https://zilliqa.com>`_ blockchain.  Scilla is designed
+as a principled language with smart contract safety in mind.
 
 Scilla imposes a structure on smart contracts that will make applications less
 vulnerable to attacks by eliminating certain known vulnerabilities directly at
