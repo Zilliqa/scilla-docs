@@ -477,14 +477,18 @@ recipient is a contract, the additional fields must have the same
 names and types as the parameters of the transition being invoked on
 the recipient contract.
 
-.. note::
+Here's an example that sends multiple messages.
 
-   The Zilliqa blockchain does not yet support sending multiple
-   messages from the same transition invocation, including the
-   procedures that are invoked by the transition. This means that the
-   list given as an argument to ``send`` must contain only one
-   message, and that a transition may perform at most one ``send``
-   instruction each time the transition is called.
+  .. code-block:: ocaml
+
+    msg1 = { _tag : "setFoo"; _recipient : contractAddress1; _amount : Uint128 0; foo : Uint32 101 };
+    msg2 = { _tag : "setBar"; _recipient : contractAddress2; _amount : Uint128 0; bar : Uint32 100 };
+    msgs = 
+      let nil = Nil {Message} in
+      let m1 = Cons {Message} msg1 nil in
+      Cons msg2 m1
+      ;
+    send msgs
 
 A contract can also communicate to the outside world by emitting
 events. An event is a signal that gets stored on the blockchain for
