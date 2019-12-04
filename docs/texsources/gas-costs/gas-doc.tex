@@ -423,22 +423,104 @@ are self-explanatory.
 		\textbf{\texttt{\textcolor{magenta}{badd}}} & $32$  & \\ \hline 
 \end{tabularx}
 
-\section{Contract Deployment and Transition Invocation}
+\section{Contract Deployment}
 
 In addition to the above gas, there is an upfront cost for contract deployment and
 transition invocations. The goal of these costs is to prevent spam attacks. 
 
 At the time of contract deployment, an end user will provide two input files:
 one containing the contract (a \texttt{.scilla} file) and the other containing
-the value of the immutable parameters (a JSON file). The upfront gas consumed
-for contract deployment is equal to the size (in bytes) of the \textsc{Scilla}
-file plus that of the JSON file.  
+the value of the immutable parameters (a JSON file).
 
-In a similar manner, at the time of contract invocation, and end user (as a
-part of a transaction) or a contract (as a part of a message call)  will supply
-a JSON file that will contain information on which transition needs to be
-invoked and the parameters to pass. Gas associated with such transition calls
-is equal to the size of this JSON file. 
+The upfront gas consumed for contract deployment comes in two parts:
+
+\begin{itemize}
+\item An amount of gas equal to the size (in bytes) of the
+  \textsc{Scilla} file plus that of the JSON file.
+\item An amount of gas based on the work required to typecheck the
+  contract. This amount is charged because the size of a
+  \textsc{Scilla} type may be exponential in the size of the contract
+  code.
+\end{itemize}
+
+The gas charge for typechecking is calculated for each use of the
+\textbf{\texttt{\textcolor{teal}{TApp}}} operator (\texttt{@}), which applies a
+type function \texttt{\textbf{\textcolor{violet}{tfun}} $\alpha$ => e}
+to a type $\tau$, and thus replaces all (free) occurrences of $\alpha$
+with $\tau$ in the type of \texttt{e}.
+
+Each type a type function \texttt{$\alpha$ => e} is applied to a type
+$\tau$, the following (recursively computed) gas is charged:
+
+\begin{table}[!hbt]
+	\caption{Gas for typechecking of expressions. \label{tab:typechecking} }
+\centering
+	\begin{tabular}{|p{3.5cm}|p{6.7cm}|p{5.5cm}|}
+	\hline
+	\textbf{Type of e}  & \textbf{$typGas(\tau)$} & \textbf{Remarks} \\ \hline
+  Primitive type (
+	\textbf{\texttt{\textcolor{teal}{String}}},
+  \textbf{\texttt{\textcolor{teal}{IntX}}},
+  \textbf{\texttt{\textcolor{teal}{BNum}}},
+  \textbf{\texttt{\textcolor{teal}{ByStrX}}},
+  \textbf{\texttt{\textcolor{teal}{Messsage}}},
+  etc.),
+  & \multirow{4}{5cm}{ $1$ } &
+  \\ \hline
+  \textbf{\texttt{\textcolor{teal}{ADT n $\tau_1$\dots $\tau_k$}}}
+  &
+  $ 1 + \sum_{i \in 1...k} typGas(\tau_{i}) $ &
+  An abstract datatype such as \textbf{\textcolor{magenta}{\texttt{Pair}}}
+  may be parameterised with other types $\tau_1$\dots $\tau_k$.
+  Substitution needs to happen inside those types as well.
+  \\ \hline
+  \textbf{\texttt{\textcolor{teal}{MapType~$\tau_{key}~\tau_{val}$}}}
+  &
+  $ 1 + typGas(\tau_{key}) + typGas(\tau_{val}) $
+  &
+  \\ \hline
+  \textbf{\texttt{\textcolor{teal}{FunType~$\tau_{arg}~\tau_{body}$}}}
+  &
+  $ 1 + typGas(\tau_{arg}) + typGas(\tau_{body}) $
+  &
+  \\ \hline
+	\textbf{\texttt{\textcolor{teal}{PolyFun~$\alpha'~\tau_{body}$}}}
+  &
+  $ 1 + typGas(\tau_{body})$
+  &
+  The typechecker ensures that $\alpha'$ is different from
+  $\alpha$, so that no unwanted variable capture takes place.
+  \\ \hline
+	\textbf{\texttt{\textcolor{teal}{TypeVar~$\alpha'$}}}
+  &
+  $$ 
+	  \begin{cases}
+      |\tau|, & \text{if } \alpha=\alpha', \\
+      $1$, & \text{else } \\
+    \end{cases}
+  $$
+    &
+  $|\tau|$ is the size of the type being substituted, which is
+    calculated using the same table, except that the size of a
+    \textbf{\texttt{\textcolor{teal}{TypeVar}}} is always $1$.
+  \\ \hline
+	\end{tabular}
+\end{table}
+
+\section{Transition Invocation}
+When a transition is invoked on a deployed contract by an end user (as
+a part of a transaction), the user supplies a JSON file containing
+information on which transition needs to be invoked and the parameters
+to pass. Gas associated with such transition calls is equal to the
+size of this JSON file.
+
+If the invocation causes the contract to invoke another transition (by
+sending a message either to itself or to another contract), this
+causes additional gas to be charged based on the size of the JSON file
+of the new message, as well as for the execution of the next
+transition. All gas expended through such chain calls will be charged
+to the end user who invoked the first transition in the chain.
+
 
 %\section{Importing Standard Libraries}
 
