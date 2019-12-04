@@ -481,9 +481,8 @@ Here's an example that sends multiple messages.
 
   .. code-block:: ocaml
 
-    (*Assume contractAddress is the address of the contract being called and the contract contains the transition setHello*)
-    msg1 = { _tag : "setHello"; _recipient : contractAddress1; _amount : Uint128 0; param : Uint32 0 };
-    msg2 = { _tag : "setHello"; _recipient : contractAddress2; _amount : Uint128 100; param : Uint32 0 };
+    msg1 = { _tag : "setFoo"; _recipient : contractAddress1; _amount : Uint128 0; foo : Uint32 101 };
+    msg2 = { _tag : "setBar"; _recipient : contractAddress2; _amount : Uint128 0; bar : Uint32 100 };
     msgs = 
       let nil = Nil {Message} in
       let m1 = Cons {Message} msg1 nil in
