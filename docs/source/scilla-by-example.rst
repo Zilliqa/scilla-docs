@@ -395,6 +395,11 @@ amount of funds (``goal``) without which the project can not be
 started. The contract hence has three immutable variables ``owner``,
 ``max_block`` and ``goal``.
 
+The immutable variables are provided when the contract is deployed. At
+that point we wish to add a sanity check that the ``goal`` is a
+strictly positive amount. If the contract is accidentally initialised
+with a ``goal`` of 0, then the contract should not be deployed.
+
 The total amount that has been donated to the campaign so far is
 stored in a field ``_balance``. Any contract in Scilla has an implicit
 ``_balance`` field of type ``Uint128``, which is initialised to 0 when
@@ -414,6 +419,22 @@ contribute to the crowdfunding campaign, ``GetFunds ()`` that allows **only the
 owner** to claim the donated amount and transfer it to ``owner`` and
 ``ClaimBack()`` that allows contributors to claim back their donations in case
 the campaign is not successful.
+
+Sanity check for contract parameters
+*********************************************
+
+To ensure that the ``goal`` is a strictly positive amount, we use a
+contract constraint:
+
+.. code-block:: ocaml
+
+   with
+     let zero = Uint128 0 in
+     builtin lt zero goal
+   =>
+
+This ensures that the contract cannot be deployed with a ``goal`` of 0
+by mistake.
 
 
 Reading the Current Block Number
@@ -689,6 +710,12 @@ The complete crowdfunding contract is given below.
         max_block : BNum,
         goal      : Uint128)
         
+        (* Contract constraint *)
+        with
+          let zero = Uint128 0 in
+          builtin lt zero goal
+        =>
+
         (* Mutable fields *)
         field backers : Map ByStr20 Uint128 = Emp ByStr20 Uint128
         field funded : Bool = False
