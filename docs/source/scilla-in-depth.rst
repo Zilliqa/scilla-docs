@@ -21,7 +21,7 @@ The general structure of a Scilla contract is given in the code fragment below:
 + Within a contract, there are then four distinct parts:
 
   1. The first part declares the immutable parameters of the contract.
-  2. The second part describes the contract's constraints, which must
+  2. The second part describes the contract's constraint, which must
      be valid when the contract is deployed.
   3. The third part declares the mutable fields.
   4. The fourth part contains all ``transition`` and ``procedure`` definitions. 
@@ -59,7 +59,7 @@ The general structure of a Scilla contract is given in the code fragment below:
     (vname_1 : vtype_1,
      vname_2 : vtype_2)
 
-    (* Contract constraints *)
+    (* Contract constraint *)
     with
       (* Constraint expression *)
     =>
@@ -128,13 +128,13 @@ variables are to be specified when the contract is deployed.
 Contract Constraints
 ********************
 
-`Contract constraints` are requirements placed on the the contract's
-initial parameters. The constraint is checked when the contract is
-deployed. Contract deployment only succeeds if the constraints are
-satsified - if the constraints are not satisfied, then the deployment
-fails.
+A `contract constraint` is a requirement placed on the the contract's
+initial parameters. A contract constraint provides a way of
+establishing a contract invariant as soon as the contract is deployed,
+thus preventing the contract being deployed with non-sensical
+parameters.
 
-Contract constraints are declared using the following syntax:
+A contract constraint is declared using the following syntax:
 
 .. code-block:: ocaml
 
@@ -142,15 +142,16 @@ Contract constraints are declared using the following syntax:
      ...
    =>
 
-A contract constraint provides a way of establishing a contract
-invariant as soon as the contract is deployed, thus preventing the
-contract being deployed with non-sensical parameters.
+The constraint must be an expression of type ``Bool``.
+
+The constraint is checked when the contract is deployed. Contract
+deployment only succeeds if the constraint evaluates to ``True``. If
+it evaluates to ``False``, then the deployment fails.
                 
 .. note::
 
    Declaring a constract constraint is optional. If no constraint is
-   declared, then the constraint is assumed to simply be the boolean
-   value ``True``.
+   declared, then the constraint is assumed to simply be ``True``.
 
 
 
