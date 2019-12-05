@@ -2093,10 +2093,98 @@ PairUtils
 
 - ``snd : Pair 'A 'B -> 'B``: Extract the second element of a Pair.
 
+User Defined Libraries
+######################
+
+In addition to the standard library provided by Scilla, users are allowed
+to deploy library code on the blockchain. Library files are allowed to only
+contain pure Scilla code (which is the same restriction that in-contract
+library code has). Library files must use the ``.scillib`` file extension.
+
+Below is an example of a user defined library that defines a single function
+``add_if_equal`` that adds to ``Uint128`` values if they are equal or returns
+``0`` otherwise.
+
+.. code-block:: ocaml
+
+  import IntUtils
+
+  library ExampleLib
+
+  let add_if_equal =
+    fun (a : Uint128) => fun (b : Uint128) =>
+    let eq = uint128_eq a b in
+    match eq with
+    | True => builtin add a b
+    | False => Uint128 0
+
+The structure of a library file is similar to that of a Scilla contract, except that
+it doesn't have the sections corresponding to the contract itself
+(contract name, parameters, fields, transitions).
+
+Similar to how contracts can import libraries, a library can import other libraries
+(including user-defined libraries) too. The scope of variables in an imported library
+is restricted to the immediate importer. So if ``X`` imports library ``Y`` which in
+turn imports library ``Z``, then the names in ``Z`` are not in scope in `X``, but only
+in ``Y``. Cyclic dependencies in imports are not allowed and flagged as errors
+during the checking phase.
+
+
+Local Development with User Defined Libraries
+*********************************************
+
+To use library functions in an external (user-defined) library module, the command line
+argument to the scilla executables must include a `-libdir` option, along with a list of
+directories (in the standard PATH format) as an argument. Scilla will search for the library
+in these directories (in the same order) for a file with ``Name.scillib``, where ``Name`` is
+the library name as used in the ``import`` statement. Alternatively, the environment variable
+``SCILLA_STDLIB_PATH`` can be set.
+
+``scilla-checker`` type checks library modules in the same way as contract modules. Similarly,
+``scilla-runner`` (TODO: add reference to "interface:Calling Interface") can "create" libraries
+(which is essentially charging a gas for deploying). Note that ``scilla-runner`` takes a
+blockhain.json as argument (the way it does for creating contracts) to be compatible with
+contract creation w.r.t command line arguments.
+
+User Defined Libraries on the Blockchain
+****************************************
+
+While the Zilliqa blockchain is designed to provide the standard Scilla libraries to an
+executing contract, it must be provided with extra information to support user defined
+libraries.
+
+Contracts (or libraries) that import user defined libraries must include, in its `init.json`
+an entry named ``_extlibs``, of Scilla type ``List (Pair String ByStr20)``. Each entry in
+the list maps an imported library's name (as specified inside the source code) to its
+address in the blockchain. This enables the blockchain to provide the library sources to
+Scilla at the time of checking and execution.
+
+Continuing the previous example, for a contract / library that imports ``ExampleLib``, its
+init.json should have an entry:
+
+.. code-block:: javascript
+
+  [
+    ...,
+    {
+      "vname" : "_extlibs",
+      "type" : "List(Pair String ByStr20)",
+      "value" : [
+          {
+              "constructor" : "Pair",
+              "argtypes" : ["String", "ByStr20"],
+              "arguments" : ["ExampleLib", "0x986556789012345678901234567890123456abcd"]
+          },
+          ...
+      ]
+    }
+  ]
+
+Namespaces
+**********
 
 
 
-  
 Scilla versions
 ###############
 .. _versions:
