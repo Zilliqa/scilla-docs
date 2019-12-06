@@ -2182,7 +2182,32 @@ init.json should have an entry:
 
 Namespaces
 **********
+When a contract or a library imports more than one library, a possibility of name clash
+exists. For example if library ``X`` and library ``Y`` are imported, and they both have
+a name ``foo`` defined, then Scilla cannot decide which ``foo`` it must resolve
+to when ``foo`` is used in the importer. The checker flags an error in such a scenario.
 
+To enable users to meaningfully import libraries that may have name clashes, Scilla provides
+an ``import as`` construct. ``import Foo as Bar`` imports the library ``Foo`` with all of its
+names pushed into the ``Bar`` namespace. Accesses to names in ``Foo`` must now be prefixed
+with ``Bar.``.
+
+Extending our previous example, shown below is a contract that imports ``ExampleLib``
+in namespace ``Bar``, to use the function ``add_if_equal``.
+
+.. code-block:: ocaml
+
+  scilla_version 0
+
+  import ExampleLib as Foo
+
+  library MyContract
+
+  let adder = fun (a : Uint128) => fun (b : Uint128) =>
+    Foo.add_if_equal a b
+
+  contract MyContract ()
+  ...
 
 
 Scilla versions
