@@ -789,6 +789,12 @@ Scilla supports the following built-in operations on maps:
    Builtin functions ``put`` and ``remove`` return a new map, which is
    a possibly modified copy of the original map. This may affect performance!
 
+.. note::
+
+  Empty maps can be constructed using the ``Emp`` keyword, specifying the key
+  and value types as its arguments. This can be helpful in initializing ``Map``
+  fields to be empty. For example ``field foomap : Map Uint128 String = Emp Uint128 String``
+  declares a ``Map`` field initialized to be empty.
 
 Addresses
 *********
