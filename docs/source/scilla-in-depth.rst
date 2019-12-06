@@ -2134,17 +2134,17 @@ Local Development with User Defined Libraries
 *********************************************
 
 To use library functions in an external (user-defined) library module, the command line
-argument to the scilla executables must include a `-libdir` option, along with a list of
+argument to the scilla executables must include a ``-libdir`` option, along with a list of
 directories (in the standard PATH format) as an argument. Scilla will search for the library
 in these directories (in the same order) for a file with ``Name.scillib``, where ``Name`` is
 the library name as used in the ``import`` statement. Alternatively, the environment variable
 ``SCILLA_STDLIB_PATH`` can be set.
 
 ``scilla-checker`` type checks library modules in the same way as contract modules. Similarly,
-``scilla-runner`` (TODO: add reference to "interface:Calling Interface") can "create" libraries
-(which is essentially charging a gas for deploying). Note that ``scilla-runner`` takes a
-blockhain.json as argument (the way it does for creating contracts) to be compatible with
-contract creation w.r.t command line arguments.
+``scilla-runner`` can "create" libraries (which is essentially charging a gas for deploying).
+Note that ``scilla-runner`` takes a blockhain.json as argument (the way it does for
+:ref:`Contract Creation <calling-interface>`) to be command line argument compatible with
+contract creation.
 
 User Defined Libraries on the Blockchain
 ****************************************

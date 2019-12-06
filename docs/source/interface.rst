@@ -1,14 +1,15 @@
 .. _interface-label:
 
 
-
 Interpreter Interface
-=========================
+=====================
 
 The Scilla interpreter provides a calling interface that enables users
 to invoke transitions with specified inputs and obtain
 outputs. Execution of a transition with supplied inputs will result in a
 set of outputs, and a change in the smart contract mutable state.
+
+.. _calling-interface:
 
 Calling Interface
 #################
