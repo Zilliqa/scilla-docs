@@ -408,8 +408,8 @@ the campaign.
 
 The contract maintains two mutable variables:
 
-  - ``backers``: a map between contributor's address (a ``ByStr20`` value)
-    and the amount contributed, represented with a ``Uint128`` value.
+  - ``backers``: a map from a contributor's address (a ``ByStr20`` value)
+    to the amount contributed, represented with a ``Uint128`` value.
     Since there are no backers initially, this map is initialized to an
     ``Emp`` (empty) map. The map enables the contract to register a donor,
     prevent multiple donations and to refund back the money if the campaign
