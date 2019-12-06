@@ -18,11 +18,13 @@ The general structure of a Scilla contract is given in the code fragment below:
 + Then follows the actual contract definition declared using the
   keyword ``contract``.
 
-+ Within a contract, there are then three distinct parts:
++ Within a contract, there are then four distinct parts:
 
   1. The first part declares the immutable parameters of the contract.
-  2. The second part declares the mutable fields.
-  3. The third part contains all ``transition`` and ``procedure`` definitions. 
+  2. The second part describes the contract's constraint, which must
+     be valid when the contract is deployed.
+  3. The third part declares the mutable fields.
+  4. The fourth part contains all ``transition`` and ``procedure`` definitions. 
 
 
 .. code-block:: ocaml
@@ -57,6 +59,11 @@ The general structure of a Scilla contract is given in the code fragment below:
     (vname_1 : vtype_1,
      vname_2 : vtype_2)
 
+    (* Contract constraint *)
+    with
+      (* Constraint expression *)
+    =>
+    
     (* Mutable fields declaration *)
 
     field vname_1 : vtype_1 = init_val_1
@@ -97,7 +104,7 @@ Immutable Variables
 values are defined when the contract is deployed, and cannot be
 modified afterwards.
 
-Declaration of immutable variables has the following format:
+Immutable variables are declared using the following syntax:
 
 .. code-block:: ocaml
 
@@ -117,6 +124,36 @@ variables are to be specified when the contract is deployed.
    of type ``ByStr20``, which is initialised to the address of the
    contract when the contract is deployed. This field can be
    freely read within the implementation, but cannot be modified.
+
+Contract Constraints
+********************
+
+A `contract constraint` is a requirement placed on the the contract's
+initial parameters. A contract constraint provides a way of
+establishing a contract invariant as soon as the contract is deployed,
+thus preventing the contract being deployed with non-sensical
+parameters.
+
+A contract constraint is declared using the following syntax:
+
+.. code-block:: ocaml
+
+   with
+     ...
+   =>
+
+The constraint must be an expression of type ``Bool``.
+
+The constraint is checked when the contract is deployed. Contract
+deployment only succeeds if the constraint evaluates to ``True``. If
+it evaluates to ``False``, then the deployment fails.
+                
+.. note::
+
+   Declaring a constract constraint is optional. If no constraint is
+   declared, then the constraint is assumed to simply be ``True``.
+
+
 
 Mutable Variables
 *****************
@@ -789,6 +826,13 @@ Scilla supports the following built-in operations on maps:
    Builtin functions ``put`` and ``remove`` return a new map, which is
    a possibly modified copy of the original map. This may affect performance!
 
+.. note::
+
+  Empty maps can be constructed using the ``Emp`` keyword, specifying the key
+  and value types as its arguments. This is the way to initialise ``Map``
+  fields to be empty. For example ``field foomap : Map Uint128 String = Emp Uint128 String``
+  declares a ``Map`` field with keys of type ``Uint128`` and values of type
+  ``String``, whic is initialized to be the empty map.
 
 Addresses
 *********

@@ -395,6 +395,11 @@ amount of funds (``goal``) without which the project can not be
 started. The contract hence has three immutable variables ``owner``,
 ``max_block`` and ``goal``.
 
+The immutable variables are provided when the contract is deployed. At
+that point we wish to add a sanity check that the ``goal`` is a
+strictly positive amount. If the contract is accidentally initialised
+with a ``goal`` of 0, then the contract should not be deployed.
+
 The total amount that has been donated to the campaign so far is
 stored in a field ``_balance``. Any contract in Scilla has an implicit
 ``_balance`` field of type ``Uint128``, which is initialised to 0 when
@@ -404,16 +409,42 @@ contract's account on the blockchain.
 The campaign is deemed successful if the owner can raise the goal in
 the stipulated time. In case the campaign is unsuccessful, the
 donations are returned to the project backers who contributed during
-the campaign. The contract maintains two mutable variables: ``backer``
-a map between contributor's address and amount contributed and a
-boolean flag ``funded`` that indicates whether the owner has already
-transferred the funds after the end of the campaign.
+the campaign.
+
+The contract maintains two mutable variables:
+
+  - ``backers``: a map from a contributor's address (a ``ByStr20`` value)
+    to the amount contributed, represented with a ``Uint128`` value.
+    Since there are no backers initially, this map is initialized to an
+    ``Emp`` (empty) map. The map enables the contract to register a donor,
+    prevent multiple donations and to refund back the money if the campaign
+    does not succeed.
+
+  - ``funded``:  a boolean flag initialized to ``False`` that indicates
+    whether the owner has already transferred the funds after the end of
+    the campaign.
 
 The contract contains three transitions: ``Donate ()`` that allows anyone to
 contribute to the crowdfunding campaign, ``GetFunds ()`` that allows **only the
 owner** to claim the donated amount and transfer it to ``owner`` and
 ``ClaimBack()`` that allows contributors to claim back their donations in case
 the campaign is not successful.
+
+Sanity check for contract parameters
+*********************************************
+
+To ensure that the ``goal`` is a strictly positive amount, we use a
+contract constraint:
+
+.. code-block:: ocaml
+
+   with
+     let zero = Uint128 0 in
+     builtin lt zero goal
+   =>
+
+This ensures that the contract cannot be deployed with a ``goal`` of 0
+by mistake.
 
 
 Reading the Current Block Number
@@ -689,6 +720,12 @@ The complete crowdfunding contract is given below.
         max_block : BNum,
         goal      : Uint128)
         
+        (* Contract constraint *)
+        with
+          let zero = Uint128 0 in
+          builtin lt zero goal
+        =>
+
         (* Mutable fields *)
         field backers : Map ByStr20 Uint128 = Emp ByStr20 Uint128
         field funded : Bool = False
