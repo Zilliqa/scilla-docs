@@ -792,9 +792,10 @@ Scilla supports the following built-in operations on maps:
 .. note::
 
   Empty maps can be constructed using the ``Emp`` keyword, specifying the key
-  and value types as its arguments. This can be helpful in initializing ``Map``
+  and value types as its arguments. This is the way to initialise ``Map``
   fields to be empty. For example ``field foomap : Map Uint128 String = Emp Uint128 String``
-  declares a ``Map`` field initialized to be empty.
+  declares a ``Map`` field with keys of type ``Uint128`` and values of type
+  ``String``, whic is initialized to be the empty map.
 
 Addresses
 *********

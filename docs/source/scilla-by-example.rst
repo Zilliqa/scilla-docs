@@ -404,10 +404,20 @@ contract's account on the blockchain.
 The campaign is deemed successful if the owner can raise the goal in
 the stipulated time. In case the campaign is unsuccessful, the
 donations are returned to the project backers who contributed during
-the campaign. The contract maintains two mutable variables: ``backer``
-a map between contributor's address and amount contributed and a
-boolean flag ``funded`` that indicates whether the owner has already
-transferred the funds after the end of the campaign.
+the campaign.
+
+The contract maintains two mutable variables:
+
+  - ``backers``: a map between contributor's address (a ``ByStr20`` value)
+    and the amount contributed, represented with a ``Uint128`` value.
+    Since there are no backers initially, this map is initialized to an
+    ``Emp`` (empty) map. The map enables the contract to register a donor,
+    prevent multiple donations and to refund back the money if the campaign
+    does not succeed.
+
+  - ``funded``:  a boolean flag initialized to ``False`` that indicates
+    whether the owner has already transferred the funds after the end of
+    the campaign.
 
 The contract contains three transitions: ``Donate ()`` that allows anyone to
 contribute to the crowdfunding campaign, ``GetFunds ()`` that allows **only the
