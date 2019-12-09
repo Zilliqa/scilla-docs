@@ -2137,7 +2137,7 @@ PairUtils
 
 - ``snd : Pair 'A 'B -> 'B``: Extract the second element of a Pair.
 
-User Defined Libraries
+User-defined Libraries
 ######################
 
 In addition to the standard library provided by Scilla, users are allowed
@@ -2145,8 +2145,8 @@ to deploy library code on the blockchain. Library files are allowed to only
 contain pure Scilla code (which is the same restriction that in-contract
 library code has). Library files must use the ``.scillib`` file extension.
 
-Below is an example of a user defined library that defines a single function
-``add_if_equal`` that adds to ``Uint128`` values if they are equal or returns
+Below is an example of a user-defined library that defines a single function
+``add_if_equal`` that adds to ``Uint128`` values if they are equal and returns
 ``0`` otherwise.
 
 .. code-block:: ocaml
@@ -2162,9 +2162,13 @@ Below is an example of a user defined library that defines a single function
     | True => builtin add a b
     | False => Uint128 0
 
-The structure of a library file is similar to that of a Scilla contract, except that
-it doesn't have the sections corresponding to the contract itself
-(contract name, parameters, fields, transitions).
+The structure of a library file is similar to the structure of the library part of a
+Scilla contract. A library file contains definitions of variables and pure library
+functions, but does not contain an actual contract definition with parameters, fields,
+transitions and so on.
+
+Of particular importance is that a library cannot declare fields. Therefore, all
+libraries are stateless and can only contain pure code.
 
 Similar to how contracts can import libraries, a library can import other libraries
 (including user-defined libraries) too. The scope of variables in an imported library
@@ -2174,37 +2178,35 @@ in ``Y``. Cyclic dependencies in imports are not allowed and flagged as errors
 during the checking phase.
 
 
-Local Development with User Defined Libraries
+Local Development with User-defined Libraries
 *********************************************
 
-To use library functions in an external (user-defined) library module, the command line
-argument to the scilla executables must include a ``-libdir`` option, along with a list of
-directories (in the standard PATH format) as an argument. Scilla will search for the library
-in these directories (in the same order) for a file with ``Name.scillib``, where ``Name`` is
-the library name as used in the ``import`` statement. Alternatively, the environment variable
-``SCILLA_STDLIB_PATH`` can be set.
+To use variables and functions declaredin an external (user-defined) library module,
+the command line argument to the scilla executables must include a ``-libdir`` option,
+along with a list of directories  as an argument. If the Scilla file imports a library ``ALib``,
+then the Scilla executable will search for a library file called ``ALib.scillib``
+in the directories provided. If more than one directory contains a file with the correct name,
+then the directories are given priority in the same order as they are provided to the Scilla executable.
+Alternatively, the environment variable ``SCILLA_STDLIB_PATH`` can be set to a list of library directories.
 
-``scilla-checker`` type checks library modules in the same way as contract modules. Similarly,
-``scilla-runner`` can "create" libraries (which is essentially charging a gas for deploying).
-Note that ``scilla-runner`` takes a blockhain.json as argument (the way it does for
-:ref:`Contract Creation <calling-interface>`) to be command line argument compatible with
-contract creation.
+``scilla-checker`` typechecks library modules in the same way as contract modules. Similarly,
+``scilla-runner`` can deploy libraries. Note that ``scilla-runner`` takes a blockhain.json as
+argument (the way it does for :ref:`Contract Creation <calling-interface>`) to be command
+line argument compatible with contract creation.
 
-User Defined Libraries on the Blockchain
+User-defined Libraries on the Blockchain
 ****************************************
 
 While the Zilliqa blockchain is designed to provide the standard Scilla libraries to an
-executing contract, it must be provided with extra information to support user defined
+executing contract, it must be provided with extra information to support user-defined
 libraries.
 
-Contracts (or libraries) that import user defined libraries must include, in its `init.json`
+A contracts or a library that import user-defined libraries must include in its `init.json`
 an entry named ``_extlibs``, of Scilla type ``List (Pair String ByStr20)``. Each entry in
-the list maps an imported library's name (as specified inside the source code) to its
-address in the blockchain. This enables the blockchain to provide the library sources to
-Scilla at the time of checking and execution.
+the list maps an imported library's name to its address in the blockchain.
 
-Continuing the previous example, for a contract / library that imports ``ExampleLib``, its
-init.json should have an entry:
+Continuing the previous example, a contract or library that imports ``Examplelib`` should have
+the following entry in its init.json:
 
 .. code-block:: javascript
 
@@ -2226,15 +2228,14 @@ init.json should have an entry:
 
 Namespaces
 **********
-When a contract or a library imports more than one library, a possibility of name clash
-exists. For example if library ``X`` and library ``Y`` are imported, and they both have
-a name ``foo`` defined, then Scilla cannot decide which ``foo`` it must resolve
-to when ``foo`` is used in the importer. The checker flags an error in such a scenario.
+Import statements can be used to define separate namespaces for imported names.
+To push the names from a library ``Foo`` into the namespace ``Bar``, use the statement
+``import Foo as Bar``. Accessing a variable ``v`` in Foo must now be done using the qualified
+name ``Bar.v``. This is useful when importing multiple libraries that define the same name.
 
-To enable users to meaningfully import libraries that may have name clashes, Scilla provides
-an ``import as`` construct. ``import Foo as Bar`` imports the library ``Foo`` with all of its
-names pushed into the ``Bar`` namespace. Accesses to names in ``Foo`` must now be prefixed
-with ``Bar.``.
+The same variable name must not occur in the same namespace, so if multiple imported libraries
+define the same name, then at most one of the libraries may reside in the default (unqualified)
+namespace. All other conflicting libraries must be pushed to separate namespaces.
 
 Extending our previous example, shown below is a contract that imports ``ExampleLib``
 in namespace ``Bar``, to use the function ``add_if_equal``.
@@ -2243,12 +2244,12 @@ in namespace ``Bar``, to use the function ``add_if_equal``.
 
   scilla_version 0
 
-  import ExampleLib as Foo
+  import ExampleLib as Bar
 
   library MyContract
 
   let adder = fun (a : Uint128) => fun (b : Uint128) =>
-    Foo.add_if_equal a b
+    Bar.add_if_equal a b
 
   contract MyContract ()
   ...
