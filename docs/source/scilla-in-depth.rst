@@ -2201,7 +2201,7 @@ While the Zilliqa blockchain is designed to provide the standard Scilla librarie
 executing contract, it must be provided with extra information to support user-defined
 libraries.
 
-A contracts or a library that import user-defined libraries must include in its `init.json`
+A contract or a library that imports user-defined libraries must include in its `init.json`
 an entry named ``_extlibs``, of Scilla type ``List (Pair String ByStr20)``. Each entry in
 the list maps an imported library's name to its address in the blockchain.
 
@@ -2233,9 +2233,10 @@ To push the names from a library ``Foo`` into the namespace ``Bar``, use the sta
 ``import Foo as Bar``. Accessing a variable ``v`` in Foo must now be done using the qualified
 name ``Bar.v``. This is useful when importing multiple libraries that define the same name.
 
-The same variable name must not occur in the same namespace, so if multiple imported libraries
-define the same name, then at most one of the libraries may reside in the default (unqualified)
-namespace. All other conflicting libraries must be pushed to separate namespaces.
+The same variable name must not be defined more than once in the same namespace,
+so if multiple imported libraries define the same name, then at most one of the
+libraries may reside in the default (unqualified) namespace. All other conflicting
+libraries must be pushed to separate namespaces.
 
 Extending our previous example, shown below is a contract that imports ``ExampleLib``
 in namespace ``Bar``, to use the function ``add_if_equal``.
