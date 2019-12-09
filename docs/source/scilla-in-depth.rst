@@ -374,9 +374,13 @@ Expressions
 
 - ``tfun T => expr`` : A type function that takes ``T`` as a parametric type and
   returns the value to which expression ``expr`` evaluates. These are typically used
-  to build library functions. See the section on Pairs_ below for an example.
+  to build library functions. See the implementation of fst_ for an example.
 
-- ``@x T``: Apply the type function ``x`` to the type ``T``.
+- ``@x T``: Apply the type function ``x`` to the type ``T``. This
+  specialises the type function ``x`` by instantiating the first type
+  variable of ``x`` to ``T``. Type applications are typically used
+  when a library function is about to be applied. See the example
+  application of fst_ for an example.
 
 - ``builtin f x``: Apply the built-in function ``f`` on ``x``.
 
@@ -1129,12 +1133,14 @@ Notice the difference in how we specify the type of the field as
 ``Pair A' B'``, and how we specify the types of values given to the
 constructor as ``Pair { A' B' }``.
 
+.. _fst:
+
 We now illustrate how pattern matching can be used to extract the
 first element from a ``Pair``. The function ``fst`` shown below
 is defined in the ``PairUtils`` library of the Scilla standard library.
 
 .. code-block:: ocaml
-
+                
   let fst =
     tfun 'A =>
     tfun 'B =>
@@ -1143,6 +1149,15 @@ is defined in the ``PairUtils`` library of the Scilla standard library.
       | Pair a b => a
       end
 
+To apply ``fst`` to one must first instantiate the type variables
+``'A`` and ``'B``, which is done as follows:
+
+.. code-block:: ocaml
+
+  p <- pp;
+  fst_specialised = @fst String Uint32;
+  p_fst = fst_specialised p
+      
 .. note::
    
    Using ``Pair`` is generally discouraged. Instead, the programmer
