@@ -15,7 +15,7 @@ simulates a blockchain in the browser's memory by maintaining persistent
 account states. It is optimized for use in Chrome Web Browser.
 
 Users will not need to hold testnet ZIL to use Savant, instead they are given 20 arbitrary accounts with
-1,000,000,000 fake ZILs to test their contracts.
+100,000,000 fake QA (1 ZIL = 1,000,000,000,000 QA) to test their contracts.
 
 Savant serves as a staging environment, before doing automated script testing with tools
 like `Kaya (TestRPC) <https://github.com/Zilliqa/kaya>`_ and `Javascript library <https://github.com/Zilliqa/Zilliqa-JavaScript-Library>`_. To try out the Savant IDE, users need to visit `Savant IDE <https://savant-ide.zilliqa.com>`_.
