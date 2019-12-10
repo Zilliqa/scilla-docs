@@ -2201,6 +2201,8 @@ While the Zilliqa blockchain is designed to provide the standard Scilla librarie
 executing contract, it must be provided with extra information to support user-defined
 libraries.
 
+The ``init.json`` of a library must include a ``Bool`` entry named ``_library``, set to
+``True``. Additionally,
 A contract or a library that imports user-defined libraries must include in its `init.json`
 an entry named ``_extlibs``, of Scilla type ``List (Pair String ByStr20)``. Each entry in
 the list maps an imported library's name to its address in the blockchain.
@@ -2212,6 +2214,11 @@ the following entry in its init.json:
 
   [
     ...,
+    {
+        "vname" : "_library",
+        "type" : "Bool",
+        "value": { "constructor": "True", "argtypes": [], "arguments": [] }
+    }
     {
       "vname" : "_extlibs",
       "type" : "List(Pair String ByStr20)",
