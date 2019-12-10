@@ -391,7 +391,7 @@ raise funds through donations from the community.
 It is assumed that the owner (``owner``) wishes to run the campaign
 until a certain, pre-determined block number is reached on the
 blockchain (``max_block``). The owner also wishes to raise a minimum
-amount of funds (``goal``) without which the project can not be
+amount of QA (``goal``) without which the project can not be
 started. The contract hence has three immutable variables ``owner``,
 ``max_block`` and ``goal``.
 
@@ -403,7 +403,7 @@ with a ``goal`` of 0, then the contract should not be deployed.
 The total amount that has been donated to the campaign so far is
 stored in a field ``_balance``. Any contract in Scilla has an implicit
 ``_balance`` field of type ``Uint128``, which is initialised to 0 when
-the contract is deployed, and which holds the amount of ZIL in the
+the contract is deployed, and which holds the amount of QA in the
 contract's account on the blockchain. 
 
 The campaign is deemed successful if the owner can raise the goal in
@@ -478,7 +478,7 @@ variable ``goal`` when the contract is deployed. To check whether the
 target have been met, we must compare the total amount raised to the
 target.
 
-The amount of ZIL raised is stored in the contract's account on the
+The amount of QA raised is stored in the contract's account on the
 blockchain, and can be accessed through the implicitly declared
 ``_balance`` field as follows:
 
@@ -521,7 +521,7 @@ events:
 A message must contain the compulsory fields ``_tag``, ``_recipient``
 and ``_amount``. The ``_recipient`` field is the blockchain address
 (of type ``ByStr20``) that the message is to be sent to, and the
-``_amount`` field is the number of ZIL to be transferred to that
+``_amount`` field is the number of QA to be transferred to that
 account.
 
 The value of the ``_tag`` field is the name of the transition (of type ``String``) 

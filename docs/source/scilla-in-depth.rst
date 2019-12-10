@@ -175,14 +175,15 @@ fields get modified.
 
 .. note::
 
-   In addition to the explicitly declared mutable fields, a Scilla contract
-   has an implicitly declared mutable field ``_balance`` of
+   In addition to the explicitly declared mutable fields, a Scilla
+   contract has an implicitly declared mutable field ``_balance`` of
    type ``Uint128``, which is initialised to 0 when the contract is
    deployed. The ``_balance`` field keeps the amount of funds held by
-   the contract.  This field can be freely read within the
-   implementation, but can only modified by explicitly transferring
-   funds to other accounts (using ``send``), or by accepting money
-   from incoming messages (using ``accept``).
+   the contract, measured in QA (1 ZIL = 1,000,000,000,000 QA).  This
+   field can be freely read within the implementation, but can only
+   modified by explicitly transferring funds to other accounts (using
+   ``send``), or by accepting money from incoming messages (using
+   ``accept``).
 
 .. note::
 
@@ -255,11 +256,12 @@ multiple parameters are separated by ``,``.
       instead of a user account, then ``_sender`` is the address of
       the contract that called this transition.
 
-    - ``_amount : Uint128`` : Incoming amount of QAs (see section above on the units) sent by the
-      sender. To transfer the money from the sender to the contract,
-      the transition must explicitly accept the money using the
-      ``accept`` instruction. The money transfer does not happen if
-      the transition does not execute an ``accept``.
+    - ``_amount : Uint128`` : Incoming amount, in QA (see section
+      above on the units), sent by the sender. To transfer the money
+      from the sender to the contract, the transition must explicitly
+      accept the money using the ``accept`` instruction. The money
+      transfer does not happen if the transition does not execute an
+      ``accept``.
 
 .. note::
 
@@ -455,9 +457,9 @@ mathematical. Scilla contains the following types of statements:
        ...
      end
 
-- ``accept`` : Accept the QAs of the message that invoked the
+- ``accept`` : Accept the QA of the message that invoked the
   transition. The amount is automatically added to the ``_balance``
-  field of the contract. If a message contains QAs, but the invoked
+  field of the contract. If a message contains QA, but the invoked
   transition does not accept the money, the money is transferred back
   to the sender of the message.
 
@@ -503,7 +505,7 @@ A message passed to ``send`` must contain the compulsory fields
 
 The ``_recipient`` field (of type ``ByStr20``) is the blockchain
 address that the message is to be sent to, and the ``_amount`` field
-(of type ``Uint128``) is the number of ZIL to be transferred to that
+(of type ``Uint128``) is the number of QA to be transferred to that
 account.
 
 The ``_tag`` field (of type ``String``) is only used when the value of

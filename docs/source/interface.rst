@@ -197,7 +197,7 @@ transition. The json is an array containing the following four objects:
 Field      Description
 =======  ===========================================  
 _tag      Transition to be invoked
-_amount   Number of ZILs to be transferred
+_amount   Number of QA to be transferred
 _sender   Address of the invoker
 params    An array of parameter objects
 =======  ===========================================  
@@ -278,7 +278,7 @@ Field                   Description
 =====================   ====================================================================
 scilla_major_version    The major version of the scilla language of this contract.
 gas_remaining           The remaining gas after invoking or deploying a contract.
-_accepted               Whether the contract has accepted ZIL (Either ``"true"`` or ``"false"``)
+_accepted               Whether the incoming QA have been accepted (Either ``"true"`` or ``"false"``)
 message                 The message to be sent to another contract/non-contract account, if any.
 states                  An array of objects that form the new contract state
 events                  An array of events emitted by the transition and the procedures it invoked.
@@ -293,7 +293,7 @@ events                  An array of events emitted by the transition and the pro
   Field              Description
   ===========       =======================================================  
   _tag               Transition to be invoked
-  _amount            Number of QAs (10^-12 ZILs) to be transferred
+  _amount            Number of QA to be transferred
   _recipient         Address of the recipient
   params             An array of parameter objects to be passed
   ===========       =======================================================
