@@ -37,10 +37,11 @@ annotations to each piece of syntax:
   name (``_eventname``), then their structure (the fields and their types) must
   also be the same.
 
-+ `Cashflow analysis` analyzes the usage of variables and fields, and
-  attempts to determine which fields are used to represent (native)
-  blockchain money. No checks are performed, but expressions,
-  variables and fields are annotated with tags indicating their usage.
++ `Cashflow analysis` analyzes the usage of variables, fields and
+  ADTs, and attempts to determine which fields are used to represent
+  (native) blockchain money. No checks are performed, but expressions,
+  variables, fields and ADTs are annotated with tags indicating their
+  usage.
 
 + `Sanity-checking` performs a number of minor checks, e.g., that all
   parameters to a transition or a procedure have distinct names.
@@ -278,14 +279,15 @@ Cashflow Analysis
 .. _scilla_checker_cashflow:
 
 The cashflow analysis phase analyzes the usage of a contract's
-variables and fields, and attempts to determine which fields are used
-to represent (native) blockchain money. Each contract field is
-annotated with a tag indicating the field's usage.
+variables, fields, and ADT constructor, and attempts to determine
+which fields and ADTs are used to represent (native) blockchain
+money. Each contract field is annotated with a tag indicating the
+field's usage.
 
-The resulting tags are an approximation based on the usage of each
-contract field, and the usage of local variables in the contract. The
-tags are not guaranteed to be accurate, but are intended as a tool to
-help the contract developer use her fields in the intended manner.
+The resulting tags are an approximation based on the usage of the
+contract's fields, variables, and ADT constructors. The tags are not
+guaranteed to be accurate, but are intended as a tool to help the
+contract developer use her fields in the intended manner.
 
 
 Running the analysis
@@ -309,8 +311,9 @@ procedures of the contract until no further information is gathered.
 
 The starting point for the analysis is the incoming message that
 invokes the contract's transition, the outgoing messages and events
-that may be sent by the contract, and any field being read from the
-blockchain such as the current blocknumber.
+that may be sent by the contract, the contract's account balance, and
+any field being read from the blockchain such as the current
+blocknumber.
 
 Both incoming and outgoing messages contain a field ``_amount`` whose
 value is the amount of money being transferred between accounts by the
@@ -321,10 +324,11 @@ the ``_amount`` field of an outgoing message is also tagged as
 representing money.
 
 Conversely, the message fields ``_sender``, ``_recipient``, and
-``_tag``, the event field ``_eventname``, and the blockchain field
-``BLOCKNUMBER`` are known to not represent money, so any variable used
-to initialise those fields or to hold the value read from one of those
-fields is tagged as not representing money.
+``_tag``, the event field ``_eventname``, the exception field
+``_exception``, and the blockchain field ``BLOCKNUMBER``, are known to
+not represent money, so any variable used to initialise those fields
+or to hold the value read from one of those fields is tagged as not
+representing money.
 
 Once some variables have been tagged, their usage implies how other
 variables can be tagged. For instance, if two variables tagged as
@@ -336,10 +340,13 @@ Tagging of contract fields happens when a local variable is used when
 loading or storing a contract field. In these cases, the field is
 deemed to have the same tag as the local variable.
 
-Once a transition or procedure has been analyzed the local variables
-and their tags are saved, and the analysis proceeds to the next
-transition or procedure while keeping the tags of the contract
-fields. The analysis continues until all the transitions and
+Tagging of custom ADTs is done when they are used for constructing
+values, and when they are used in pattern-matching.
+
+Once a transition or procedure has been analyzed, the local variables
+and their tags are saved and the analysis proceeds to the next
+transition or procedure while keeping the tags of the contract fields
+and ADTs. The analysis continues until all the transitions and
 procedures have been analysed without any existing tags having
 changed.
 
@@ -363,26 +370,58 @@ The analysis uses the following set of tags:
   is tagged with `t`. Keys of maps are assumed to always be `Not money`. Using
   a variable as a function parameter does not give rise to a tag.
 
-- `Option t` (where `t` is a tag): The variable represents an option
-  value, which, if it does not have the value ``None``, contains the
-  value ``Some x`` where ``x`` has tag `t`.
-
-- `Pair t1 t2` (where `t1` and `t2` are tags): The variable represents
-  a pair of values with tags `t1` and `t2`, respectively.
+- `T t1 ... tn` (where `T` is an ADT, and `t1 ... tn` are tags): The
+  variable represents a value of an ADT, such as `List` or
+  `Option`. The tags `t1 ... tn` correspond to the tags of each type
+  parameter of the ADT. (See the simple example_ further down.)
 
 - `Inconsistent`: The variable has been used to represent both money
   and not money. Inconsistent usage indicates a bug.
-
-  
-Lists and user-defined ADTs are currently not supported.
 
 Library and local functions are only partially supported, since no
 attempt is made to connect the tags of parameters to the tag of the
 result. Built-in functions are fully supported, however.
 
+.. _example:
 
-Example
-*******
+A simple example
+****************
+Consider the following code snippet:
+
+.. code-block:: ocaml
+                
+                match p with
+                | Nil =>
+                | Cons x xs =>
+                  msg = { _amount : x ; ...}
+                  ...
+                end
+
+``x`` is used to initialise the ``_amount`` field of a message, so
+``x`` gets tagged with `Money`. Since ``xs`` is the tail of a list of
+which ``x`` is the first element, ``xs`` must be a list of elements
+with the same tag as ``x``. ``xs`` therefore gets tagged with `List
+Money`, corresponding to the fact that the ``List 'A`` type has one
+type parameter.
+
+Similarly, ``p`` is matched against the patterns ``Nil`` and ``Cons x
+xs``. ``Nil`` is a list, but since the list is empty we don't know
+anything about the contents of the list, and so the ``Nil`` pattern
+corresponds to the tag `List (No information)`. ``Cons x xs`` is also
+a list, but this time we do know something about the contents, namely
+that the first element ``x`` is tagged with `Money`, and the tail of
+the list is tagged with `List Money`. Consequently, ``Cons x xs``
+corresponds to `List Money`.
+
+Unifying the two tags `List (No information)` and `List Money` gives
+the tag `List Money`, so ``p`` gets tagged with `List Money`.
+
+
+TODO: ADT constructor tagging
+
+
+A more elaborate example
+************************
 
 As an example, consider a crowdfunding contract written in Scilla. Such a
 contract may declare the following immutable parameters and mutable fields:
