@@ -417,7 +417,35 @@ Unifying the two tags `List (No information)` and `List Money` gives
 the tag `List Money`, so ``p`` gets tagged with `List Money`.
 
 
-TODO: ADT constructor tagging
+ADT constructor tagging
+***********************
+
+In addition to tagging fields and local variables, the cashflow
+analyser also tags constructors of custom ADTs.
+
+To see how this works, consider the following custom ADT:
+
+.. code-block:: ocaml
+
+   type Transaction =
+   | UserTransaction of ByStr20 Uint128
+   | ContractTransaction of ByStr20 String Uint128
+
+A user tranaction is a transaciton where the recipient is a user
+account, so the ``UserTransaction`` constructor takes two arguments:
+An address of the recipient user account, and the amount to transfer.
+
+A contract transaction is a transaction where the recipient is another
+contract, so the ``ContractTransaction`` takes three arguments: An
+address of the recipient contract, the name of the transition to
+invoke on the recipient contract, and the amount to transfer.
+
+In terms of cashflow it is clear that the last argument of both
+constructors is used to represent an amount of money, wheras all other
+arguments are used to represent non-money. The cashflow analyser
+therefore attempts to tag the arguments of the two constructors with
+appropriate tags, using the principles described in the previous
+sections.
 
 
 A more elaborate example
