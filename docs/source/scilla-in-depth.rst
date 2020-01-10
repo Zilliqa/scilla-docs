@@ -2258,6 +2258,12 @@ An example ``init.json``:
 Chain Invocation Behaviour
 **************************
 
+In a sequence of contract calls (i.e, a contract transition execution
+resulting in the execution of one or more similar transition executions
+(of the same or other contracts), any kind of failure at one point will
+result in the entire set of executions to be discarded (except for the
+gas already consumed).
+
 Contracts of different Scilla versions may invoke transitions on each
 other.
 
