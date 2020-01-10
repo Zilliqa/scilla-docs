@@ -461,7 +461,8 @@ mathematical. Scilla contains the following types of statements:
   transition. The amount is automatically added to the ``_balance``
   field of the contract. If a message contains QA, but the invoked
   transition does not accept the money, the money is transferred back
-  to the sender of the message.
+  to the sender of the message. Not accepting the incoming amount
+  (when it is non-zero) is not an error.
 
 - ``send`` and ``event`` : Communication with the blockchain. See the
   next section for details.
@@ -2264,8 +2265,10 @@ resulting in the execution of one or more similar transition executions
 result in the entire set of executions to be discarded (except for the
 gas already consumed).
 
-Contracts of different Scilla versions may invoke transitions on each
-other.
+The total number of executions that can happen in a single chain call
+sequence (starting from first execution that was triggered from a non-contract
+account) is currently 10. This is subject to revision.
 
-The semantics of message passing between contracts is guaranteed to be
+Contracts of different Scilla versions may invoke transitions on each
+other. The semantics of message passing between contracts is guaranteed to be
 backward compatible between major versions.
