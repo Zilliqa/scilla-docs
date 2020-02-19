@@ -1,17 +1,18 @@
 .. _interface-label:
 
 
-
 Interpreter Interface
-=========================
+=====================
 
 The Scilla interpreter provides a calling interface that enables users
 to invoke transitions with specified inputs and obtain
 outputs. Execution of a transition with supplied inputs will result in a
 set of outputs, and a change in the smart contract mutable state.
 
+.. _calling-interface:
+
 Calling Interface
-###################
+#################
 
 A transition defined in a contract can be called either by the
 issuance of a transaction, or by message calls from another
@@ -54,6 +55,12 @@ contract definition is free of syntax errors.
 +---------------------------+---------------------------+---------------------+--------------------+
 | ``input.scilla``          | Input contract            | Yes                 |  Yes               |
 +---------------------------+---------------------------+---------------------+--------------------+
+
+In addition to the command line arguments provided above, the interpreter also expects a mandatory
+``-gaslimit X`` argument (where ``X`` is a positive integer value). If the contract or library module
+imports other libraries (including the standard library), a `-libdir` option must be provided, with
+a list of directories (in the standard PATH format) as the argument, indicating directories to be
+searched for for finding the libraries.
 
 
 Initializing the Immutable State
