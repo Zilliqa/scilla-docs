@@ -1,4 +1,4 @@
 Contact
 =========
 
-Questions? Ask us on our `Gitter Channel <https://gitter.im/Zilliqa/>`_.
+Questions? Talk to us on `Discord <https://discordapp.com/invite/mWp9HdR/>`_.
