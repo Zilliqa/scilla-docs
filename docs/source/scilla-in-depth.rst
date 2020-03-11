@@ -374,14 +374,14 @@ Expressions
 
 - ``f x`` : Apply the function ``f`` to the parameter ``x``.
 
-- ``tfun T => expr`` : A type function that takes ``T`` as a parametric type and
+- ``tfun 'T => expr`` : A type function that takes ``'T`` as a parametric type and
   returns the value to which expression ``expr`` evaluates. These are typically used
   to build library functions. See the implementation of fst_ for an example.
 
   .. note::
 
      Shadowing of type variables is not currently allowed.
-     E.g. ``tfun 'A => tfun 'A => ... `` is not a valid expression.
+     E.g. ``tfun 'T => tfun 'T => expr`` is not a valid expression.
 
 - ``@x T``: Apply the type function ``x`` to the type ``T``. This
   specialises the type function ``x`` by instantiating the first type
