@@ -443,6 +443,10 @@ mathematical. Scilla contains the following types of statements:
   ``y`` and ``z``. The number of arguments supplied must correspond to
   the number of arguments the procedure takes.
 
+- ``forall ls p`` : Invoke procedure ``p`` for each element in the
+  list ``ls``. ``p`` should be defined to take exactly one argument whose
+  type is equal to an element of the list ``ls``.
+
 - ``match`` : Pattern-matching at statement level:
 
   .. code-block:: ocaml
