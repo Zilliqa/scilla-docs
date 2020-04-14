@@ -120,10 +120,11 @@ variables are to be specified when the contract is deployed.
 .. note::
 
    In addition to the explicitly declared immutable fields, a Scilla
-   contract has an implicitly declared mutable field ``_this_address``
+   contract has an implicitly declared immutable contract parameter ``_this_address``
    of type ``ByStr20``, which is initialised to the address of the
-   contract when the contract is deployed. This field can be
-   freely read within the implementation, but cannot be modified.
+   contract when the contract is deployed. This parameter can be
+   freely read within the implementation without having to dereference it using ``<-``
+   and cannot be modified with ``:=``.
 
 Contract Constraints
 ********************
