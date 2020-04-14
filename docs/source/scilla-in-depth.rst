@@ -628,8 +628,8 @@ The following code snippet declares a variable of type ``Uint32``:
 
 Scilla supports the following built-in operations on integers. Each
 operation takes two integers ``IntX``/``UintX`` (of the same type) as
-arguments, except for ``pow`` whose second argument is always
-``Uint32``
+arguments. Exceptions are ``pow`` whose second argument is always
+``Uint32`` and ``isqrt`` which takes in a single ``UintX`` argument.
 
 - ``builtin eq i1 i2`` : Is ``i1`` equal to ``i2``? Returns a ``Bool``.
 - ``builtin add i1 i2``: Add integer values ``i1`` and ``i2``.
@@ -644,6 +644,8 @@ arguments, except for ``pow`` whose second argument is always
   by ``i2``. Returns an integer of the same type.
 - ``builtin lt i1 i2``: Is ``i1`` less than ``i2``? Returns a ``Bool``.
 - ``builtin pow i1 i2``: ``i1`` raised to the power of ``i2``. Returns an integer of the same type as ``i1``.
+- ``builtin isqrt i``: Computes the largest integer ``j`` such that ``j*j <= i``. Returns an integer of the same
+  type as ``i``.
 - ``builtin to_nat i1``: Convert a value of type ``Uint32`` to the equivalent value of type ``Nat``.
 - ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` or ``String`` (that represents a number) value to the equivalent ``UintX/IntX`` value.
   Returns ``Some IntX/UintX`` if the conversion succeeded, ``None`` otherwise.
