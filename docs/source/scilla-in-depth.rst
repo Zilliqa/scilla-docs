@@ -644,7 +644,7 @@ arguments. Exceptions are ``pow`` whose second argument is always
   by ``i2``. Returns an integer of the same type.
 - ``builtin lt i1 i2``: Is ``i1`` less than ``i2``? Returns a ``Bool``.
 - ``builtin pow i1 i2``: ``i1`` raised to the power of ``i2``. Returns an integer of the same type as ``i1``.
-- ``builtin isqrt i``: Computes the largest integer ``j`` such that ``j*j <= i``. Returns an integer of the same
+- ``builtin isqrt i``: Computes the integer square root of ``i``, i.e. the largest integer ``j`` such that ``j * j <= i``. Returns an integer of the same
   type as ``i``.
 - ``builtin to_nat i1``: Convert a value of type ``Uint32`` to the equivalent value of type ``Nat``.
 - ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` or ``String`` (that represents a number) value to the equivalent ``UintX/IntX`` value.
