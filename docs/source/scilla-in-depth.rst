@@ -2401,7 +2401,8 @@ gas already consumed).
 
 The total number of executions that can happen in a single chain call
 sequence (starting from first execution that was triggered from a non-contract
-account) is currently 10. This is subject to revision.
+account) is currently set at ``10`` edges. Edges includes both breath and depth. 
+The number may be subjected to revision in future.
 
 Contracts of different Scilla versions may invoke transitions on each
 other. The semantics of message passing between contracts is guaranteed to be

@@ -10,15 +10,19 @@ Savant IDE
 ************************
 
 `Neo Savant IDE <https://ide.zilliqa.com>`_ is a web-based development
-environment that is not connected to any external blockchain network.  It hence
-simulates a blockchain in the browser's memory by maintaining persistent
-account states. It is optimized for use in Chrome Web Browser.
+environment that allows you to interact with the simulated testnet environment, the 
+live developer testnet, and the live mainnet. It is optimized for use in Chrome Web Browser.
+Neo Savant IDE allows you to import accounts from external wallets like Ledger or keystore files.
 
-Users will not need to hold testnet ZIL to use Savant, instead they are given 20 arbitrary accounts with
-100,000,000 fake QA (1 ZIL = 1,000,000,000,000 QA) to test their contracts.
+The IDE automatically request the faucets to disburse testnet $ZIL to you when the wallet is successfully imported.
+On the simulated testnet environment, you will receive 10,000 $ZIL. 
+While on the developer testnet, you will recieve 300 $ZIL.
+There are no faucets for the live mainnet.
 
-Savant serves as a staging environment, before doing automated script testing with tools
-like `Kaya (TestRPC) <https://github.com/Zilliqa/kaya>`_ and `Javascript library <https://github.com/Zilliqa/Zilliqa-JavaScript-Library>`_. To try out the Savant IDE, users need to visit `Neo Savant IDE <https://ide.zilliqa.com>`_.
+The Neo Savant IDE can act as a staging environment, before doing automated script testing with tools
+like `Isolated Server <https://github.com/Zilliqa/Zilliqa/blob/master/ISOLATED_SERVER_setup.md>`_ and 
+`Zilliqa-JS <https://github.com/Zilliqa/Zilliqa-JavaScript-Library>`_. 
+To try out the Neo Savant IDE, users need to visit `Neo Savant IDE <https://ide.zilliqa.com>`_.
 
 
 Example Contracts
@@ -43,18 +47,17 @@ Savant IDE comes with the following sample smart contracts written in Scilla:
   ``GetFunds()``.  Else, if the campaign fails, then contributors can take back
   their donations via the transition ``ClaimBack()``.
 
-+ **OpenAuction** : A simple open auction contract where bidders can make their
++ **Auction** : A simple open auction contract where bidders can make their
   bid using ``Bid()``, and the highest and winning bid amount goes to a
   pre-defined account. Bidders who don't win can take back their bid using the
   transition ``Withdraw()``. The organizer of the auction can claim the highest
   bid by invoking the transition ``AuctionEnd()``.
 
-+ **FungibleToken** : Fungible token contract that  mimics an ERC20 style fungible
-  token standard. De facto standard for tokenised utility tokens.
++ **FungibleToken** : ZRC-2 Fungible token standard contract for creating
+  fungible digital assets such as stablecoins, utility tokens, and loyalty points.
 
-+ **NonFungible Token** : Non fungible token contract that mimics an ERC721 style 
-  NFT token standard for unique tokenised assets. Example use case could be in-game 
-  items like CryptoKitties.
++ **NonFungible Token** : ZRC-1 Non-fungible token standard contract for creating 
+  unique digital assets such as digital collectibles, music records, arts, and domains.
 
 + **ZilGame** : A two-player game where the goal is to find the closest
   pre-image of a given SHA256 digest (``puzzle``). More formally, given a
@@ -73,5 +76,9 @@ Savant IDE comes with the following sample smart contracts written in Scilla:
   specified ``owner`` in case no player plays the game.   
 
 + **SchnorrTest** : A sample contract to test the generation of a Schnorr 
+  public/private keypairs, signing of a ``msg`` with the private keys,
+  and verification of the signature.
+
++ **ECDSATest** : A sample contract to test the generation of a ECDSA 
   public/private keypairs, signing of a ``msg`` with the private keys,
   and verification of the signature.
