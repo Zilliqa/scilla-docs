@@ -30,6 +30,7 @@ that now instead of copying a map one just reads from
 ``accounts_size`` field variable.
 
 .. code-block:: ocaml
+
     let uint32_one = Uint32 1
 
     field accounts : Map ByStr20 Uint128 = Emp ByStr20 Ssn
@@ -50,6 +51,7 @@ Here is the definition of a procedure that updates a key/value pair in
 the ``accounts`` map and changes its size accordingly.
 
 .. code-block:: ocaml
+
     procedure insert_to_accounts (key : ByStr20, value : Uint128)
       already_exists <- exists accounts[key];
       match already_exists with
@@ -67,6 +69,7 @@ And this is the definition of a procedure that removes a key/value pair from
 the ``accounts`` map and changes its size accordingly.
 
 .. code-block:: ocaml
+
     procedure delete_from_accounts (key : ByStr20)
       already_exists <- exists accounts[key];
       match already_exists with
