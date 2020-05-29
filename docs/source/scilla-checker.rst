@@ -68,7 +68,7 @@ In addition to the type of the annotation, the instantiation of
 access the annotations of previous phases. Some of these functions are
 declared in the ``Rep`` signature, because they involve creating new
 abstract syntax nodes, which must be created with annotations from the
-parser onwards:
+parser onward:
 
 .. code-block:: ocaml
 
@@ -165,7 +165,7 @@ for the output syntax. These two syntax instantiations differ only in
 the type of annotations of each syntax node. If the phase produces no
 additional annotations, the two instantiations will be identical.
 
-The parameters ``SR`` and ``ER``, both of typ ``Rep``, define the
+The parameters ``SR`` and ``ER``, both of type ``Rep``, define the
 annotations for statements and expressions, respectively.
 
 .. code-block:: ocaml

@@ -38,23 +38,23 @@ matching the contract’s immutable parameters with ``init.json`` and whether th
 contract definition is free of syntax errors.
 
 
-+---------------------------+---------------------------+------------------------------------------+
-|                           |                           |                 Present                  |
-+===========================+===========================+=====================+====================+
-| Input                     |    Description            |``CreateContract``   | ``InvokeContract`` |
-+---------------------------+---------------------------+---------------------+--------------------+
-| ``init.json``             | Immutable contract params | Yes                 |  Yes               |
-+---------------------------+---------------------------+---------------------+--------------------+
-| ``input_state.json``      | Mutable contract state    | No                  |  Yes               |  
-+---------------------------+---------------------------+---------------------+--------------------+
-| ``input_blockchain.json`` | Blockchain state          | Yes                 |  Yes               |    
-+---------------------------+---------------------------+---------------------+--------------------+
-| ``input_message.json``    | Transition and params     | No                  |  Yes               |
-+---------------------------+---------------------------+---------------------+--------------------+
-| ``output.json``           | Output                    | Yes                 |  Yes               |
-+---------------------------+---------------------------+---------------------+--------------------+
-| ``input.scilla``          | Input contract            | Yes                 |  Yes               |
-+---------------------------+---------------------------+---------------------+--------------------+
++---------------------------+-------------------------------+-----------------------------------------+
+|                           |                               |                 Present                 |
++===========================+===============================+====================+====================+
+| Input                     |    Description                | ``CreateContract`` | ``InvokeContract`` |
++---------------------------+-------------------------------+--------------------+--------------------+
+| ``init.json``             | Immutable contract parameters | Yes                |  Yes               |
++---------------------------+-------------------------------+--------------------+--------------------+
+| ``input_state.json``      | Mutable contract state        | No                 |  Yes               |
++---------------------------+-------------------------------+--------------------+--------------------+
+| ``input_blockchain.json`` | Blockchain state              | Yes                |  Yes               |
++---------------------------+-------------------------------+--------------------+--------------------+
+| ``input_message.json``    | Transition and parameters     | No                 |  Yes               |
++---------------------------+-------------------------------+--------------------+--------------------+
+| ``output.json``           | Output                        | Yes                |  Yes               |
++---------------------------+-------------------------------+--------------------+--------------------+
+| ``input.scilla``          | Input contract                | Yes                |  Yes               |
++---------------------------+-------------------------------+--------------------+--------------------+
 
 In addition to the command line arguments provided above, the interpreter also expects a mandatory
 ``-gaslimit X`` argument (where ``X`` is a positive integer value). If the contract or library module
@@ -70,13 +70,13 @@ Initializing the Immutable State
 It does not change between invocations.  The JSON is an array of
 objects, each of which contains the following fields:
 
-=====  ==========================================
+=========  ==========================================
 Field      Description
-=====  ==========================================
-vname  Name of the immutable contract parameter
-type   Type of the immutable contract parameter
-value  Value of the immutable contract parameter
-=====  ==========================================
+=========  ==========================================
+``vname``  Name of the immutable contract parameter
+``type``   Type of the immutable contract parameter
+``value``  Value of the immutable contract parameter
+=========  ==========================================
 
 
 Example 1
@@ -180,7 +180,7 @@ Input Blockchain State
 ``input_blockchain.json`` feeds the current blockchain state to the
 interpreter. It is similar to ``init.json``, except that it is a fixed size
 array of objects, where each object has ``vname`` fields only from a
-pre-determined set (which correspond to actual blockchain state variables). 
+predetermined set (which correspond to actual blockchain state variables).
 
 **Permitted JSON fields:** At the moment, the only blockchain value that is exposed to contracts is the current ``BLOCKNUMBER``.
 
@@ -200,14 +200,14 @@ Input Message
 ``input_message.json`` contains the information required to invoke a
 transition. The json is an array containing the following four objects:
 
-=======  ===========================================
-Field      Description
-=======  ===========================================  
-_tag      Transition to be invoked
-_amount   Number of QA to be transferred
-_sender   Address of the invoker
-params    An array of parameter objects
-=======  ===========================================  
+===========  ===========================================
+Field         Description
+===========  ===========================================
+``_tag``      Transition to be invoked
+``_amount``   Number of QA to be transferred
+``_sender``   Address of the invoker
+``params``    An array of parameter objects
+===========  ===========================================
 
 
 All the four fields are mandatory. ``params`` can be empty if the transition
@@ -280,30 +280,30 @@ Interpreter Output
 The interpreter will return a JSON object (``output.json``)  with the following
 fields:
 
-=====================   ====================================================================
-Field                   Description
-=====================   ====================================================================
-scilla_major_version    The major version of the scilla language of this contract.
-gas_remaining           The remaining gas after invoking or deploying a contract.
-_accepted               Whether the incoming QA have been accepted (Either ``"true"`` or ``"false"``)
-message                 The message to be sent to another contract/non-contract account, if any.
-states                  An array of objects that form the new contract state
-events                  An array of events emitted by the transition and the procedures it invoked.
-=====================   ====================================================================
+=========================   ====================================================================
+Field                       Description
+=========================   ====================================================================
+``scilla_major_version``    The major version of the Scilla language of this contract.
+``gas_remaining``           The remaining gas after invoking or deploying a contract.
+``_accepted``               Whether the incoming QA have been accepted (Either ``"true"`` or ``"false"``)
+``message``                 The message to be sent to another contract/non-contract account, if any.
+``states``                  An array of objects that form the new contract state
+``events``                  An array of events emitted by the transition and the procedures it invoked.
+=========================   ====================================================================
 
 + ``message`` is a JSON object with a similar format to
   ``input_message.json``, except that it has a ``_recipient`` field
   instead of the ``_sender`` field. The fields in ``message`` are
   given below:
 
-  ===========       =======================================================
-  Field              Description
-  ===========       =======================================================  
-  _tag               Transition to be invoked
-  _amount            Number of QA to be transferred
-  _recipient         Address of the recipient
-  params             An array of parameter objects to be passed
-  ===========       =======================================================
+  ===============       =======================================================
+  Field                  Description
+  ===============       =======================================================
+  ``_tag``               Transition to be invoked
+  ``_amount``            Number of QA to be transferred
+  ``_recipient``         Address of the recipient
+  ``params``             An array of parameter objects to be passed
+  ===============       =======================================================
 
 
   The ``params`` array is encoded similar to how ``init.json`` is encoded, with
@@ -318,12 +318,12 @@ events                  An array of events emitted by the transition and the pro
   by the transition. The fields in each object in the ``events`` array
   are given below:
 
-  ===========       =======================================================
-  Field              Description
-  ===========       =======================================================  
-  _eventname         The name of the event
-  params             An array of additional event fields
-  ===========       =======================================================
+  ===============       =======================================================
+  Field                  Description
+  ===============       =======================================================
+  ``_eventname``         The name of the event
+  ``params``             An array of additional event fields
+  ===============       =======================================================
 
   The ``params`` array is encoded similar to how ``init.json`` is
   encoded, with each parameter specifying the (``vname``, ``type``,
