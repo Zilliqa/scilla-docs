@@ -7,6 +7,7 @@ REM Command file for Sphinx documentation
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
+set SOURCEDIR=-b spelling
 set SOURCEDIR=source
 set BUILDDIR=build
 set SPHINXPROJ=scilla-doc
