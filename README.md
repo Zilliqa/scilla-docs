@@ -35,6 +35,11 @@ To compile the documentation you need the following dependencies.
 Run `make html` from [docs](./docs/) folder and make sure that the edits are rendered
 correctly on the HTML files.
 
+If you need to teach the spelling checker more words, add them to the
+[spelling_wordlist.txt](./docs/source/spelling_wordlist.txt) file. The format is
+really simple -- it's just one word per line the file. And the file is sorted in
+ascending order.
+
 ### Before submitting a pull request
 
 Please preview your HTML files _before_ submitting a pull request. Try to
