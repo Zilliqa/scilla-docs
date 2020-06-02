@@ -40,6 +40,7 @@ release = u'0.5.0'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinxcontrib.spelling'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -157,3 +158,5 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+#
+spelling_lang='en_UK'

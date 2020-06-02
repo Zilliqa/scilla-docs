@@ -36,16 +36,16 @@ Savant IDE comes with the following sample smart contracts written in Scilla:
   add ``members``. All ``members`` will have read/write access capability to
   create OR update books in the inventory with `book title`, `author`, and `bookID`.
 
-+ **CrowdFunding** : Crowdfunding implements a kickstarter campaign where users
++ **CrowdFunding** : Crowdfunding implements a Kickstarter-style campaign where users
   can donate funds to the contract using ``Donate()``. If the campaign is
   successful, i.e., enough money is raised within a given time period, the
-  raised money can be sent to a pre-defined account ``owner`` via
+  raised money can be sent to a predefined account ``owner`` via
   ``GetFunds()``.  Else, if the campaign fails, then contributors can take back
   their donations via the transition ``ClaimBack()``.
 
 + **OpenAuction** : A simple open auction contract where bidders can make their
   bid using ``Bid()``, and the highest and winning bid amount goes to a
-  pre-defined account. Bidders who don't win can take back their bid using the
+  predefined account. Bidders who don't win can take back their bid using the
   transition ``Withdraw()``. The organizer of the auction can claim the highest
   bid by invoking the transition ``AuctionEnd()``.
 
@@ -57,8 +57,8 @@ Savant IDE comes with the following sample smart contracts written in Scilla:
   items like CryptoKitties.
 
 + **ZilGame** : A two-player game where the goal is to find the closest
-  pre-image of a given SHA256 digest (``puzzle``). More formally, given a
-  digest `d`, and two values `x` and `y`, `x` is said to be a closer pre-image
+  preimage of a given SHA256 digest (``puzzle``). More formally, given a
+  digest `d`, and two values `x` and `y`, `x` is said to be a closer preimage
   than `y` of `d` if Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for
   some `Distance` function. The game is played in two phases. In the first
   phase, players submit their hash,  i.e., SHA-256(x) and SHA-256(y) using the
@@ -68,10 +68,10 @@ Savant IDE comes with the following sample smart contracts written in Scilla:
   player may become the winner. In the second phase, players have to submit the
   corresponding values ``x`` or ``y`` using the transition
   ``ClaimReward(solution: Int128)``. The player submitting the closest
-  pre-image is declared the winner and wins a reward. The contract also
+  preimage is declared the winner and wins a reward. The contract also
   provides a transition ``Withdraw ()`` to recover funds and send to a
   specified ``owner`` in case no player plays the game.   
 
 + **SchnorrTest** : A sample contract to test the generation of a Schnorr 
-  public/private keypairs, signing of a ``msg`` with the private keys,
+  public/private key pairs, signing of a ``msg`` with the private keys,
   and verification of the signature.

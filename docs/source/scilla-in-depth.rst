@@ -11,7 +11,7 @@ The general structure of a Scilla contract is given in the code fragment below:
   which indicates which major Scilla version the contract uses.
   
 + Then follows the declaration of a ``library`` that contains purely
-  mathematical functions, e.g., a function to compute the boolean
+  mathematical functions, e.g., a function to compute the Boolean
   ``AND`` of two bits, or a function computing the factorial of a
   given natural number.
 
@@ -132,7 +132,7 @@ Contract Constraints
 A `contract constraint` is a requirement placed on the the contract's
 initial parameters. A contract constraint provides a way of
 establishing a contract invariant as soon as the contract is deployed,
-thus preventing the contract being deployed with non-sensical
+thus preventing the contract being deployed with nonsensical
 parameters.
 
 A contract constraint is declared using the following syntax:
@@ -151,7 +151,7 @@ it evaluates to ``False``, then the deployment fails.
                 
 .. note::
 
-   Declaring a constract constraint is optional. If no constraint is
+   Declaring a contract constraint is optional. If no constraint is
    declared, then the constraint is assumed to simply be ``True``.
 
 
@@ -169,7 +169,7 @@ declaration prefixed with the keyword ``field``.
   field vname_2 : vtype_2 = expr_2
   ...
 
-Each expression here is an initializer for the field in question. The
+Each expression here is an initialiser for the field in question. The
 definitions complete the initial state of the contract, at the time of
 creation.  As the contract executes a transition, the values of these
 fields get modified.
@@ -753,7 +753,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   Each scalar component ``ByStr32`` of a point is a big-endian encoded number.
   Also see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-196.md
 
-- ``builtin alt_bn128_G1_mul p s``. The builtin takes a point ``p` on the ``alt_bn128`` curve (as desribed previously),
+- ``builtin alt_bn128_G1_mul p s``. The builtin takes a point ``p` on the ``alt_bn128`` curve (as described previously),
   and a scalar ``ByStr32`` value ``s`` and returns the sum of the point ``p`` taken ``s`` times. The result is a point
   on the curve.
 
@@ -851,7 +851,7 @@ Scilla supports the following built-in operations on maps:
   and value types as its arguments. This is the way to initialise ``Map``
   fields to be empty. For example ``field foomap : Map Uint128 String = Emp Uint128 String``
   declares a ``Map`` field with keys of type ``Uint128`` and values of type
-  ``String``, whic is initialized to be the empty map.
+  ``String``, which is initialized to be the empty map.
 
 Addresses
 *********
@@ -1648,7 +1648,7 @@ The function ``list_exists`` takes a predicate function and a list,
 and returns a value indicating whether the predicate holds for at
 least one element in the list.
 
-A predicate function is a function returning a boolean value, and
+A predicate function is a function returning a Boolean value, and
 since we want to apply it to elements in the list, the argument type
 of the function should be the same as the element type of the list.
 
@@ -1766,13 +1766,13 @@ how to use ``list_foldk``.
     foldk predicate_step init
 
 Like before, we take a type variable ``'A`` on line 2 and take the predicate
-on the next line. We begin by using this type variable to instantiate foldk,
+on the next line. We begin by using this type variable to instantiate ``foldk``,
 by giving it our processing type and return type. The processing type being
 the list element type and the result type being ``Option 'A``. The next line
 is our accumulator, we assume that at the start of the search there is no
 satisfier.
 
-On line 7, we write a fold description for foldk. This embodies the order of
+On line 7, we write a fold description for ``foldk``. This embodies the order of
 the recursion and conditions for recursion. ``predicate_step`` has the
 type ``Option 'A -> 'A -> (Option 'A -> Option 'A) -> Option 'A``.
 The first argument is the accumulator, the second ``x`` is the next element to
@@ -2211,8 +2211,8 @@ during the checking phase.
 Local Development with User-defined Libraries
 *********************************************
 
-To use variables and functions declaredin an external (user-defined) library module,
-the command line argument to the scilla executables must include a ``-libdir`` option,
+To use variables and functions declared in an external (user-defined) library module,
+the command line argument to the Scilla executables must include a ``-libdir`` option,
 along with a list of directories  as an argument. If the Scilla file imports a library ``ALib``,
 then the Scilla executable will search for a library file called ``ALib.scillib``
 in the directories provided. If more than one directory contains a file with the correct name,
@@ -2220,7 +2220,7 @@ then the directories are given priority in the same order as they are provided t
 Alternatively, the environment variable ``SCILLA_STDLIB_PATH`` can be set to a list of library directories.
 
 ``scilla-checker`` typechecks library modules in the same way as contract modules. Similarly,
-``scilla-runner`` can deploy libraries. Note that ``scilla-runner`` takes a blockhain.json as
+``scilla-runner`` can deploy libraries. Note that ``scilla-runner`` takes a ``blockhain.json`` as
 argument (the way it does for :ref:`Contract Creation <calling-interface>`) to be command
 line argument compatible with contract creation.
 
@@ -2238,7 +2238,7 @@ an entry named ``_extlibs``, of Scilla type ``List (Pair String ByStr20)``. Each
 the list maps an imported library's name to its address in the blockchain.
 
 Continuing the previous example, a contract or library that imports ``Examplelib`` should have
-the following entry in its init.json:
+the following entry in its ``init.json``:
 
 .. code-block:: javascript
 

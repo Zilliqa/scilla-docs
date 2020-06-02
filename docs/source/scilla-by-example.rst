@@ -138,7 +138,7 @@ given below:
 At first, the caller of the transition is checked against the ``owner`` using
 the instruction ``builtin eq owner _sender`` in ``Line 2``. In order to compare
 two addresses, we are using the function ``eq`` defined as a ``builtin``
-operator. The operator returns a boolean value ``True`` or ``False``. 
+operator. The operator returns a Boolean value ``True`` or ``False``. 
 
 
 .. note::
@@ -389,7 +389,7 @@ crowdfunding campaign. In a crowdfunding campaign, a project owner wishes to
 raise funds through donations from the community. 
 
 It is assumed that the owner (``owner``) wishes to run the campaign
-until a certain, pre-determined block number is reached on the
+until a certain, predetermined block number is reached on the
 blockchain (``max_block``). The owner also wishes to raise a minimum
 amount of QA (``goal``) without which the project can not be
 started. The contract hence has three immutable variables ``owner``,
@@ -420,7 +420,7 @@ The contract maintains two mutable variables:
     prevent multiple donations and to refund back the money if the campaign
     does not succeed.
 
-  - ``funded``:  a boolean flag initialized to ``False`` that indicates
+  - ``funded``:  a Boolean flag initialized to ``False`` that indicates
     whether the owner has already transferred the funds after the end of
     the campaign.
 
