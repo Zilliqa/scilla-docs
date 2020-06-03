@@ -7,9 +7,9 @@ Scilla
 ======================================
 
 .. image:: nstatic/imgs/scilla-logo-color-transparent.png
-    :width: 200px
+    :width: 100px
     :align: center
-    :height: 200px
+    :height: 100px
 
 
 
