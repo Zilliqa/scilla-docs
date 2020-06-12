@@ -80,5 +80,5 @@ Savant IDE comes with the following sample smart contracts written in Scilla:
   and verification of the signature.
 
 + **ECDSATest** : A sample contract to test the generation of a ECDSA 
-  public/private keypairs, signing of a ``msg`` with the private keys,
+  public/private keypairs, signing of a message with the private keys,
   and verification of the signature.
