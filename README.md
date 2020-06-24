@@ -32,13 +32,27 @@ To compile the documentation you need the following dependencies.
    
 ## Building the docs
    
-Run `make html` from [docs](./docs/) folder and make sure that the edits are rendered
-correctly on the HTML files.
+### Spellchecking
+
+Run `make spell` from [docs](./docs/) folder. In case of any found spelling
+mistakes you will see an output like the following.
+```
+Spelling checker messages written to /path/to/scilla-docs/docs/build/spelling/output.txt
+WARNING: Found 1 misspelled words
+```
+Checkout the `output.txt` file and fix the typos.
 
 If you need to teach the spelling checker more words, add them to the
 [spelling_wordlist.txt](./docs/source/spelling_wordlist.txt) file. The format is
 really simple -- it's just one word per line the file. And the file is sorted in
 ascending order.
+
+### Building HTML docs
+
+Run `make html` from [docs](./docs/) folder and make sure that the edits are
+rendered correctly on the HTML files. To do that point your browser at the
+locally built `/path/to/scilla-docs/docs/build/html/index.html` file and start
+checking from it.
 
 ### Before submitting a pull request
 
