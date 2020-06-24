@@ -7,7 +7,6 @@ REM Command file for Sphinx documentation
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
-set SOURCEDIR=-b spelling
 set SOURCEDIR=source
 set BUILDDIR=build
 set SPHINXPROJ=scilla-doc
@@ -29,6 +28,9 @@ if errorlevel 9009 (
 
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 goto end
+
+:spell
+%SPHINXBUILD% -M spelling %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 
 :help
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
