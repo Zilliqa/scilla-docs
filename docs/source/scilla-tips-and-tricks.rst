@@ -123,7 +123,7 @@ Now, the ``accept_with_cap`` procedure can be used as follows.
 
 .. code-block:: ocaml
 
-    <contract library and procuderes here>
+    <contract library and procedures here>
 
     contract Tips (tip_cap : Uint128)
 
