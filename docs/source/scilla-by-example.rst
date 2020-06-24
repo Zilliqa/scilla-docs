@@ -28,8 +28,8 @@ following  specification:
   ``welcome_msg``. ``getHello`` will not take any input. 
 
 
-Defining a Contract and its (Im)Mutable Variables
-**************************************************
+Defining a Contract, its Immutable Parameters and Mutable Fields
+****************************************************************
 
 A contract is declared using the ``contract`` keyword that starts the scope of
 the contract. The keyword is followed by the name of the contract which will be
@@ -75,7 +75,7 @@ init_val``, where ``vname`` is the variable name, ``vtype`` is its type and
 
 
 At this stage, our ``HelloWorld.scilla`` contract will have the following form
-that includes the contract name and its (im)mutable variables:
+that includes the contract name, its immutable parameters and mutable fields:
 
 .. code-block:: ocaml
 

@@ -431,7 +431,7 @@ To see how this works, consider the following custom ADT:
    | UserTransaction of ByStr20 Uint128
    | ContractTransaction of ByStr20 String Uint128
 
-A user tranaction is a transaciton where the recipient is a user
+A user transaction is a transaction where the recipient is a user
 account, so the ``UserTransaction`` constructor takes two arguments:
 An address of the recipient user account, and the amount to transfer.
 
@@ -441,7 +441,7 @@ address of the recipient contract, the name of the transition to
 invoke on the recipient contract, and the amount to transfer.
 
 In terms of cashflow it is clear that the last argument of both
-constructors is used to represent an amount of money, wheras all other
+constructors is used to represent an amount of money, whereas all other
 arguments are used to represent non-money. The cashflow analyser
 therefore attempts to tag the arguments of the two constructors with
 appropriate tags, using the principles described in the previous
