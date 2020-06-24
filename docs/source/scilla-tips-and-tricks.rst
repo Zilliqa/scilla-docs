@@ -1,8 +1,10 @@
 Scilla Tips and Tricks
 ======================
+.. _scilla_tips:
 
 Performance
 ###########
+.. _scilla_tips_performance:
 
 Field map size
 **************
@@ -83,3 +85,50 @@ the ``accounts`` map and changes its size accordingly.
       delete accounts[key]
     end
 
+
+Money Idioms
+############
+.. _scilla_tips_money:
+
+Partially accepting funds
+*************************
+
+Let's say you are working on a contract which lets people tips each other.
+Naturally, you'd like to avoid a situation when a person tips too much because
+of a typo. It would be nice to ask Scilla to accept incoming funds partially,
+but there is no ``accept <cap>`` builtin. You can either not accept at all or
+accept the funds fully. We can work around this restriction by fully accepting
+the incoming funds and then immediately refunding the tipper if the tip exceeds
+some cap.
+
+It turns out we can encapsulate this kind of behavior as a reusable procedure.
+
+.. code-block:: ocaml
+
+    procedure accept_with_cap (cap : Uint128)
+      sent_more_than_necessary = builtin lt cap _amount;
+      match sent_more_than_necessary with
+      | True =>
+          amount_to_refund = builtin sub _amount cap;
+          accept;
+          msg = { _tag : ""; _recipient: _sender; _amount: amount_to_refund };
+          msgs = one_msg msg;
+          send msgs
+      | False =>
+          accept
+      end
+    end
+
+Now, the ``accept_with_cap`` procedure can be used as follows.
+
+.. code-block:: ocaml
+
+    <contract library and procuderes here>
+
+    contract Tips (tip_cap : Uint128)
+
+    transition Tip (message_from_tipper : String)
+      accept_with_cap tip_cap;
+      e = { _eventname: "ThanksForTheTip" };
+      event e
+    end
