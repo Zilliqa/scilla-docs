@@ -16,6 +16,10 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import sys, os
+
+# Check if we are building on readthedocs
+on_readthedocs = os.environ.get('READTHEDOCS', None) == 'True'
 
 # -- Project information -----------------------------------------------------
 
@@ -40,8 +44,11 @@ release = u'0.5.0'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinxcontrib.spelling'
 ]
+
+if not on_readthedocs:
+     # readthedocs doesn't install dependencies
+     extensions.append('sphinxcontrib.spelling')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['ntemplates']
