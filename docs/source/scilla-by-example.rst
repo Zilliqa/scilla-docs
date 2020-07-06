@@ -558,15 +558,6 @@ a list, and send it:
    send msgs
 
 
-.. note::
-
-   The Zilliqa blockchain does not yet support sending multiple
-   messages in the same transition. This means that the list given as
-   an argument to ``send`` must contain only one message, and that a
-   transition may perform at most one ``send`` instruction each time
-   the transition is called.
-   
-
 Procedures
 **********************
 
