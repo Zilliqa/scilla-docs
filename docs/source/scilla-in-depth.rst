@@ -627,7 +627,7 @@ The following code snippet declares a variable of type ``Uint32``:
 
 
 Scilla supports the following built-in operations on integers. Each
-operation takes two integers ``IntX``/``UintX`` (of the same type) as
+operation takes two integers ``IntX`` / ``UintX`` (of the same type) as
 arguments. Exceptions are ``pow`` whose second argument is always
 ``Uint32`` and ``isqrt`` which takes in a single ``UintX`` argument.
 
@@ -647,11 +647,24 @@ arguments. Exceptions are ``pow`` whose second argument is always
 - ``builtin isqrt i``: Computes the integer square root of ``i``, i.e. the largest integer ``j`` such that ``j * j <= i``. Returns an integer of the same
   type as ``i``.
 - ``builtin to_nat i1``: Convert a value of type ``Uint32`` to the equivalent value of type ``Nat``.
-- ``builtin to_(u)int(32/64/128/256)``: Convert a ``UintX/IntX`` or ``String`` (that represents a number) value to the equivalent ``UintX/IntX`` value.
-  Returns ``Some IntX/UintX`` if the conversion succeeded, ``None`` otherwise.
+- ``builtin to_(u)int32/64/128/256)``: Convert a ``UintX`` / ``IntX`` or a
+  ``String`` (that represents a number) value to the result of ``Option UintX``
+  or ``Option IntX`` type. Returns ``Some res`` if the conversion succeeded and
+  ``None`` otherwise. The conversion may fail when
+
+  * there is not enough bits to represent the result;
+  * when converting a negative integer (or a string representing a negative
+    integer) into a value of an unsigned type;
+  * the input string cannot be parsed as an integer.
+
+  Here is the list of concrete conversion builtins for better discoverability:
+  ``to_int32``, ``to_int64``, ``to_int128``, ``to_int256``,
+  ``to_uint32``, ``to_uint64``, ``to_uint128``, ``to_uint256``.
 
 Addition, subtraction, multiplication, pow, division and remainder operations
-may raise integer overflow, underflow and division_by_zero errors.
+may raise integer overflow, underflow and division_by_zero errors. This aborts
+the execution of the current transition and unrolls all the state changes made
+so far.
 
 .. note::
 
