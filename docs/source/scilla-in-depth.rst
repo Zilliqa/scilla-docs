@@ -648,9 +648,9 @@ arguments. Exceptions are ``pow`` whose second argument is always
   type as ``i``.
 - ``builtin to_nat i1``: Convert a value of type ``Uint32`` to the equivalent value of type ``Nat``.
 - ``builtin to_(u)int32/64/128/256)``: Convert a ``UintX`` / ``IntX`` or a
-  ``String`` (that represents a number) value to the result of ``Option UintX``
-  or ``Option IntX`` type. Returns ``Some res`` if the conversion succeeded and
-  ``None`` otherwise. The conversion may fail when
+  ``String`` (that represents a decimal number) value to the result of ``Option
+  UintX`` or ``Option IntX`` type. Returns ``Some res`` if the conversion
+  succeeded and ``None`` otherwise. The conversion may fail when
 
   * there is not enough bits to represent the result;
   * when converting a negative integer (or a string representing a negative
