@@ -22,6 +22,7 @@ cashflow
 cryptographic
 decrementing
 dereference
+discoverability
 endian
 executables
 facto
