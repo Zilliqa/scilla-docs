@@ -725,7 +725,8 @@ including byte sequences. In the description
 below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 ``ByStr32``.
 
-- ``builtin eq h1 h2``: Is ``h1`` equal to ``h2``? Returns a ``Bool``.
+- ``builtin eq h1 h2``: Is ``h1`` equal to ``h2``? Both inputs are of the
+  same type ``ByStrX`` (or both are of type ``ByStr``). Returns a ``Bool``.
 
 - ``builtin sha256hash x`` : Convert ``x`` of ``Any`` type to its SHA256 hash. Returns a ``ByStr32``.
 
