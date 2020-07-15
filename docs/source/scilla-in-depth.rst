@@ -766,7 +766,7 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   Each scalar component ``ByStr32`` of a point is a big-endian encoded number.
   Also see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-196.md
 
-- ``builtin alt_bn128_G1_mul p s``. The builtin takes a point ``p` on the ``alt_bn128`` curve (as described previously),
+- ``builtin alt_bn128_G1_mul p s``. The builtin takes a point ``p`` on the ``alt_bn128`` curve (as described previously),
   and a scalar ``ByStr32`` value ``s`` and returns the sum of the point ``p`` taken ``s`` times. The result is a point
   on the curve.
 
