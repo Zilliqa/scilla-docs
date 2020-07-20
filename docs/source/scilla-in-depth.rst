@@ -782,12 +782,82 @@ Maps
 ****
 .. _Maps:
 
-A value of type ``Map kt vt`` provides a key-value store where ``kt``
-is the type of keys and ``vt`` is the type of values. ``kt`` may be
-any one of ``String``, ``IntX``, ``UintX``, ``ByStrX`` or
-``ByStr``. ``vt`` may be any type except a function type.
+A value of type ``Map kt vt`` provides a key-value store where ``kt`` is the
+type of keys and ``vt`` is the type of values (in some other programming
+languages datatypes like Scilla's ``Map`` are called associative arrays, symbol
+tables, or dictionaries). The type of map keys ``kt`` may be any one of the
+following *primitive* types: ``String``, ``IntX``, ``UintX``, ``ByStrX``,
+``ByStr`` or ``BNum``. The type of values ``vt`` may be any type except a
+function type, this includes both builtin and user-defined algebraic datatypes.
 
-Scilla supports the following built-in operations on maps:
+Since compound types are not supported as map key types, the way to model, e.g.
+association of pairs of values to another value is by using *nested* maps. For
+instance, if one wants to associate with an account and a particular trusted
+user some money limit the trusted user is allowed to spend on behalf of the
+account, one can use the following nested map:
+
+.. code-block:: ocaml
+
+    field operators: Map ByStr20 (Map ByStr20 Uint128)
+      = Emp ByStr20 (Map ByStr20 Unit)
+
+The first and the second key are of type ``ByStr20`` and represent accounts and
+the trusted users correspondingly. We represent the money limits with the
+``Uint128`` type.
+
+Scilla supports a number of operations on map, which can be categorized as
+
+- *in-place* operations which modify maps without making any copies, hence they
+  belong to the imperative fragment of Scilla. These operations are efficient
+  and recommended to use in almost all of the cases;
+- *copying* operations are intended to use in pure functions, e.g. when
+  designing a Scilla library, because they never modify the original map they
+  are called on. These operations may incur significant performance overhead.
+  Syntactically, the copying operations are all prefixed with ``builtin``
+  keyword (see below).
+
+.. _Maps_inplace_operations:
+
+In-place map operations
+-----------------------
+
+- ``m[k] := v``: *In-place* insert operation. It inserts a key ``k`` bound to a
+  value ``v`` into a map ``m``. If ``m`` already contains key ``k``, the old
+  value bound to ``k`` gets replaced by ``v`` in the map. ``m`` must refer to a
+  contract field. Insertion into nested maps is supported with the syntax
+  ``m[k1][k2][...] := v``. If the intermediate key(s) does not exist in the
+  nested maps, they are freshly created along with the map values they are
+  associated with.
+
+- ``v <- m[k]``: *In-place* fetch operation. It fetches the value associated
+  with the key ``k`` in the map ``m``. ``m`` must refer to a contract field.
+  Returns an optional value (see the ``Option`` type below) -- if ``k`` has an
+  associated value ``v`` in ``m``, then the result is ``Some v``, otherwise the
+  result is ``None``. Fetching from nested maps is supported with the syntax ``v
+  <- m[k1][k2][...]``. If one or more of the intermediate key(s) do not exist in
+  the corresponding map, the result is ``None``.
+
+- ``b <- exists m[k]``: *In-place* key existence check. If the key ``k`` is
+  associated with a value in the map ``m`` then the result value ``b`` (of type
+  ``Bool``) will be ``True``; returns ``b`` equals to ``False`` otherwise. ``m``
+  must refer to a contract field. Existence checks through nested maps is
+  supported with the syntax ``v <- exists m[k1][k2][...]``. If one or more of
+  the intermediate key(s) do not exist in the corresponding map, the result is
+  ``False``.
+
+- ``delete m[k]``: *In-place* remove operation. The operation removes a key
+  ``k`` and its associated value from the map ``m``. The identifier ``m`` must
+  refer to a contract field. Removal from nested maps is supported with the
+  syntax ``delete m[k1][k2][...]``. If any of the specified keys do not exist in
+  the corresponding map, no action is taken. Note that in the case of a nested
+  removal ``delete m[k1][...][kn-1][kn]``, only the key-value association of
+  ``kn`` is removed. The key-value bindings of ``k`` to ``kn-1`` will still
+  exist.
+
+.. _Maps_copying_builtins:
+
+Copying map operations
+----------------------
 
 - ``builtin put m k v``: Insert a key ``k`` bound to a value ``v`` into a map
   ``m``. Returns a new map which is a copy of the ``m`` but with ``k``
@@ -797,38 +867,15 @@ Scilla supports the following built-in operations on maps:
   The ``put`` function is typically used in library functions.
   Note that ``put`` makes a copy of ``m`` before inserting the key-value pair.
 
-- ``m[k] := v``: *In-place* insert operation, i.e., identical to
-  ``put``, but without making a copy of ``m``. ``m`` must refer to a
-  contract field.  Insertion into nested maps is supported with the
-  syntax ``m[k1][k2][...] := v``. If the intermediate key(s) does not
-  exist in the nested maps, they are freshly created along with the
-  map values they are associated with.
-  
 - ``builtin get m k``: Fetch the value associated with the key ``k`` in the
   map ``m``. Returns an optional value (see the ``Option`` type below)
   -- if ``k`` has an associated value ``v`` in ``m``, then the result
   is ``Some v``, otherwise the result is ``None``. The ``get``
   function is typically used in library functions.
-  
-- ``v <- m[k]``: *In-place* fetch operation, i.e, identical to
-  ``get``. ``m`` must refer to a contract field. Returns an optional
-  value (see the ``Option`` type below) -- if ``k`` has an associated
-  value ``v`` in ``m``, then the result is ``Some v``, otherwise the
-  result is ``None``. Fetching from nested maps is supported with the
-  syntax ``v <- m[k1][k2][...]``. If one or more of the intermediate
-  key(s) do not exist in the corresponding map, the result is
-  ``None``.
 
 - ``builtin contains m k``: Is the key ``k`` associated with a value in the map
   ``m``?  Returns a ``Bool``. The ``contains`` function is typically
   used in library functions.
-
-- ``b <- exists m[k]``: *In-place* existence check, i.e., identical to
-  ``contains``. ``m`` must refer to a contract field. Returns a
-  ``Bool``. Existence checks through nested maps is supported with the
-  syntax ``v <- exists m[k1][k2][...]``. If one or more of the
-  intermediate key(s) do not exist in the corresponding map, the
-  result is ``False``.
 
 - ``builtin remove m k``: Remove a key ``k`` and its associated value from the
   map ``m``. Returns a new map which is a copy of ``m`` but with ``k``
@@ -838,21 +885,15 @@ Scilla supports the following built-in operations on maps:
   The ``remove`` function is typically used in library functions.
   Note that ``remove`` makes a copy of ``m`` before removing the key-value pair.
 
-- ``delete m[k]``: *In-place* remove operation, i.e., identical to
-  ``remove``, but without making a copy of ``m``. ``m`` must refer to
-  a contract field. Removal from nested maps is supported with the
-  syntax ``delete m[k1][k2][...]``. If any of the specified keys do
-  not exist in the corresponding map, no action is taken. Note that in
-  the case of a nested removal ``delete m[k1][...][kn-1][kn]``, only
-  the key-value association of ``kn`` is removed. The key-value
-  bindings of ``k`` to ``kn-1`` will still exist.
-
 - ``builtin to_list m``: Convert a map ``m`` to a ``List (Pair kt vt)`` where
   ``kt`` and ``vt`` are key and value types, respectively (see the
   ``List`` type below).
 
-- ``builtin size m``: Return the number of bindings in map ``m``.
-  The result type is ``Uint32``.
+- ``builtin size m``: Return the number of bindings in map ``m``. The result
+  type is ``Uint32``. Note that this builtin consumes amount of gas proportional
+  to the size of the map ``m``. This stems from the implementation of Scilla
+  maps and if you need to know the size of a large map, please refer to
+  :ref:`Field map size <field_map_size>` section for a workaround.
 
 .. note::
 

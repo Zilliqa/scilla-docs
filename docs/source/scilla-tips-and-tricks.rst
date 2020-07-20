@@ -1,10 +1,15 @@
+.. _scilla_tips:
+
 Scilla Tips and Tricks
 ======================
-.. _scilla_tips:
+
+.. _scilla_tips_performance:
 
 Performance
 ###########
-.. _scilla_tips_performance:
+
+
+.. _field_map_size:
 
 Field map size
 **************
