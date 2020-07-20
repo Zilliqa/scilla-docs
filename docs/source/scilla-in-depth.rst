@@ -807,14 +807,17 @@ the trusted users correspondingly. We represent the money limits with the
 
 Scilla supports a number of operations on map, which can be categorized as
 
-- *in-place* operations which modify maps without making any copies, hence they
-  belong to the imperative fragment of Scilla. These operations are efficient
-  and recommended to use in almost all of the cases;
-- *copying* operations are intended to use in pure functions, e.g. when
+- *in-place* operations which modify *field* maps without making any copies,
+  hence they belong to the imperative fragment of Scilla. These operations are
+  efficient and recommended to use in almost all of the cases;
+- *functional* map operations are intended to use in pure functions, e.g. when
   designing a Scilla library, because they never modify the original map they
-  are called on. These operations may incur significant performance overhead.
-  Syntactically, the copying operations are all prefixed with ``builtin``
-  keyword (see below).
+  are called on. These operations may incur significant performance overhead as
+  some of them create a new (modified) copy of the input map. Syntactically, the
+  copying operations are all prefixed with ``builtin`` keyword (see below). Note
+  that to call the functional builtins on a field map one first needs to make a
+  *copy* of the field map using a command like so: ``map_copy <- field_map``,
+  which results in gas consumption proportional to the size of ``field_map``.
 
 .. _Maps_inplace_operations:
 
@@ -856,8 +859,8 @@ In-place map operations
 
 .. _Maps_copying_builtins:
 
-Copying map operations
-----------------------
+Functional map operations
+-------------------------
 
 - ``builtin put m k v``: Insert a key ``k`` bound to a value ``v`` into a map
   ``m``. Returns a new map which is a copy of the ``m`` but with ``k``
@@ -890,10 +893,11 @@ Copying map operations
   ``List`` type below).
 
 - ``builtin size m``: Return the number of bindings in map ``m``. The result
-  type is ``Uint32``. Note that this builtin consumes amount of gas proportional
-  to the size of the map ``m``. This stems from the implementation of Scilla
-  maps and if you need to know the size of a large map, please refer to
-  :ref:`Field map size <field_map_size>` section for a workaround.
+  type is ``Uint32``. Calling this builtin consumes a small *constant* amount of
+  gas. But calling it directly on a *field* map is not supported, meaning that
+  getting the size of field maps while avoiding expensive copying needs some
+  more scaffolding, which you can find out about in :ref:`Field map size
+  <field_map_size>` section.
 
 .. note::
 
