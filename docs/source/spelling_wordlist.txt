@@ -20,6 +20,8 @@ blockhain
 blocknumber
 cashflow
 cryptographic
+datatype
+datatypes
 decrementing
 dereference
 discoverability
