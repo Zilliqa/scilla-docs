@@ -66,7 +66,7 @@ the ``accounts`` map and changes its size accordingly.
           (* do nothing as the size does not change *)
       | False =>
           size <- accounts_size;
-          new_size = builtin add siz uint32_one;
+          new_size = builtin add size uint32_one;
           accounts_size := new_size
       end;
       accounts[key] := value
