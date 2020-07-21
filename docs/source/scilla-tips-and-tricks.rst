@@ -22,7 +22,7 @@ a copy of the map in question.
 
 .. code-block:: ocaml
 
-    field accounts : Map ByStr20 Uint128 = Emp ByStr20 Ssn
+    field accounts : Map ByStr20 Uint128 = Emp ByStr20 Uint128
 
     transition Foo()
       ...
@@ -40,7 +40,7 @@ that now instead of copying a map one just reads from
 
     let uint32_one = Uint32 1
 
-    field accounts : Map ByStr20 Uint128 = Emp ByStr20 Ssn
+    field accounts : Map ByStr20 Uint128 = Emp ByStr20 Uint128
     fiels accounts_size : Uint32 = 0
 
     transition Foo()
