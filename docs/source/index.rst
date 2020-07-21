@@ -55,7 +55,7 @@ are given below:
 
 
 **Scilla**
-    + `Scilla Design Document <https://arxiv.org/pdf/1801.00687.pdf>`_ 
+    + `Scilla Design Paper <https://ilyasergey.net/papers/scilla-oopsla19.pdf>`_
     
     + `Scilla Slides  <https://drive.google.com/file/d/10gIef8jeoQ2h9kYInvU3s0i5B6Z9syGB/view>`_
     
