@@ -43,6 +43,18 @@ annotations to each piece of syntax:
   variables, fields and ADTs are annotated with tags indicating their
   usage.
 
++ `Payment acceptance checking` checks contracts for payment acceptances. It
+  raises a warning if a contract has no transitions which accept payment. Also,
+  the check raises a warning if a transition has any code path with potentially
+  multiple ``accept`` statements in it. This check does not raise an error since
+  it is not possible via static analysis to know for sure in all cases whether
+  multiple ``accept`` statements would be reached if present, since this can be
+  dependent on conditions which are only known at run-time. The Scilla checker
+  only performs this check if only ``-cf`` flag is specified on the command
+  line, i.e. it is performed together with the cashflow analysis. For instance,
+  fungible token contracts don't generally need ``accept`` statements, hence
+  this check is not mandatory.
+
 + `Sanity-checking` performs a number of minor checks, e.g., that all
   parameters to a transition or a procedure have distinct names.
 
