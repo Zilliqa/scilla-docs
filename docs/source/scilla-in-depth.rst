@@ -1231,7 +1231,10 @@ To apply ``fst`` to one must first instantiate the type variables
   p <- pp;
   fst_specialised = @fst String Uint32;
   p_fst = fst_specialised p
-      
+
+The value associated with the identifier ``p_fst`` will be the string
+``"Hello"``.
+
 .. note::
    
    Using ``Pair`` is generally discouraged. Instead, the programmer
