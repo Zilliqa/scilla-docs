@@ -9,13 +9,13 @@ We start off by writing a classical ``HelloWorld.scilla`` contract with the
 following  specification:
 
 
-+ It should have an `immutable variable` ``owner`` to be initialized
-  by the creator of the contract. The variable is immutable in the
-  sense that once initialized, its value cannot be changed. ``owner``
-  will be of type ``ByStr20`` (a hexadecimal Byte String representing
++ It should have an `immutable contract parameter` ``owner`` to be initialized
+  by the creator of the contract. The parameter is immutable in the sense that
+  once initialized during contract deployment, its value cannot be changed.
+  ``owner`` will be of type ``ByStr20`` (a hexadecimal Byte String representing
   a 20 byte address).
 
-+ It should have a `mutable variable` ``welcome_msg`` of type ``String``
++ It should have a `mutable field` ``welcome_msg`` of type ``String``
   initialized to ``""``. Mutability here refers to the possibility of modifying
   the value of a variable even after the contract has been deployed.
 
@@ -42,6 +42,7 @@ the contract. The keyword is followed by the name of the contract which will be
 
 
 .. note::
+
 	In the current implementation, a Scilla contract can only contain a single
 	contract declaration and hence any code that follows the ``contract``
 	keyword is part of the contract declaration. In other words, there is no
@@ -49,25 +50,25 @@ the contract. The keyword is followed by the name of the contract which will be
 
 
 
-A contract declaration is followed by the  declaration of its immutable
-variables, the scope of which is defined by ``()``.  Each immutable variable is
+A contract declaration is followed by the declaration of its immutable
+parameters, the scope of which is defined by ``()``. Each immutable parameter is
 declared in the following way: ``vname: vtype``, where ``vname`` is the
-variable name and ``vtype`` is the variable type. Immutable variables are
-separated by ``,``.  As per the specification, the contract will have only one
-immutable variable ``owner`` of type ``ByStr20`` and hence the following code
-fragment.  
+parameter name and ``vtype`` is the parameter type. Immutable parameters are
+separated by ``,``. As per the specification, the contract will have only one
+immutable parameter ``owner`` of type ``ByStr20`` and hence the following code
+fragment.
 
 
 .. code-block:: ocaml
 
     (owner: ByStr20)
 
-Mutable variables in a contract are declared through keyword ``field``. Each
-mutable variable is declared in the following way: ``field vname : vtype =
-init_val``, where ``vname`` is the variable name, ``vtype`` is its type and
-``init_val`` is the value to which the variable has to be initialized.  The
-``HelloWorld`` contract has one mutable parameter ``welcome_msg`` of type
-``String`` initialized to ``""``. This yields the following code fragment:
+Mutable fields in a contract are declared through keyword ``field``. Each
+mutable field is declared in the following way: ``field vname : vtype =
+init_val``, where ``vname`` is the field name, ``vtype`` is its type and
+``init_val`` is the value to which the field has to be initialized. The
+``HelloWorld`` contract has one mutable field ``welcome_msg`` of type ``String``
+initialized to ``""``. This yields the following code fragment:
 
 .. code-block:: ocaml
 
@@ -91,10 +92,15 @@ Defining Interfaces `aka` Transitions
 ***************************************
 
 Interfaces like ``setHello`` are referred to as `transitions` in Scilla.
-Transitions are similar to `functions` or `methods` in other languages.  
+Transitions are similar to `functions` or `methods` in other languages. There is
+an important difference, however, most languages allow their functions or
+methods to be "interrupted" by a thread running in parallel, but Scilla won't
+let a transition to be interrupted ensuring there is no so-called reentrancy
+issues.
 
 
 .. note::
+
 	The term `transition` comes from the underlying computation model in Scilla
 	which follows a communicating automaton. A contract in Scilla is an
 	automaton with some state. The state of an automaton can be changed using a
@@ -213,7 +219,7 @@ The Caller is the Owner
 """"""""""""""""""""""""
 
 In case the caller is ``owner``, the contract allows the caller to set the
-value of the mutable variable ``welcome_msg`` to the input parameter ``msg``.
+value of the mutable field ``welcome_msg`` to the input parameter ``msg``.
 This is done through the following instruction:
 
 
@@ -224,7 +230,7 @@ This is done through the following instruction:
 
 .. note::
  
-    Writing to a mutable variable is done using the operator ``:=``.
+    Writing to a mutable field is done using the operator ``:=``.
 
 
 And as in the previous case, the contract then emits an event with
@@ -246,7 +252,7 @@ follows:
 	library HelloWorld
 
 The library may include utility functions and program constants using
-the ``let x = y in expr`` construct. In our example the library will
+the ``let ident = expr`` construct. In our example the library will
 only include the definition of error codes:
 
 .. code-block:: ocaml
@@ -300,10 +306,11 @@ not take a parameter.
     end
 
 .. note::
-	Reading from a contract state variable is done using the operator ``<-``.
 
-In the ``getHello()`` transition, we will first read from a mutable
-variable, and then we construct and emit the event.
+   Reading from a mutable field is done using the operator ``<-``.
+
+In the ``getHello()`` transition, we will first read from a mutable field, and
+then we construct and emit the event.
 
 
 Scilla Version
@@ -392,10 +399,10 @@ It is assumed that the owner (``owner``) wishes to run the campaign
 until a certain, predetermined block number is reached on the
 blockchain (``max_block``). The owner also wishes to raise a minimum
 amount of QA (``goal``) without which the project can not be
-started. The contract hence has three immutable variables ``owner``,
+started. The contract hence has three immutable parameters ``owner``,
 ``max_block`` and ``goal``.
 
-The immutable variables are provided when the contract is deployed. At
+The immutable parameters are provided when the contract is deployed. At
 that point we wish to add a sanity check that the ``goal`` is a
 strictly positive amount. If the contract is accidentally initialised
 with a ``goal`` of 0, then the contract should not be deployed.
@@ -409,11 +416,11 @@ contract's account on the blockchain.
 The campaign is deemed successful if the owner can raise the goal in
 the stipulated time. In case the campaign is unsuccessful, the
 donations are returned to the project backers who contributed during
-the campaign.
+the campaign. The backers are supposed to ask for refund explicitly.
 
-The contract maintains two mutable variables:
+The contract maintains two mutable fields:
 
-  - ``backers``: a map from a contributor's address (a ``ByStr20`` value)
+  - ``backers``: a field map from a contributor's address (a ``ByStr20`` value)
     to the amount contributed, represented with a ``Uint128`` value.
     Since there are no backers initially, this map is initialized to an
     ``Emp`` (empty) map. The map enables the contract to register a donor,
@@ -434,7 +441,7 @@ Sanity check for contract parameters
 *********************************************
 
 To ensure that the ``goal`` is a strictly positive amount, we use a
-contract constraint:
+`contract constraint`:
 
 .. code-block:: ocaml
 
@@ -443,8 +450,10 @@ contract constraint:
      builtin lt zero goal
    =>
 
-This ensures that the contract cannot be deployed with a ``goal`` of 0
-by mistake.
+The Boolean expression between ``with`` and ``=>`` above is evaluated during
+contract deployment and the contract only gets deployed if the result of
+evaluation is ``True``. This ensures that the contract cannot be deployed with a
+``goal`` of 0 by mistake.
 
 
 Reading the Current Block Number
@@ -474,7 +483,7 @@ Reading and Updating the Current Balance
 ******************************************
 
 The target for the campaign is specified by the owner in the immutable
-variable ``goal`` when the contract is deployed. To check whether the
+parameter ``goal`` when the contract is deployed. To check whether the
 target have been met, we must compare the total amount raised to the
 target.
 
@@ -490,12 +499,11 @@ Money is represented as values of type ``Uint128``.
 
 .. note::
 
-   The ``_balance`` field is read using the operator ``<-`` just like
-   any other contract state variable. However, the ``_balance`` field
-   can only be updated by accepting money from incoming messages
-   (using the instruction ``accept``), or by explicitly transferring
-   money to other account (using the instruction ``send`` as explained
-   below).
+   The ``_balance`` field is read using the operator ``<-`` just like any other
+   contract field. However, the ``_balance`` field can only be updated by
+   accepting money from incoming messages (using the instruction ``accept``), or
+   by explicitly transferring money to other account (using the instruction
+   ``send`` as explained below).
 
 
 
@@ -518,16 +526,23 @@ events:
 
    msg = {_tag : ""; _recipient : owner; _amount : bal; code : got_funds_code};
 
-A message must contain the compulsory fields ``_tag``, ``_recipient``
-and ``_amount``. The ``_recipient`` field is the blockchain address
-(of type ``ByStr20``) that the message is to be sent to, and the
-``_amount`` field is the number of QA to be transferred to that
-account.
+A message must contain the compulsory `message fields` ``_tag``, ``_recipient``
+and ``_amount``. The ``_recipient`` message field is the blockchain address (of
+type ``ByStr20``) that the message is to be sent to, and the ``_amount`` message
+field is the number of QA to be transferred to that account.
 
-The value of the ``_tag`` field is the name of the transition (of type ``String``) 
-that is to be invoked on the ``_recipient`` contract. If ``_recipient`` 
-is a user account, then the value of ``_tag`` can be set to be ``""`` (the empty string).
-In fact, if the ``_recipient`` is a user account, then the value of ``_tag`` is ignored.
+The value of the ``_tag`` message field is the name of the transition (of type
+``String``) that is to be invoked on the contract deployed at ``_recipient``
+address. If ``_recipient`` is the address of a user account then the value of
+``_tag`` is ignored, hence for simplicity we put ``""`` here.
+
+.. note::
+
+   To make it possible to refund both contracts and user accounts (this is
+   useful if a backer used a wallet contract to donate), use a standard
+   transition name as per `ZRC-5
+   <https://github.com/Zilliqa/ZRC/blob/master/zrcs/zrc-5.md>`_, i.e.
+   ``AddFunds``.
 
 In addition to the compulsory fields the message may contain other
 fields, such as ``code`` above. However, if the message recipient is a
@@ -617,10 +632,10 @@ procedure with the arguments ``True`` and ``0``:
 
 .. note::
 
-    The special variables ``_sender`` and ``_amount`` are available to
-    the procedure even though the procedure is invoked by a transition
+    The special parameters ``_sender`` and ``_amount`` are available to
+    a procedure even though the procedure is invoked by a transition
     rather than by an incoming message. It is not necessary to pass
-    the variables as arguments to the procedure.
+    these special parameters as arguments to the procedure.
    
 .. note::
 

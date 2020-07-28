@@ -16,7 +16,7 @@ Neo Savant IDE allows you to import accounts from external wallets like Ledger o
 
 The IDE automatically request the faucets to disburse testnet $ZIL to you when the wallet is successfully imported.
 On the simulated testnet environment, you will receive 10,000 $ZIL. 
-While on the developer testnet, you will recieve 300 $ZIL.
+While on the developer testnet, you will receive 300 $ZIL.
 There are no faucets for the live mainnet.
 
 The Neo Savant IDE can act as a staging environment, before doing automated script testing with tools
