@@ -83,7 +83,7 @@ Example 1
 **********
 
 For the ``HelloWorld.scilla`` contract fragment given below, we have only one
-immutable variable ``owner``.
+immutable parameter ``owner``.
 
 .. code-block:: ocaml
 
@@ -124,7 +124,7 @@ Example 2
 **********
     
 For the ``Crowdfunding.scilla`` contract fragment given below, we have three
-immutable variables ``owner``, ``max_block`` and ``goal``.
+immutable parameters ``owner``, ``max_block`` and ``goal``.
 
 
 .. code-block:: ocaml

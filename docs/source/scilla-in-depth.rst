@@ -54,7 +54,7 @@ The general structure of a Scilla contract is given in the code fragment below:
 
     contract MyContract
 
-    (* Immutable fields declaration *)
+    (* Immutable contract parameters declaration *)
 
     (vname_1 : vtype_1,
      vname_2 : vtype_2)
@@ -97,14 +97,14 @@ The general structure of a Scilla contract is given in the code fragment below:
 
 
 
-Immutable Variables
-*******************
+Immutable Contract Parameters
+*****************************
 
-`Immutable variables` are the contract's initial parameters whose
+`Immutable parameters` are the contract's initial parameters whose
 values are defined when the contract is deployed, and cannot be
 modified afterwards.
 
-Immutable variables are declared using the following syntax:
+Immutable parameters are declared using the following syntax:
 
 .. code-block:: ocaml
 
@@ -112,14 +112,14 @@ Immutable variables are declared using the following syntax:
    vname_2 : vtype_2,
     ...  )
 
-Each declaration consists of a variable name (an identifier) and
-followed by its type, separated by ``:``. Multiple variable
+Each declaration consists of a parameter name (an identifier) and
+followed by its type, separated by ``:``. Multiple parameter
 declarations are separated by ``,``. The initialization values for
-variables are to be specified when the contract is deployed.
+parameters are to be specified when the contract is deployed.
 
 .. note::
 
-   In addition to the explicitly declared immutable fields, a Scilla
+   In addition to the explicitly declared immutable parameters, a Scilla
    contract has an implicitly declared immutable contract parameter ``_this_address``
    of type ``ByStr20``, which is initialised to the address of the
    contract when the contract is deployed. This parameter can be
@@ -129,8 +129,8 @@ variables are to be specified when the contract is deployed.
 Contract Constraints
 ********************
 
-A `contract constraint` is a requirement placed on the the contract's
-initial parameters. A contract constraint provides a way of
+A `contract constraint` is a requirement placed on the contract's
+immutable parameters. A contract constraint provides a way of
 establishing a contract invariant as soon as the contract is deployed,
 thus preventing the contract being deployed with nonsensical
 parameters.
@@ -156,11 +156,11 @@ it evaluates to ``False``, then the deployment fails.
 
 
 
-Mutable Variables
-*****************
+Mutable Fields
+**************
 
-`Mutable variables` represent the mutable state of the contract. They are also
-called `fields`. They are declared after the immutable variables, with each
+`Mutable fields` represent the mutable state (mutable variables) of the
+contract. They are declared after the immutable parameters, with each
 declaration prefixed with the keyword ``field``.
 
 .. code-block:: ocaml
@@ -188,7 +188,7 @@ fields get modified.
 
 .. note::
 
-   Both mutable and immutable variables must be of a *storable*
+   Both mutable fields and immutable parameters must be of a *storable*
    type:
 
    - Messages, events and the special ``Unit`` type are not
@@ -524,6 +524,14 @@ the ``_recipient`` field is the address of a contract. In this case,
 the value of the ``_tag`` field is the name of the transition that is
 to be invoked on the recipient contract. If the recipient is a user
 account, the ``_tag`` field is ignored.
+
+.. note::
+
+   To make it possible to transfer funds from a contract to both contracts and
+   user accounts, use a standard transition name as per `ZRC-5
+   <https://github.com/Zilliqa/ZRC/blob/master/zrcs/zrc-5.md>`_, i.e.
+   ``AddFunds``. Please make sure to check if a contract to which you intend to
+   send funds is implemented in adherence with ZRC-5 convention.
 
 In addition to the compulsory fields the message may contain other
 fields (of any type), such as ``param`` above. However, if the message
