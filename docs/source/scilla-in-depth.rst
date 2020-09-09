@@ -120,11 +120,16 @@ parameters are to be specified when the contract is deployed.
 .. note::
 
    In addition to the explicitly declared immutable parameters, a Scilla
-   contract has an implicitly declared immutable contract parameter ``_this_address``
-   of type ``ByStr20``, which is initialised to the address of the
-   contract when the contract is deployed. This parameter can be
-   freely read within the implementation without having to dereference it using ``<-``
-   and cannot be modified with ``:=``.
+   contract has the following implicitly declared immutable contract parameters
+
+     1. ``_this_address`` of type ``ByStr20``, which is initialised to the address of the
+     contract when the contract is deployed.
+
+     2. ``_creation_block`` of type ``BNum``, which is initialized to the block number
+     at which the contract is / was deployed.
+
+   These parameters can be freely read within the implementation without having to
+   dereference it using ``<-`` and cannot be modified with ``:=``.
 
 Contract Constraints
 ********************

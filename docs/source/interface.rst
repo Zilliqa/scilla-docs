@@ -78,6 +78,13 @@ Field      Description
 ``value``  Value of the immutable contract parameter
 =========  ==========================================
 
+``init.json`` must specify ``_scilla_version`` with type ``Uint32``,
+specifying a value that is the same as specified in the contract's source.
+Additionally, the blockchain will provide two implicit contract parameters
+``_this_address``, a ``ByStr20`` value denoting the address of the contract
+itself, and ``_creation_block``, a ``BNum`` value denoting the block in which
+the contract is / was created. While working with the offline interpreter,
+you may need to provide these values in the ``init.json`` yourself.
 
 Example 1
 **********
