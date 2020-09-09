@@ -96,6 +96,7 @@ The general structure of a Scilla contract is given in the code fragment below:
     end
 
 
+.. _immutable-contract-parameters:
 
 Immutable Contract Parameters
 *****************************
@@ -153,7 +154,21 @@ The constraint must be an expression of type ``Bool``.
 The constraint is checked when the contract is deployed. Contract
 deployment only succeeds if the constraint evaluates to ``True``. If
 it evaluates to ``False``, then the deployment fails.
-                
+
+Here is a simple example of using contract constraints to make sure
+a contract with a limited period of functioning is not deployed `after`
+that period:
+
+.. code-block:: ocaml
+
+   contract Mortal(end_of_life : BNum)
+   with
+     builtin blt _creation_block end_of_life
+   =>
+
+The snippet above uses the implicit contract parameter ``_creation_block``
+described in :ref:`immutable-contract-parameters`.
+
 .. note::
 
    Declaring a contract constraint is optional. If no constraint is
