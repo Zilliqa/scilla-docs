@@ -323,7 +323,7 @@ keyword.
 where ``vname : vtype`` specifies the name and type of each parameter and
 multiple parameters are separated by ``,``. 
 
-Once a procedure is defined it is available to invoked from
+Once a procedure is defined it is available to be invoked from
 transitions and procedures in the rest of the contract file. It is not
 possible to invoke a procedure from transition or procedure defined
 earlier in the contract, nor is it possible for a procedure to call
