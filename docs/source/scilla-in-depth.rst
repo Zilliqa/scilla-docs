@@ -248,7 +248,7 @@ The base unit used in Scilla smart contracts is QA. Hence, when using money vari
 Transitions
 ************
 
-`Transitions` are a way to define now the state of the contract may
+`Transitions` are a way to define how the state of the contract may
 change. The transitions of a contract define the public interface for
 the contract, since transitions may be invoked by sending a message to
 the contract.
