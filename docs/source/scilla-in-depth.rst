@@ -1542,6 +1542,127 @@ a match expression:
    end
 
 
+Type identity for user-defined ADTs
+***********************************
+
+.. note::
+
+   Due to a bug in the Scilla implementation the information in this
+   section is only valid from Scilla version 0.10.0 and
+   forwards. Contracts written in Scilla versions prior to 0.10.0 and
+   which exploit this bug will have to be rewritten and redeployed, as
+   they will no longer work from version 0.10.0 and onwards.
+
+Each type declaration defines a unique type. In particular this means
+that even if two libraries both define identical types, the types are
+considered different.
+
+As an example, consider the following two contracts:
+
+.. code-block:: ocaml
+
+   library C1Lib
+   
+   type T =
+   | C1 of Uint32
+   | C2 of Bool
+   
+   contract Contract1()
+   
+   field contract2_address : ByStr20 = 0x1234567890123456789012345678901234567890
+   
+   transition Sending ()
+     c2 <- contract2_address;
+     x = Uint32 0;
+     out = C1 x;
+     msg = { _tag : "Receiving" ; _recipient : c2 ; _amount : Uint128 0 ;
+            param : out };
+     no_msg = Nil {Message};
+     msgs = Cons {Message} msg no_msg;
+     send msgs
+   end
+
+   (* ******************************* *)
+
+   (* Contract2 is deployed at address 0x1234567890123456789012345678901234567890 *)
+   library C2Lib
+   
+   type T =
+   | C1 of Uint32
+   | C2 of Bool
+   
+   contract Contract2()
+   
+   transition Receiving (param : T)
+     match param with
+     | C1 v =>
+     | C2 b => 
+     end
+   end
+   
+Even though both contracts define identical types ``T``, the two types
+are considered different in Scilla. In particlar this means that the
+message sent from ``Contract1`` to ``Contract2`` will not trigger the
+``Receiving`` transition, because the value sent as the ``param``
+message field has the type ``T`` from ``Contract1``, whereas the type
+``T`` from ``Contract2`` is expected.
+
+In order to pass a value of a user-defined ADT as a parameter to a
+transition, the type must be defined in a user-defined library, which
+both the sending and the receiving contract must import:
+
+.. code-block:: ocaml
+
+   library MutualLib
+
+   type T =
+   | C1 of Uint32
+   | C2 of Bool
+
+   (* ******************************* *)
+
+   import MutualLib
+   
+   library C1Lib
+   
+   contract Contract1()
+   
+   field contract2_address : ByStr20 = 0x1234567890123456789012345678901234567890
+   
+   transition Sending ()
+     c2 <- contract2_address;
+     x = Uint32 0;
+     out = C1 x;
+     msg = { _tag : "Receiving" ; _recipient : c2 ; _amount : Uint128 0 ;
+            param : out };
+     no_msg = Nil {Message};
+     msgs = Cons {Message} msg no_msg;
+     send msgs
+   end
+
+   (* ******************************* *)
+
+   (* Contract2 is deployed at address 0x1234567890123456789012345678901234567890 *)
+
+   scilla_version 0
+
+   import MutualLib
+
+   library C2Lib
+
+   contract Contract2()
+
+   transition Receiving (param : T)
+     match param with
+     | C1 v =>
+     | C2 b => 
+     end
+   end
+
+The section :ref:`user-defined_libraries` has more information on how
+to define and use libraries.
+   
+
 More ADT examples
 #################
 
@@ -2256,6 +2377,8 @@ PairUtils
   fst_strings tobias
 
 - ``snd : Pair 'A 'B -> 'B``: Extract the second element of a Pair.
+
+.. _user-defined_libraries:
 
 User-defined Libraries
 ######################
