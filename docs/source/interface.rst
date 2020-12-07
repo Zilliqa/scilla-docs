@@ -278,8 +278,77 @@ an example ``input_message.json`` is given below:
       ]
     }
 
+Example 3: Using user-defined types
+***********************************
 
+.. note::
 
+   Due to a bug in the Scilla implementation the information in this
+   section is only valid from Scilla version 0.10.0 and
+   forwards. Contracts written in Scilla versions prior to 0.10.0 and
+   which exploit this bug will have to be rewritten and redeployed, as
+   they will no longer work from version 0.10.0 and onwards.
+
+When passing a value of user-defined type through the interpreter interface, the json structure is identical to the one described in the previous example. However, in the interpreter interface all types must be fully qualified, which is defined as follows:
+
+- For a user-defined type ``T`` defined in a module deployed at address ``A``, the fully qualified name is ``A.T``.
+
+- For a user-defined constructor ``C`` defined in a module deployed at address ``A``, the fully qualified name is ``A.C``.
+
+.. note::
+
+   For the purposes of offline development the address of a module is
+   defined as the module's filename, without file extension. That is,
+   if a contract defines a type ``T`` with a constructor ``C`` in a
+   file ``F.scilla``, then the fully qualified name of the type is
+   ``F.T``, and the fully qualified name of the constructor is
+   ``F.C``.
+  
+As an example consider a contract that implements a simple board game. The contract might define a type ``Direction`` and a transition ``MoveAction`` as follows:
+
+.. code-block:: ocaml
+
+   type Direction =
+   | East
+   | South
+   | West
+   | North
+
+   ...
+
+   transition MoveAction (dir : Direction, spaces : Uint32)
+     ...
+
+Say that the contract has been deployed at address ``0x1234567890123456789012345678906784567890``. To invoke the transition with parameters ``East`` and ``2``, use the type name ``0x1234567890123456789012345678906784567890.Direction`` and the constructor name ``0x1234567890123456789012345678906784567890.East`` in the message json:
+
+.. code-block:: json
+
+   {
+       "_tag": "MoveAction",
+       "_amount": "0",
+       "_sender" : "0x64345678901234567890123456789012345678cd",
+       "params": [
+           {
+               "vname" : "dir",
+               "type"  : "0x1234567890123456789012345678906784567890.Direction",
+               "value" :
+               {
+                   "constructor" : "0x1234567890123456789012345678906784567890.East",
+                   "argtypes"    : [],
+                   "arguments"   : []
+               }
+           },
+           {
+               "vname" : "spaces",
+               "type"  : "Uint32",
+               "value" : "2"
+           }
+       ]
+   }
+
+   
+If a contract has immutable fields of user-defined types, then the fields must also be initialised using fully qualified names in the associated ``init.json``.
+   
 
 Interpreter Output
 #####################
@@ -451,8 +520,7 @@ The following example shows how values of the ``List`` and ``Option`` types are 
     "events": []
   }
                 
-
-
+  
 Input Mutable Contract State
 ############################
 
