@@ -728,8 +728,13 @@ Scilla supports the following built-in operations on strings:
   if the combination of the input parameters results in an invalid substring.
 - ``builtin to_string x``: Convert ``x`` to a string literal. Valid types of
   ``x`` are ``IntX``, ``UintX``, ``ByStrX`` and ``ByStr``. Returns a ``String``.
+  Byte strings are converted to textual hexadecimal representation.
 - ``builtin strlen s`` : Calculate the length of ``s`` (of type
   ``String``). Returns a ``Uint32``.
+- ``builtin strrev s`` : Returns the reverse of the string ``s``.
+- ``builtin to_ascii h`` : Reinterprets a byte string (``ByStr`` or ``ByStrX``)
+  as a printable ASCII string and returns an equivalent ``String`` value. If the byte
+  string contains any non-printable characters, a runtime error is raised.
 
 Crypto Built-ins
 ****************
@@ -762,12 +767,28 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr20``.
 
-- ``builtin to_bystr h`` : Convert a hash ``h`` of type ``ByStrX`` (for
+- ``builtin to_bystr h`` : Convert a value ``h`` of type ``ByStrX`` (for
   some known ``X``) to one of arbitrary length of type ``ByStr``.
 
-- ``builtin to_uint256 h`` : Convert a hash ``h`` to the equivalent
-  value of type ``Uint256``. ``h`` must be of type ``ByStrX`` for some
-  known ``X`` less than or equal to 32.
+- ``builtin substr h idx len`` : Extract the sub-byte-string of ``h`` of
+  length ``len`` starting from position ``idx``. ``idx`` and
+  ``len`` must be of type ``Uint32``. Character indices in byte strings
+  start from ``0``.  Returns a ``ByStr`` or fails with a runtime error.
+- ``builtin strrev h`` : Reverse byte string (either ``ByStr`` or ``ByStrX``).
+  Returns a value of the same type as the argument.
+
+- ``builtin to_bystrx h`` :
+
+  - ``ByStr`` argument: Convert an arbitrary size byte string value
+    ``h`` (of type ``ByStr``) to a fixed sized byte string of
+    type ``ByStrX`, with length ``X``. The builtin returns an ``Option``
+    value, which takes ``None`` when the lengths mismatch.
+  - ``Uint(32/64/128/256)`` argument: Convert unsigned integers to their
+    big endian byte representation, returning a ``ByStr(4/8/16/32)`` value.
+
+- ``builtin to_uint(32/64/128/256) h`` : Convert a fixed sized byte string value ``h`` to an
+  equivalent value of type ``Uint(32/64/128/256)``. ``h`` must be of type ``ByStrX`` for some
+  known ``X`` less than or equal to (4/8/16/32). A big-endian representation is assumed.
 
 - ``builtin schnorr_verify pubk data sig`` : Verify a signature ``sig``
   of type ``ByStr64`` against a byte string ``data`` of type ``ByStr`` with the
@@ -777,9 +798,18 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   of type ``ByStr64`` against a byte string ``data`` of type ``ByStr`` with the
   ECDSA public key ``pubk`` of type ``ByStr33``.
 
-- ``concat h1 h2``: Concatenate the hashes ``h1`` and ``h2``. If
-  ``h1`` has type ``ByStrX`` and ``h2`` has type ``ByStrY``, then the
-  result will have type ``ByStr(X+Y)``.
+- ``builtin ecdsa_recover_pk data sig recid`` : Recover ``data`` (of type ``ByStr``),
+  having signature ``sig`` (of type ``ByStr64``) and a ``Uint32`` recovery integer
+  ``recid``, whose value is restricted to be 0, 1, 2 or 3, the uncompressed
+  public key, returning a ``ByStr65`` value.
+
+- ``builtin concat h1 h2``: Concatenate byte strings ``h1`` and ``h2``.
+  
+  - If ``h1`` has type ``ByStrX`` and ``h2`` has type ``ByStrY``, then the
+    result will have type ``ByStr(X+Y)``.
+  - If the arguments are of type ``ByStr``, the result is also of type ``ByStr``.
+
+- ``builtin strlen h``: The length of byte string (``ByStr``) ``h``. Returns ``Uint32``.
 
 - ``builtin bech32_to_bystr20 prefix addr``. The builtin takes a network specific prefix (``"zil"`` / ``"tzil"``) of type
   ``String`` and an input bech32 string (of type ``String``) and if the inputs are valid, converts it to a
