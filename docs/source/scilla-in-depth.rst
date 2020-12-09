@@ -772,7 +772,8 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 
 - ``builtin substr h idx len`` : Extract the sub-byte-string of ``h`` of
   length ``len`` starting from position ``idx``. ``idx`` and
-
+  ``len`` must be of type ``Uint32``. Character indices in byte strings
+  start from ``0``.  Returns a ``ByStr`` or fails with a runtime error.
 - ``builtin strrev h`` : Reverse byte string (either ``ByStr`` or ``ByStrX``).
   Returns a value of the same type as the argument.
 
