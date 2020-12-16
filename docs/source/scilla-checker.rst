@@ -335,7 +335,7 @@ as representing money. Similarly, a local variable used to initialise
 the ``_amount`` field of an outgoing message is also tagged as
 representing money.
 
-Conversely, the message fields ``_sender``, ``_recipient``, and
+Conversely, the message fields ``_sender``, ``_origin``, ``_recipient``, and
 ``_tag``, the event field ``_eventname``, the exception field
 ``_exception``, and the blockchain field ``BLOCKNUMBER``, are known to
 not represent money, so any variable used to initialise those fields

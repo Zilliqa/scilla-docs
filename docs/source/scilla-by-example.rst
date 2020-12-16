@@ -632,7 +632,7 @@ procedure with the arguments ``True`` and ``0``:
 
 .. note::
 
-    The special parameters ``_sender`` and ``_amount`` are available to
+    The special parameters ``_sender``, ``_origin`` and ``_amount`` are available to
     a procedure even though the procedure is invoked by a transition
     rather than by an incoming message. It is not necessary to pass
     these special parameters as arguments to the procedure.
