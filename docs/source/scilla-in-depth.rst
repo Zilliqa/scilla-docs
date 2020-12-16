@@ -276,11 +276,11 @@ multiple parameters are separated by ``,``.
       transition. If the transition was called by a contract account
       instead of a user account, then ``_sender`` is the address of
       the contract that called this transition. In a chain call, this is
-      always the immediate caller.
+      the contract that sent the message invoking the current transition.
 
-    - ``_origin : ByStr20`` : The account address that triggered this
+    - ``_origin : ByStr20`` : The account address that initiated the current
       transaction (which can possibly be a chain call). This is always
-      a non-contract address.
+      a user address, since contracts can never initiate transactions.
 
     - ``_amount : Uint128`` : Incoming amount, in QA (see section
       above on the units), sent by the sender. To transfer the money
