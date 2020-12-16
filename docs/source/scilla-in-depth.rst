@@ -275,7 +275,12 @@ multiple parameters are separated by ``,``.
     - ``_sender : ByStr20`` : The account address that triggered this
       transition. If the transition was called by a contract account
       instead of a user account, then ``_sender`` is the address of
-      the contract that called this transition.
+      the contract that called this transition. In a chain call, this is
+      always the immediate caller.
+
+    - ``_origin : ByStr20`` : The account address that triggered this
+      transaction (which can possibly be a chain call). This is always
+      a non-contract address.
 
     - ``_amount : Uint128`` : Incoming amount, in QA (see section
       above on the units), sent by the sender. To transfer the money
@@ -344,7 +349,7 @@ procedure does not return a result.
 
 .. note::
 
-   The implicit transition parameters ``_sender`` and ``_amount`` are
+   The implicit transition parameters ``_sender``, ``_origin`` and ``_amount`` are
    implicitly passed to all the procedures that a transition
    calls. There is therefore no need to declare those parameters
    explicitly when defining a procedure.

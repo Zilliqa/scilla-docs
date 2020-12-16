@@ -212,7 +212,8 @@ Field         Description
 ===========  ===========================================
 ``_tag``      Transition to be invoked
 ``_amount``   Number of QA to be transferred
-``_sender``   Address of the invoker
+``_sender``   Address of the invoker (in a chain call, this is the immediate caller)
+``_origin``   Address from which the transaction originated
 ``params``    An array of parameter objects
 ===========  ===========================================
 
@@ -240,6 +241,7 @@ an example ``input_message.json`` is given below:
         "_tag"    : "SayHello",
         "_amount" : "0",
         "_sender" : "0x1234567890123456789012345678901234567890",
+        "_origin" : "0x1234567890123456789012345678901234567890",
         "params"  : []
     }
 
@@ -259,6 +261,7 @@ an example ``input_message.json`` is given below:
       "_tag"    : "TransferFrom",
       "_amount" : "0",
       "_sender" : "0x64345678901234567890123456789012345678cd",
+      "_origin" : "0x64345678901234567890123456789012345678cd",
       "params"  : [
         {
           "vname" : "from",
@@ -327,6 +330,7 @@ Say that the contract has been deployed at address ``0x1234567890123456789012345
        "_tag": "MoveAction",
        "_amount": "0",
        "_sender" : "0x64345678901234567890123456789012345678cd",
+       "_origin" : "0x64345678901234567890123456789012345678cd",
        "params": [
            {
                "vname" : "dir",
