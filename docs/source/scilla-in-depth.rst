@@ -680,7 +680,7 @@ arguments. Exceptions are ``pow`` whose second argument is always
 - ``builtin isqrt i``: Computes the integer square root of ``i``, i.e. the largest integer ``j`` such that ``j * j <= i``. Returns an integer of the same
   type as ``i``.
 - ``builtin to_nat i1``: Convert a value of type ``Uint32`` to the equivalent value of type ``Nat``.
-- ``builtin to_(u)int32/64/128/256)``: Convert a ``UintX`` / ``IntX`` or a
+- ``builtin to_(u)int32/64/128/256``: Convert a ``UintX`` / ``IntX`` or a
   ``String`` (that represents a decimal number) value to the result of ``Option
   UintX`` or ``Option IntX`` type. Returns ``Some res`` if the conversion
   succeeded and ``None`` otherwise. The conversion may fail when
@@ -782,14 +782,21 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 - ``builtin strrev h`` : Reverse byte string (either ``ByStr`` or ``ByStrX``).
   Returns a value of the same type as the argument.
 
-- ``builtin to_bystrx h`` :
+- ``builtin to_bystrX h`` : (note that ``X`` is a numerical paratemeter here and
+  not a part of the builtin name, see the examples below)
 
-  - ``ByStr`` argument: Convert an arbitrary size byte string value
-    ``h`` (of type ``ByStr``) to a fixed sized byte string of
-    type ``ByStrX`, with length ``X``. The builtin returns an ``Option``
-    value, which takes ``None`` when the lengths mismatch.
-  - ``Uint(32/64/128/256)`` argument: Convert unsigned integers to their
-    big endian byte representation, returning a ``ByStr(4/8/16/32)`` value.
+  - if the argument ``h`` is of type ``ByStr``: Convert an arbitrary size byte
+    string value ``h`` (of type ``ByStr``) to a fixed sized byte string of type
+    ``ByStrX``, with length ``X``. The result is of type ``Option ByStrX`` in
+    this case: the builtin returns ``Some res`` if the length of the argument is
+    equal to ``X`` and ``None`` otherwise. E.g. ``builtin to_bystr42 bs``
+    returns ``Some bs'`` if the length of ``bs`` is 42.
+  - if the argument ``h`` is of type ``Uint(32/64/128/256)``: Convert unsigned
+    integers to their big endian byte representation, returning a
+    ``ByStr(4/8/16/32)`` value (notice it's not an optional type in this case).
+    For instance, ``builtin to_bystr4 x`` (this only typechecks if ``x`` has
+    type ``Uint32``) or ``builtin to_bystr16 x`` (this only typechecks if ``x``
+    is of type ``Uint128``).
 
 - ``builtin to_uint(32/64/128/256) h`` : Convert a fixed sized byte string value ``h`` to an
   equivalent value of type ``Uint(32/64/128/256)``. ``h`` must be of type ``ByStrX`` for some
