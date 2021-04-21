@@ -805,7 +805,10 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
 - ``builtin schnorr_verify pubk data sig`` : Verify a signature ``sig``
   of type ``ByStr64`` against a byte string ``data`` of type ``ByStr`` with the
   Schnorr public key ``pubk`` of type ``ByStr33``.
-  
+
+- ``builtin schnorr_get_address pubk``: Given a public key of type ``ByStr33``,
+  returns the ``ByStr20`` Zilliqa address that corresponds to that public key.
+
 - ``builtin ecdsa_verify pubk data sig`` : Verify a signature ``sig``
   of type ``ByStr64`` against a byte string ``data`` of type ``ByStr`` with the
   ECDSA public key ``pubk`` of type ``ByStr33``.
