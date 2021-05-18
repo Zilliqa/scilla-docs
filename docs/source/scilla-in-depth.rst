@@ -272,16 +272,6 @@ multiple parameters are separated by ``,``.
     In addition to the parameters that are explicitly declared in the
     definition, each transition has the following implicit parameters:
 
-    - ``_sender : ByStr20`` : The account address that triggered this
-      transition. If the transition was called by a contract account
-      instead of a user account, then ``_sender`` is the address of
-      the contract that called this transition. In a chain call, this is
-      the contract that sent the message invoking the current transition.
-
-    - ``_origin : ByStr20`` : The account address that initiated the current
-      transaction (which can possibly be a chain call). This is always
-      a user address, since contracts can never initiate transactions.
-
     - ``_amount : Uint128`` : Incoming amount, in QA (see section
       above on the units), sent by the sender. To transfer the money
       from the sender to the contract, the transition must explicitly
@@ -289,6 +279,19 @@ multiple parameters are separated by ``,``.
       transfer does not happen if the transition does not execute an
       ``accept``.
 
+    - ``_sender : ByStr20 with end`` : The account address that triggered this
+      transition. If the transition was called by a contract account
+      instead of a user account, then ``_sender`` is the address of
+      the contract that called this transition. In a chain call, this is
+      the contract that sent the message invoking the current transition.
+
+    - ``_origin : ByStr20 with end`` : The account address that initiated the current
+      transaction (which can possibly be a chain call). This is always
+      a user address, since contracts can never initiate transactions.
+
+    The type ``ByStr20 with end`` is an `address type`. Address types are explained
+    in detail in the :ref:`Addresses <Addresses>` section.
+      
 .. note::
 
    Transition parameters must be of a *serialisable* type:
@@ -462,6 +465,9 @@ mathematical. Scilla contains the following types of statements:
   variable ``BLOCKNUMBER``, and store it into the local variable
   ``x``.
 
+- ``x <- & c.f`` : Fetch the value of the contract field ``f`` at address ``c``, and store
+  it into the local variable ``x``.
+
 - ``v = e`` : Evaluate the expression ``e``, and assign the value to
   the local variable ``v``.
 
@@ -536,7 +542,7 @@ through the ``send`` instruction:
     (*Assume contractAddress is the address of the contract being called and the contract contains the transition setHello*)
     msg = { _tag : "setHello"; _recipient : contractAddress; _amount : Uint128 0; param : Uint32 0 };
 
-A message passed to ``send`` must contain the compulsory fields
+A message passed to ``send`` must contain the mandatory fields
 ``_tag``, ``_recipient`` and ``_amount``.
 
 The ``_recipient`` field (of type ``ByStr20``) is the blockchain
@@ -598,14 +604,21 @@ same name must have the same entry names and types.
 
 .. note::
 
-   A transition may send a message at any point during execution
+   A transition may execute a ``send`` at any point during execution
    (including during the execution of the procedures it invokes), but
-   the recipient account will not receive the message until after the
-   transition has completed. Similarly, a transition may emit events
-   at any point during execution (including during the execution of
-   the procedures it invokes), but the event will not be visible on
-   the blockchain before the transition has completed.
+   the messages will not sent onwards until after the transition has
+   completed. Similarly, a transition may emit events at any point
+   during execution (including during the execution of the procedures
+   it invokes), but the event will not be visible on the blockchain
+   before the transition has completed.
 
+TODO: Explain message LIFO queue. Explain order if multiple messages are sent.
+
+TODO: Explain that ``accept`` performs the transfer of funds (increases local balance, decreases sender balance), and how ``send`` explicitly doesn't because funds need to be accepted before transfer takes place.
+
+   
+
+   
 Run-time Errors
 ***************
 
@@ -741,46 +754,31 @@ Scilla supports the following built-in operations on strings:
   as a printable ASCII string and returns an equivalent ``String`` value. If the byte
   string contains any non-printable characters, a runtime error is raised.
 
-Crypto Built-ins
-****************
+Byte strings
+************
 
-A hash in Scilla is declared using the data type ``ByStr32``. A
-``ByStr32`` represents a hexadecimal byte string of 32 bytes (64
-hexadecimal characters). A ``ByStr32`` literal is prefixed with
-``0x``.
+Byte strings in Scilla are represented using the types ``ByStr`` and
+``ByStrX``, where ``X`` is a number. ``ByStr`` refers to a byte string of
+arbitrary length, whereas for any ``X``, ``ByStrX`` refers to a byte
+string of fixed length ``X``. For instance, ``ByStr20`` is the type of
+byte strings of length 20, ``ByStr32`` is the type of byte strings of
+length 32, and so on.
 
-The following code snippet declares a variable of type ``ByStr32``:
+Byte strings literals in Scilla are written using hexadecimal
+characters prefixed with ``0x``. Note that it takes 2 hexadecimal
+characters to specify 1 byte, so a ``ByStrX`` literal requires ``2 *
+X`` hexadecimal characters. The following code snippet declares a
+variable of type ``ByStr32``:
 
 .. code-block:: ocaml
         
     let x = 0x123456789012345678901234567890123456789012345678901234567890abff 
 
-
-
-
-Scilla supports the following built-in operations on hashes and other cryptographic primitives,
-including byte sequences. In the description
-below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
-``ByStr32``.
-
-- ``builtin eq h1 h2``: Is ``h1`` equal to ``h2``? Both inputs are of the
-  same type ``ByStrX`` (or both are of type ``ByStr``). Returns a ``Bool``.
-
-- ``builtin sha256hash x`` : Convert ``x`` of ``Any`` type to its SHA256 hash. Returns a ``ByStr32``.
-
-- ``builtin keccak256hash x``: Convert ``x`` of ``Any`` type to its Keccak256 hash. Returns a ``ByStr32``.
-
-- ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr20``.
+Scilla supports the following built-in operations for computing on and 
+converting between byte string types:
 
 - ``builtin to_bystr h`` : Convert a value ``h`` of type ``ByStrX`` (for
   some known ``X``) to one of arbitrary length of type ``ByStr``.
-
-- ``builtin substr h idx len`` : Extract the sub-byte-string of ``h`` of
-  length ``len`` starting from position ``idx``. ``idx`` and
-  ``len`` must be of type ``Uint32``. Character indices in byte strings
-  start from ``0``.  Returns a ``ByStr`` or fails with a runtime error.
-- ``builtin strrev h`` : Reverse byte string (either ``ByStr`` or ``ByStrX``).
-  Returns a value of the same type as the argument.
 
 - ``builtin to_bystrX h`` : (note that ``X`` is a numerical paratemeter here and
   not a part of the builtin name, see the examples below)
@@ -802,6 +800,121 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   equivalent value of type ``Uint(32/64/128/256)``. ``h`` must be of type ``ByStrX`` for some
   known ``X`` less than or equal to (4/8/16/32). A big-endian representation is assumed.
 
+- ``builtin concat h1 h2``: Concatenate byte strings ``h1`` and ``h2``.
+  
+  - If ``h1`` has type ``ByStrX`` and ``h2`` has type ``ByStrY``, then the
+    result will have type ``ByStr(X+Y)``.
+  - If the arguments are of type ``ByStr``, the result is also of type ``ByStr``.
+
+- ``builtin strlen h``: The length of byte string (``ByStr``) ``h``. Returns ``Uint32``.
+
+- ``eq a1 a2``: Is ``a1`` equal to ``a2``? Returns a ``Bool``.
+
+Addresses
+*********
+.. _Addresses:
+  
+Addresses on the Zilliqa network are strings of 20 bytes, and raw
+addresses are therefore represented by values of type ``ByStr20``.
+
+Additionally, Scilla supports structured address types, i.e., types
+that are equivalent to ``ByStr20``, but which, when interpreted as an
+address on the network, provide additional information about the
+contents of that address. Address types are written
+using the form ``ByStr20 with <address contents> end``, where
+``<address contents>`` refer to what the address contains.
+
+The hierarchy of address types is as follows:
+
+- ``ByStr20``: Raw byte string of length 20. The type does not provide
+  any guarantee as to what is located at the address.
+
+- ``ByStr20 with end``: A ``ByStr20`` which, when interpreted as a
+  network address, refers to an address that is in use. An address is
+  in use if it either contains a contract, or if the balance or the
+  nonce of the address is greater than 0. (The balance of an address
+  is the number of QA held by the address account. The nonce of an
+  address is the number of transactions that have been initiated from
+  that address).
+
+- ``ByStr20 with contract end``: A ``ByStr20`` which, when interpreted
+  as a network address, refers to the address of a contract.
+
+- ``ByStr20 with contract field f1 : t1, field f2 : t2, ... end``: A
+  ``ByStr20`` which, when interpreted as a network address, refers to
+  the address of a contract containing the mutable fields ``f1`` of
+  type ``t1``, ``f2`` of type ``t2``, and so on. The contract in
+  question may define more field than the ones specified in the type,
+  but the fields specified in the type must be defined in the contract
+
+.. note::
+
+   All addresses in use, and therefore by extension all contract
+   addresses, implicitly define a mutable field ``_balance :
+   Uint128``. This field is always present when an address is in use.
+
+.. note::
+
+   Address types specifying immutable fields are currently not supported.
+
+   
+The hierarchy of address types defines a subtype relation, which in
+Scilla is referred to as `assignability`:
+  
+- Any address type ``ByStr20 with ... end`` is assignable to
+  ``ByStr20``, e.g., for comparing equality using ``builtin
+  eq``, or as the ``_recipient`` value of a message.
+
+- Any contract address type ``ByStr20 with contract ... end`` is
+  assignable to ``ByStr20 with end``.
+
+- Any contract address type specifying explict fields ``ByStr20 with
+  contract field f1 : t11, field f2 : t12, ... end`` is assignable to
+  a contract address type specifying a subset of those fields
+  ``ByStr20 with contract field f1 : t21, field f2 : t22, ... end``,
+  provided that ``t11`` is assignable to ``t21``, ``t12`` is
+  assignable to ``t22``, and so on for each field specified in both
+  contract types.
+
+
+.. note::
+   TODO: Explain dynamic typechecks
+
+  
+
+
+
+Crypto Built-ins
+****************
+
+A hash in Scilla is declared using the data type ``ByStr32``. A
+``ByStr32`` represents a hexadecimal byte string of 32 bytes (64
+hexadecimal characters). A ``ByStr32`` literal is prefixed with
+``0x``.
+
+
+
+Scilla supports the following built-in operations on hashes and other cryptographic primitives,
+including byte sequences. In the description
+below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
+``ByStr32``.
+
+- ``builtin eq h1 h2``: Is ``h1`` equal to ``h2``? Both inputs are of the
+  same type ``ByStrX`` (or both are of type ``ByStr``). Returns a ``Bool``.
+
+- ``builtin sha256hash x`` : Convert ``x`` of ``Any`` type to its SHA256 hash. Returns a ``ByStr32``.
+
+- ``builtin keccak256hash x``: Convert ``x`` of ``Any`` type to its Keccak256 hash. Returns a ``ByStr32``.
+
+- ``builtin ripemd160hash x``: Convert ``x`` of ``Any`` type to its RIPEMD-160 hash. Returns a ``ByStr20``.
+
+- ``builtin substr h idx len`` : Extract the sub-byte-string of ``h`` of
+  length ``len`` starting from position ``idx``. ``idx`` and
+  ``len`` must be of type ``Uint32``. Character indices in byte strings
+  start from ``0``.  Returns a ``ByStr`` or fails with a runtime error.
+- ``builtin strrev h`` : Reverse byte string (either ``ByStr`` or ``ByStrX``).
+  Returns a value of the same type as the argument.
+
 - ``builtin schnorr_verify pubk data sig`` : Verify a signature ``sig``
   of type ``ByStr64`` against a byte string ``data`` of type ``ByStr`` with the
   Schnorr public key ``pubk`` of type ``ByStr33``.
@@ -817,14 +930,6 @@ below, ``Any`` can be of type ``IntX``, ``UintX``, ``String``, ``ByStr20`` or
   having signature ``sig`` (of type ``ByStr64``) and a ``Uint32`` recovery integer
   ``recid``, whose value is restricted to be 0, 1, 2 or 3, the uncompressed
   public key, returning a ``ByStr65`` value.
-
-- ``builtin concat h1 h2``: Concatenate byte strings ``h1`` and ``h2``.
-  
-  - If ``h1`` has type ``ByStrX`` and ``h2`` has type ``ByStrY``, then the
-    result will have type ``ByStr(X+Y)``.
-  - If the arguments are of type ``ByStr``, the result is also of type ``ByStr``.
-
-- ``builtin strlen h``: The length of byte string (``ByStr``) ``h``. Returns ``Uint32``.
 
 - ``builtin bech32_to_bystr20 prefix addr``. The builtin takes a network specific prefix (``"zil"`` / ``"tzil"``) of type
   ``String`` and an input bech32 string (of type ``String``) and if the inputs are valid, converts it to a
@@ -913,11 +1018,27 @@ In-place map operations
   <- m[k1][k2][...]``. If one or more of the intermediate key(s) do not exist in
   the corresponding map, the result is ``None``.
 
+- ``v <- c.m[k]``: *In-place* remote fetch operation. It fetches the value associated
+  with the key ``k`` in the map ``m``. ``m`` must refer to a contract field at address ``c``.
+  Returns an optional value (see the ``Option`` type below) -- if ``k`` has an
+  associated value ``v`` in ``m``, then the result is ``Some v``, otherwise the
+  result is ``None``. Fetching from nested maps is supported with the syntax ``v
+  <- m[k1][k2][...]``. If one or more of the intermediate key(s) do not exist in
+  the corresponding map, the result is ``None``.
+
 - ``b <- exists m[k]``: *In-place* key existence check. If the key ``k`` is
   associated with a value in the map ``m`` then the result value ``b`` (of type
   ``Bool``) will be ``True``; returns ``b`` equals to ``False`` otherwise. ``m``
   must refer to a contract field. Existence checks through nested maps is
   supported with the syntax ``v <- exists m[k1][k2][...]``. If one or more of
+  the intermediate key(s) do not exist in the corresponding map, the result is
+  ``False``.
+
+- ``b <- & exists c.m[k]``: *In-place* remote key existence check. If the key ``k`` is
+  associated with a value in the map ``m`` then the result value ``b`` (of type
+  ``Bool``) will be ``True``; returns ``b`` equals to ``False`` otherwise. ``m``
+  must refer to a contract field at address ``c``. Existence checks through nested maps is
+  supported with the syntax ``v <- & exists c.m[k1][k2][...]``. If one or more of
   the intermediate key(s) do not exist in the corresponding map, the result is
   ``False``.
 
@@ -969,7 +1090,7 @@ Functional map operations
   type is ``Uint32``. Calling this builtin consumes a small *constant* amount of
   gas. But calling it directly on a *field* map is not supported, meaning that
   getting the size of field maps while avoiding expensive copying needs some
-  more scaffolding, which you can find out about in :ref:`Field map size
+  more scaffolding, which you can find out about in the :ref:`Field map size
   <field_map_size>` section.
 
 .. note::
@@ -984,18 +1105,6 @@ Functional map operations
   fields to be empty. For example ``field foomap : Map Uint128 String = Emp Uint128 String``
   declares a ``Map`` field with keys of type ``Uint128`` and values of type
   ``String``, which is initialized to be the empty map.
-
-Addresses
-*********
-
-An address in Scilla is declared using the data type
-``ByStr20``. ``ByStr20`` represents a hexadecimal byte string of 20
-bytes (40 hexadecimal characters). A ``ByStr20`` literal is prefixed
-with ``0x``.
-
-Scilla supports the following built-in operations on addresses:
-
-- ``eq a1 a2``: Is ``a1`` equal to ``a2``? Returns a ``Bool``.
 
 Block Numbers
 *************
