@@ -854,11 +854,11 @@ using the form ``ByStr20 with <address contents> end``, where
 
 The hierarchy of address types is as follows:
 
-- ``ByStr20``: Raw byte string of length 20. The type does not provide
-  any guarantee as to what is located at the address. (Generally,
-  ``ByStr20`` is not regarded as an address type, because it can refer
-  to any string of bytes of length 20, whether it is meant to
-  represent an address or not.)
+- ``ByStr20``: A raw byte string of length 20. The type does not
+  provide any guarantee as to what is located at the
+  address. (Generally, ``ByStr20`` is not regarded as an address type,
+  because it can refer to any string of bytes of length 20, whether it
+  is meant to represent an address or not.)
 
 - ``ByStr20 with end``: A ``ByStr20`` which, when interpreted as a
   network address, refers to an address that is in use. An address is
@@ -887,11 +887,14 @@ The hierarchy of address types is as follows:
 
 .. note::
 
-   Address types specifying immutable fields are currently not supported.
+   Address types specifying the immutable fields or transitions of a
+   contract are currently not supported.
    
 The hierarchy of address types defines a subtype relation, which in
 Scilla is referred to as `assignability`:
-  
+
+- Any type is assignable to itself.
+
 - Any address type ``ByStr20 with ... end`` is assignable to
   ``ByStr20``, e.g., for comparing equality using ``builtin
   eq``, or as the ``_recipient`` value of a message.
@@ -907,11 +910,15 @@ Scilla is referred to as `assignability`:
   assignable to ``t22``, and so on for each field specified in both
   contract types.
 
+- For ADTs with type parameters such as ``List`` or ``Option``, an ADT
+  ``T t1 t2 ...`` is assignable to ``S s1 s2 ...`` if ``T`` is the
+  same as ``S``, and ``t1`` is assignable to ``s1``, ``t2`` is
+  assignable to ``s2``, and so on.
 
-.. note::
-   TODO: Explain dynamic typechecks
-
-
+- A map with key type ``kt1`` and value type ``vt1`` is assignable to
+  another map with key type ``kt2`` and value type ``vt2`` if ``kt1``
+  is assignable to ``kt2`` and ``vt1`` is assignable to ``vt2``.
+  
 To perform a remote fetch ``x <- & c.f``, the type of ``c`` must be
 some address type declaring the field ``f``. For instance, if ``c``
 has the type ``ByStr20 with contract field paused : Bool end``, then
@@ -931,6 +938,59 @@ field must be declared in the type of ``c``, e.g., ``ByStr20 with
 contract field m : Map Uint128 (Map Uint32 Bool) end``.
 
 Writing to a remote field is not allowed.
+
+
+.. note::
+
+   Address types cannot be fully typechecked statically, i.e., by
+   ``scilla-checker``, e.g., because a byte string is a transition
+   parameter and thus not known statically, or because a byte string
+   refers to an address that does not currently contain a contract,
+   but which might contain a contract in the future.
+
+   For this reason, immutable fields (i.e., contract parameters
+   supplied when the contract is deployed) and transition parameters
+   of address types are typechecked dynamically, when the actual byte
+   string is known.
+
+   For example, a contract might specify an immutable field
+   ``init_owner`` as follows:
+
+   ``contract MyContract (init_owner : ByStr20 with end)``
+
+   When the contract is deployed, the byte string supplied as
+   ``init_owner`` is looked up as an address on the blockchain, and if
+   the contents of that address matches the address type (in this
+   case that the address is in use either by a user or by a
+   contract), then deployment continues, and ``init_owner`` can be
+   treated as a ``ByStr20 with end`` throughout the contract.
+
+   Similarly, a transition might specify a parameter
+   ``token_contract`` as follows:
+
+   ``transition Transfer (token_contract : ByStr20 with contract field
+   balances : Map ByStr20 Uint128 end)``
+
+   When the transition is invoked, the byte string supplied as the
+   ``token_contract`` parameter is looked up as an address on the
+   blockchain, and if the contents of that address matches the address
+   type (in this case that the address contains a contract with a
+   field ``balances`` of a type that is assignable to ``Map ByStr20
+   Uint128``), then the transition parameter is initialised
+   successfully, and ``token_contract`` can be treated as a ``ByStr20
+   with contract field balances : Map ByStr20 Uint128 end`` throughout
+   this transition invocation.
+
+   In either case, if the contents of the address does not match the
+   specified type, then the dynamic typecheck is unsuccessful, causing
+   deployment (for failed immutable parameters) or transition
+   invocation (for transition parameters) to fail. A failed dynamic
+   typecheck is considered a run-time error, causing the current
+   transaction to abort. (For the purposes of dynamic typechecks of
+   immutable fields the deployment of a contract is considered a
+   transaction).
+   
+
 
 
 Crypto Built-ins
@@ -2810,11 +2870,11 @@ Chain Calls
 ***********
 .. _Chaincalls:
 
-A user invokes a transition on a contract by sending a message with
-the contract's address as the recipient, and that transition may then
-send one or more messages onwards, possibly invoking other transitions
-on other contracts. The resulting collection of messages, fund
-transfers, transition invocations, and contract state changes are
+When a user invokes a transition on a contract by sending a message
+with the contract's address as the recipient, and that transition may
+then send one or more messages onwards, possibly invoking other
+transitions on other contracts. The resulting collection of messages,
+fund transfers, transition invocations, and contract state changes are
 referred to as a `transaction`.
 
 A transition that sends a message invoking another transition
