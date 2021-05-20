@@ -297,8 +297,11 @@ multiple parameters are separated by ``,``.
    Transition parameters must be of a *serialisable* type:
 
    - Messages, events and the special ``Unit`` type are not
-     serialisable. All other primitive types like integers and strings
-     are serialisable.
+     serialisable.
+
+   - Byte strings are serialisable. Addresses are serialisable only as
+     ``ByStr20`` values. All other primitive types like integers and
+     strings are serialisable.
 
    - Function types and map types are not serialisable.
 
@@ -465,8 +468,11 @@ mathematical. Scilla contains the following types of statements:
   variable ``BLOCKNUMBER``, and store it into the local variable
   ``x``.
 
-- ``x <- & c.f`` : Fetch the value of the contract field ``f`` at address ``c``, and store
-  it into the local variable ``x``.
+- ``x <- & c.f`` : Remote fetch. Fetch the value of the contract field
+  ``f`` at address ``c``, and store it into the local variable
+  ``x``. Note that the type of ``c`` must be an address type
+  containing the field ``f``. See the secion on :ref:`Addresses
+  <Addresses>` for details on address types.
 
 - ``v = e`` : Evaluate the expression ``e``, and assign the value to
   the local variable ``v``.
@@ -589,6 +595,14 @@ everyone to see. If a user uses a client application invoke a
 transition on a contract, the client application can listen for events
 that the contract may emit, and alert the user.
 
+.. note::
+
+   A transition may execute a ``send`` at any point during execution
+   (including during the execution of the procedures it invokes), but
+   the messages will not sent onwards until after the transition has
+   finished. More details can be found in the :ref:`Chain Calls
+   <Chaincalls>` section.
+   
 - ``event e``: Emit a message ``e`` as an event. The following code
   emits an event with name ``e_name``.
 
@@ -604,19 +618,11 @@ same name must have the same entry names and types.
 
 .. note::
 
-   A transition may execute a ``send`` at any point during execution
-   (including during the execution of the procedures it invokes), but
-   the messages will not sent onwards until after the transition has
-   completed. Similarly, a transition may emit events at any point
-   during execution (including during the execution of the procedures
-   it invokes), but the event will not be visible on the blockchain
-   before the transition has completed.
-
-TODO: Explain message LIFO queue. Explain order if multiple messages are sent.
-
-TODO: Explain that ``accept`` performs the transfer of funds (increases local balance, decreases sender balance), and how ``send`` explicitly doesn't because funds need to be accepted before transfer takes place.
-
-   
+   As with the sending of messages, a transition may emit events at
+   any point during execution (including during the execution of the
+   procedures it invokes), but the event will not be visible on the
+   blockchain before the transition has finished. More details can be
+   found in the :ref:`Chain Calls <Chaincalls>` section.
 
    
 Run-time Errors
@@ -638,6 +644,28 @@ The syntax for raising errors is similar to that of events and messages.
 Unlike that for ``event`` or ``send``, The argument to ``throw`` is optional
 and can be omitted. An empty throw will result in an error that just conveys
 the location of where the ``throw`` happened without more information.
+
+.. note::
+
+   If a run-time error occurs during the execution of a transition,
+   then the entire transaction is aborted, and any state changes in
+   both the current and other contracts are rolled back. (The state of
+   other contracts may have changed due to a chain call).
+
+   In particular:
+
+   - All transferred funds are returned to their respective senders,
+     even if an ``accept`` was executed before the error.
+
+   - The message queue is cleared, so that as yet unprocessed messages
+     will no longer will be sent onwards even if a ``send`` was
+     executed before the error.
+
+   - The event list is cleared, so that no events are emitted even if
+     an ``event`` was executed before the error.
+
+   Gas is still charged for the transaction up until the point the
+   run-time error occurs.
 
 .. note::
 
@@ -827,7 +855,10 @@ using the form ``ByStr20 with <address contents> end``, where
 The hierarchy of address types is as follows:
 
 - ``ByStr20``: Raw byte string of length 20. The type does not provide
-  any guarantee as to what is located at the address.
+  any guarantee as to what is located at the address. (Generally,
+  ``ByStr20`` is not regarded as an address type, because it can refer
+  to any string of bytes of length 20, whether it is meant to
+  represent an address or not.)
 
 - ``ByStr20 with end``: A ``ByStr20`` which, when interpreted as a
   network address, refers to an address that is in use. An address is
@@ -851,12 +882,12 @@ The hierarchy of address types is as follows:
 
    All addresses in use, and therefore by extension all contract
    addresses, implicitly define a mutable field ``_balance :
-   Uint128``. This field is always present when an address is in use.
+   Uint128``. For user accounts the ``_balance`` field refers to the
+   account balance.
 
 .. note::
 
    Address types specifying immutable fields are currently not supported.
-
    
 The hierarchy of address types defines a subtype relation, which in
 Scilla is referred to as `assignability`:
@@ -880,8 +911,26 @@ Scilla is referred to as `assignability`:
 .. note::
    TODO: Explain dynamic typechecks
 
-  
 
+To perform a remote fetch ``x <- & c.f``, the type of ``c`` must be
+some address type declaring the field ``f``. For instance, if ``c``
+has the type ``ByStr20 with contract field paused : Bool end``, then
+the value of ``paused`` field at address ``c`` can be fetched using
+the statement ``x <- & c.paused``, whereas it is not possible to fetch
+the value of an undeclared field (e.g., ``admin``) of ``c``, even if
+the contract at address ``c`` does actually contain a field
+``admin``. To be able to fetch the admin field, the type of ``c`` must
+contain the ``admin`` field as well, e.g, ``ByStr20 with contract
+field paused : Bool, field admin : ByStr20 end``
+
+Remote fetches of maps fields can be performed using in-place
+operations in the same way as for locally declared map fields, i.e.,
+``x <- & c.m[key]``, ``x <- & c.m[key1][key2]``, ``x <- & exists
+m[key]``, etc. As with remote fetches of map fields, the remote map
+field must be declared in the type of ``c``, e.g., ``ByStr20 with
+contract field m : Map Uint128 (Map Uint32 Bool) end``.
+
+Writing to a remote field is not allowed.
 
 
 Crypto Built-ins
@@ -1018,7 +1067,7 @@ In-place map operations
   <- m[k1][k2][...]``. If one or more of the intermediate key(s) do not exist in
   the corresponding map, the result is ``None``.
 
-- ``v <- c.m[k]``: *In-place* remote fetch operation. It fetches the value associated
+- ``v <- & c.m[k]``: *In-place* remote fetch operation. It fetches the value associated
   with the key ``k`` in the map ``m``. ``m`` must refer to a contract field at address ``c``.
   Returns an optional value (see the ``Option`` type below) -- if ``k`` has an
   associated value ``v`` in ``m``, then the result is ``Some v``, otherwise the
@@ -2757,20 +2806,92 @@ An example ``init.json``:
    ]
 
 
-Chain Invocation Behaviour
-**************************
+Chain Calls
+***********
+.. _Chaincalls:
 
-In a sequence of contract calls (i.e, a contract transition execution
-resulting in the execution of one or more similar transition executions
-(of the same or other contracts), any kind of failure at one point will
-result in the entire set of executions to be discarded (except for the
-gas already consumed).
+A user invokes a transition on a contract by sending a message with
+the contract's address as the recipient, and that transition may then
+send one or more messages onwards, possibly invoking other transitions
+on other contracts. The resulting collection of messages, fund
+transfers, transition invocations, and contract state changes are
+referred to as a `transaction`.
 
-The total number of executions that can happen in a single chain call
-sequence (starting from first execution that was triggered from a non-contract
-account) is currently set at ``10`` edges which includes both breadth and depth. 
-The number may be subjected to revision in the future.
+A transition that sends a message invoking another transition
+(typically on another contract) is referred to as a `chain call`.
+
+During a transaction a LIFO queue (i.e., a stack) of unprocessed
+messages is maintained. Initially, the message queue contains only the
+single message sent by the original user, but additional messages may
+be added to the queue when a transition performs a chain call.
+
+When a transition finishes, its outgoing messages are added to the
+message queue. The first message in the queue is then removed from the
+queue for processing. If at this point the queue is empty, the
+transaction finishes.
+
+When a transition sends multiple messages, the messages are added to
+the queue in the following order:
+
+- If multiple ``send`` statements are executed, then the messages of
+  the last ``send`` are added first. This means that the messages of
+  the first ``send`` get processed first.
+
+- If a ``send`` statement is given a list with multiple messages in
+  it, then the head of the list is added to the queue before the
+  messages in the tail of the list are added. This means that the last
+  message in the list (the one that that was added to the list first)
+  gets processed first.
+
+Any run-time failure during the execution of a transaction causes the
+entire transaction to be aborted, with no further statements being
+executed, no further messages being processed, all state changes being
+rolled back, and all transferred funds returned to their respective
+senders. However, gas is still charged for the transcaction up until
+the point of the failure.
+
+The total number of messages that can be sent in a single transaction
+is currently set at 10. The number is subject to revision in the
+future.
 
 Contracts of different Scilla versions may invoke transitions on each
-other. The semantics of message passing between contracts is guaranteed to be
-backward compatible between major versions.
+other. The semantics of message passing between contracts is
+guaranteed to be backward compatible between major versions.
+
+
+Accounting
+**********
+
+For the transfer of native ZIL funds, Scilla follows an `acceptance
+semantics`. For a transfer to take place the funds must explicitly be
+accepted by the recipient by executing an ``accept`` statement - it is
+not sufficient that the sender executes a ``send`` statement.
+
+When a contract executes an ``accept`` statement the ``_amount`` of
+the incoming message is added to the contract's ``_balance``
+field. Simultaneously, the ``_amount`` is deducted from the sender's
+balance (the ``_balance`` field if the sender is a contract, or the
+user account balance if the sender is a user).
+
+Conversely, when a contract executes a ``send`` statement the
+``_amount`` values of the outgoing messages are `not` deducted from
+the ``_balance`` field, because the outgoing funds have not yet been
+accepted by the recipients.
+
+.. note::
+
+   A user account (i.e., an address that does not hold a contract)
+   implicitly accepts all incoming funds, but does not do so until the
+   message carrying the funds is processed.
+
+Using an acceptance semantics for transfers means that it is possible
+for a transition to send out more funds than its contract's current
+``_balance``. Care must be taken to only do so either if one or more
+of the recipients do not accept the funds, or if one of multiple
+outgoing message causes a series of chain calls which result in the
+current contract receiving (and accepting) additional funds to cover
+the missing outgoings.
+
+If the recipient accepts more funds than are available in the sender's
+balance, then a run-time error occurs, and the entire transaction is
+aborted.
