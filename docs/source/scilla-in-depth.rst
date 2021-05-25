@@ -1012,7 +1012,7 @@ even if the contract at address ``c`` does actually contain a field
 type of ``c`` must contain the ``admin`` field as well, e.g, ``ByStr20
 with contract field paused : Bool, field admin : ByStr20 end``
 
-Remote fetches of maps fields can be performed using in-place
+Remote fetches of map fields can be performed using in-place
 operations in the same way as for locally declared map fields, i.e.,
 ``x <- & c.m[key]``, ``x <- & c.m[key1][key2]``, ``x <- & exists
 m[key]``, etc. As with remote fetches of map fields, the remote map
@@ -2907,7 +2907,7 @@ with the contract's address as the recipient, then that transition may
 then send one or more messages onwards, possibly invoking other
 transitions on other contracts. The resulting collection of messages,
 fund transfers, transition invocations, and contract state changes are
-referred to as a `transaction`.
+referred to as a *transaction*.
 
 A transition that sends a message invoking another transition
 (typically on another contract) is referred to as a *chain call*.
