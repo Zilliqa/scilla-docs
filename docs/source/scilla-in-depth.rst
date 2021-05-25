@@ -658,7 +658,7 @@ the location of where the ``throw`` happened without more information.
      even if an ``accept`` was executed before the error.
 
    - The message queue is cleared, so that as yet unprocessed messages
-     will no longer will be sent onwards even if a ``send`` was
+     will no longer be sent onwards even if a ``send`` was
      executed before the error.
 
    - The event list is cleared, so that no events are emitted even if
