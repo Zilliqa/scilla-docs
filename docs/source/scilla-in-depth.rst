@@ -878,7 +878,7 @@ The hierarchy of address types is as follows:
   ``ByStr20`` which, when interpreted as a network address, refers to
   the address of a contract containing the mutable fields ``f1`` of
   type ``t1``, ``f2`` of type ``t2``, and so on. The contract in
-  question may define more field than the ones specified in the type,
+  question may define more fields than the ones specified in the type,
   but the fields specified in the type must be defined in the contract.
 
 .. note::
