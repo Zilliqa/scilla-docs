@@ -890,7 +890,7 @@ The hierarchy of address types is as follows:
 
 .. note::
 
-   Address types specifying immutable fields or transitions of a
+   Address types specifying immutable parameters or transitions of a
    contract are not supported.
 
 Assignability
