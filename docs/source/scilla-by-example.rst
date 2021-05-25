@@ -307,7 +307,7 @@ not take a parameter.
 
 .. note::
 
-   Reading from a local mutable field, i.e., a field defined in the current, is done using the operator ``<-``.
+   Reading from a local mutable field, i.e., a field defined in the current contract, is done using the operator ``<-``.
 
 In the ``getHello()`` transition, we will first read from a mutable field, and
 then we construct and emit the event.
