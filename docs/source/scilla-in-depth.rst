@@ -934,7 +934,7 @@ transition parameter and thus not known statically, or because a byte
 string refers to an address that does not currently contain a
 contract, but which might contain a contract in the future.
 
-For this reason immutable fields (i.e., contract parameters
+For this reason immutable parameters (i.e., contract parameters
 supplied when the contract is deployed) and transition parameters
 of address types are typechecked dynamically, when the actual byte
 string is known.
