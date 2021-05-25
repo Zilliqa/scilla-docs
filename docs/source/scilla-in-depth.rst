@@ -2910,7 +2910,7 @@ fund transfers, transition invocations, and contract state changes are
 referred to as a `transaction`.
 
 A transition that sends a message invoking another transition
-(typically on another contract) is referred to as a `chain call`.
+(typically on another contract) is referred to as a *chain call*.
 
 During a transaction a LIFO queue (i.e., a stack) of unprocessed
 messages is maintained. Initially, the message queue contains only the
