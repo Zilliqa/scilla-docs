@@ -866,7 +866,7 @@ The hierarchy of address types is as follows:
 - ``ByStr20 with end``: A ``ByStr20`` which, when interpreted as a
   network address, refers to an address that is in use. An address is
   in use if it either contains a contract, or if the balance or the
-  nonce of the address is greater than 0. (The balance of an address
+  *nonce* of the address is greater than 0. (The balance of an address
   is the number of Qa held by the address account. The nonce of an
   address is the number of transactions that have been initiated from
   that address).
