@@ -893,37 +893,35 @@ The hierarchy of address types is as follows:
    Address types specifying immutable parameters or transitions of a
    contract are not supported.
 
-Assignability
--------------
+Address subtyping
+-----------------
 
-The hierarchy of address types defines a subtype relation, which in
-Scilla is referred to as `assignability`:
+The hierarchy of address types defines a subtype relation:
 
-- Any type is assignable to itself.
-
-- Any address type ``ByStr20 with ... end`` is assignable to
-  ``ByStr20``, e.g., for comparing equality using ``builtin
-  eq``, or as the ``_recipient`` value of a message.
+- Any address type ``ByStr20 with ... end`` is as subtype of
+  ``ByStr20``. This means that any address type can be used in place
+  of a ``ByStr20``, e.g., for comparing equality using ``builtin eq``,
+  or as the ``_recipient`` value of a message.
 
 - Any contract address type ``ByStr20 with contract ... end`` is
-  assignable to ``ByStr20 with end``.
+  a subtype of ``ByStr20 with end``.
 
 - Any contract address type specifying explict fields ``ByStr20 with
-  contract field f1 : t11, field f2 : t12, ... end`` is assignable to
+  contract field f1 : t11, field f2 : t12, ... end`` is a subtype of
   a contract address type specifying a subset of those fields
   ``ByStr20 with contract field f1 : t21, field f2 : t22, ... end``,
-  provided that ``t11`` is assignable to ``t21``, ``t12`` is
-  assignable to ``t22``, and so on for each field specified in both
+  provided that ``t11`` is a subtype of ``t21``, ``t12`` is
+  a subtype of ``t22``, and so on for each field specified in both
   contract types.
 
 - For ADTs with type parameters such as ``List`` or ``Option``, an ADT
-  ``T t1 t2 ...`` is assignable to ``S s1 s2 ...`` if ``T`` is the
-  same as ``S``, and ``t1`` is assignable to ``s1``, ``t2`` is
-  assignable to ``s2``, and so on.
+  ``T t1 t2 ...`` is a subtype of ``S s1 s2 ...`` if ``T`` is the same
+  as ``S``, and ``t1`` is a subtype of ``s1``, ``t2`` is a subtype of
+  ``s2``, and so on.
 
-- A map with key type ``kt1`` and value type ``vt1`` is assignable to
+- A map with key type ``kt1`` and value type ``vt1`` is a subtype of
   another map with key type ``kt2`` and value type ``vt2`` if ``kt1``
-  is assignable to ``kt2`` and ``vt1`` is assignable to ``vt2``.
+  is a subtype of ``kt2`` and ``vt1`` is a subtype of ``vt2``.
 
 Dynamic typecheck of addresses
 ------------------------------
