@@ -846,3 +846,203 @@ The complete crowdfunding contract is given below.
             end
           end  
         end
+
+A Third Example: A Simple Token Exchange
+########################################
+
+As a third example we look at how contracts written in Scilla can
+interact by passing messages to each other, and by reading each
+other's states. As our example application we choose a simplified
+token exchange contracts in which users can place offers of swapping
+one type of fungible tokens for another type.
+
+Fungible Tokens
+****************
+
+Recall that a fungible token is one which is indistinguishable from
+another token of the same type. For example, a US $1 bank note is
+indistinguishable from any other US $1 bank note (for the purposes of
+swapping the bank note for goods, services, or other tokens, at
+least).
+
+The `Zilliqa Reference Contracts <https://github.com/Zilliqa/ZRC>`_
+library offers specifications and reference implementations of
+commonly used contract types, and the `ZRC-2
+<https://github.com/Zilliqa/ZRC/blob/master/zrcs/zrc-2.md>`_ standard
+specifies a standard for fungible tokens, which we will use for this
+example. We will not go into detail about how the token contract
+works, but only point out a few important aspects that will be needed
+in order to implement the token exchange.
+
+
+Exchange Specification
+***********************
+
+We want our simple exchange to support the following functionality:
+
++ The exchange has a number of listed tokens that can be freely
+  swapped with each other. Each listed token is identified by its
+  token code (e.g., "USD" for US dollars).
+
++ The exchange should have an administrator at all times. The
+  administrator is in charge of approving token contracts, and listing
+  them on the exchange.
+
++ Any user can place an order on the exchange. To place an order, the
+  user specifies which token and how many he wants to sell, and which
+  token and how many he wants in exchange for those tokens. The
+  contract keeps track of every active (unmatched) order.
+
++ Any user can match an active order on the exchange. To match an
+  order, the user specifies which order to match, and the exchange
+  performs the token swap between the user who placed the order and
+  the user who matched it.
+
++ The administrator may pass the administrator role onto someone else.
+
+
+To keep the example brief our exchange will not support unlisting of
+tokens, cancellation of orders, order with expiry time, prioritising
+orders so that the order matcher gets the best deal possible, partial
+matching of orders, securing the exchange against abuse, etc.. We
+encourage the reader to implement additional features as a way to
+familiarise themselves even further with Scilla.
+
+
+Defining the Administrator Role
+********************************
+
+The exchange must have an administrator at all times, including when
+it is first deployed. We therefore define a mutable field ``admin`` to
+keep track of the current administrator, and initialise it to an
+``initial_admin``, which is given as an immutable parameter:
+
+.. code-block:: ocaml
+
+   contract SimpleExchange
+   (
+     initial_admin : ByStr20 with end
+   )
+
+   field admin : ByStr20 with end = initial_admin
+
+The type of the ``admin`` field is ``ByStr20 with end``, which is an
+`address type`. As in the earlier examples ``ByStr20`` is the type of
+byte strings of length 20, but we now add the addtional requirement
+that when that byte string is interpreted as an address on the
+network, the address must be `in use`, and the contents at that
+address must satisfy whatever is between the ``with`` and ``end``
+keywords.
+
+In this case since there is nothing between ``with`` and ``end``, we
+have no additional requirements, but the address must be in use,
+either by a user or by another contract. (We will go into more detail
+about address types when the exchange interacts with the listed token
+contracts.)
+
+Multiple transitions will need to check that the ``_sender`` is the
+current ``admin``, so let's define a procedure that checks that that
+is the case:
+
+.. code-block:: ocaml
+
+   procedure CheckSenderIsAdmin()
+     current_admin <- admin;
+     is_admin = builtin eq _sender current_admin;
+     match is_admin with
+     | True =>  (* Nothing to do *)
+     | False =>
+       (* Construct an exception object and throw it *)
+       e = { _exception : "SenderIsNotAdmin" };
+       throw e
+     end
+   end
+
+If the ``_sender`` is the current administrator, then nothing happens,
+and whichever transition called this procedure can continue. If the
+``_sender`` is someone else, however, the procedure throws an
+`exception` causing the current transaction to be aborted.
+
+We want the administrator to be able to pass on the administrator role
+to someone else, so we define our first transition ``SetAdmin`` as
+follows:
+
+.. code-block:: ocaml
+
+   transition SetAdmin(new_admin : ByStr20 with end)
+     (* Only the former admin may appoint a new admin *)
+     CheckSenderIsAdmin;
+     admin := new_admin
+   end
+                
+The transition applies the ``CheckSenderIsAdmin`` procedure, and if no
+exception is thrown then the sender is indeed the current
+administrator, and is thus allowed to pass on the administrator role
+on to someone else. The new admin must once again be an address that
+is in use.
+
+
+Intermezzo: Transferring Tokens On Behalf Of Users
+***************************************************
+
+Before we continue adding features to our exchange we must first look
+at how token contracts transfer tokens between users. 
+
+Each ZRC-2 token standard defines a field ``balances`` which keeps
+track of how many tokens each user has:
+
+.. code-block:: ocaml
+
+   field balances: Map ByStr20 Uint128
+
+However, this is not particularly useful for our exchange, because the
+token contract won't allow the exchange to transfer tokens belonging
+to someone other than the exchange itself.
+
+Instead, the ZRC-2 defines a field ``allowances``, which a user who
+owns tokens can use to allow another user partial access to the
+owner's tokens:
+
+.. code-block:: ocaml
+
+   field allowances: Map ByStr20 (Map ByStr20 Uint128)
+
+Before a user places an order, the user should provide the exchange
+with a token allowance equivalent to the amount that is put up for
+sale. The user can then place the order, and the exchange can check
+that the allowance is sufficient. The exchange then transfers the
+tokens to its own account for holding until the order is matched.
+
+Similarly, before a user matches an order, the user should provide the
+exchange with a token allowance equivalent to the amount that the
+order placer wants to buy. The user can then match the order, and the
+exchange can check that the allowance is sufficent. The exchange then
+transfers those tokens to the user who placed the order, and transfers
+to the matching user the tokens that it transferred to itself when the
+order was placed.
+
+In order to check the current allowance that a user has given to the
+exchange, we will need to specify the ``allowances`` field in the
+token address type. We do this as follows:
+
+.. code-block:: ocaml
+
+   ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end
+
+As with the ``admin`` field we require that the address is in
+use. Additionally, the requirements between ``with`` and ``end`` must
+also be satisfied:
+
++ The keyword ``contract`` specifies that the address must be in use
+  by a contract, and not by a user.
+
++ The keyword ``field`` specifies that the contract in question must
+  contain a mutable field of the specified type.
+
+
+Listing a New Token
+********************
+
+The exchange keeps track of its listed tokens, i.e., which tokens are
+allowed to be traded on the exchange. We do this by defining a map
+from the token code (a ``String``) to the address of the token.
