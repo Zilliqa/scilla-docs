@@ -862,12 +862,12 @@ Fungible Tokens
 Recall that a fungible token is one which is indistinguishable from
 another token of the same type. For example, a US $1 bank note is
 indistinguishable from any other US $1 bank note (for the purposes of
-swapping the bank note for goods, services, or other tokens, at
+using the bank note to pay for goods, services, or other tokens, at
 least).
 
 The `Zilliqa Reference Contracts <https://github.com/Zilliqa/ZRC>`_
 library offers specifications and reference implementations of
-commonly used contract types, and the `ZRC-2
+commonly used contract types, and the `ZRC2
 <https://github.com/Zilliqa/ZRC/blob/master/zrcs/zrc-2.md>`_ standard
 specifies a standard for fungible tokens, which we will use for this
 example. We will not go into detail about how the token contract
@@ -886,36 +886,48 @@ We want our simple exchange to support the following functionality:
 
 + The exchange should have an administrator at all times. The
   administrator is in charge of approving token contracts, and listing
-  them on the exchange.
+  them on the exchange. The administrator may pass the administrator
+  role on to someone else.
 
 + Any user can place an order on the exchange. To place an order, the
-  user specifies which token and how many he wants to sell, and which
-  token and how many he wants in exchange for those tokens. The
-  contract keeps track of every active (unmatched) order.
+  user specifies which token he wants to sell and how many of them he
+  is offering, and which token he wants to buy and how many he
+  wants in return. The contract keeps track of every active
+  (unmatched) order.
 
++ When a user attempts to place an order to sell some tokens, the
+  exchange checks that the user actually has those tokens to sell. If
+  he does, then the exchange claims those tokens and holds on to them
+  until the order is matched.
+  
 + Any user can match an active order on the exchange. To match an
-  order, the user specifies which order to match, and the exchange
-  performs the token swap between the user who placed the order and
-  the user who matched it.
+  order, the user specifies which order to match.
 
-+ The administrator may pass the administrator role onto someone else.
-
++ When a user attempts to match an order, the exchange checks that the
+  user actually has the tokens that the order placer wants to buy. If
+  he does, then the exchange transfers the tokens that were claimed
+  when the order was placed to the order matcher, and transfers the
+  tokens that the order placer wants to buy from the order matcher to
+  the order placer. After the tokens have been transferred the
+  exchange deletes the fulfilled order.
 
 To keep the example brief our exchange will not support unlisting of
-tokens, cancellation of orders, order with expiry time, prioritising
+tokens, cancellation of orders, orders with expiry time, prioritising
 orders so that the order matcher gets the best deal possible, partial
-matching of orders, securing the exchange against abuse, etc.. We
-encourage the reader to implement additional features as a way to
-familiarise themselves even further with Scilla.
+matching of orders, securing the exchange against abuse, fees for
+trading on the exchange, etc.. We encourage the reader to implement
+additional features as a way to familiarise themselves even further
+with Scilla.
 
 
-Defining the Administrator Role
+The Administrator Role
 ********************************
 
 The exchange must have an administrator at all times, including when
-it is first deployed. We therefore define a mutable field ``admin`` to
-keep track of the current administrator, and initialise it to an
-``initial_admin``, which is given as an immutable parameter:
+it is first deployed. The administrator may change over time, so we
+define a mutable field ``admin`` to keep track of the current
+administrator, and initialise it to an ``initial_admin``, which is
+given as an immutable parameter:
 
 .. code-block:: ocaml
 
@@ -934,14 +946,15 @@ network, the address must be `in use`, and the contents at that
 address must satisfy whatever is between the ``with`` and ``end``
 keywords.
 
-In this case since there is nothing between ``with`` and ``end``, we
-have no additional requirements, but the address must be in use,
-either by a user or by another contract. (We will go into more detail
+In this case there is nothing between ``with`` and ``end``, so we have
+no additional requirements. However, the address must be in use,
+either by a user or by another contract - otherwise Scilla will not
+accept it as having a legal address type. (We will go into more detail
 about address types when the exchange interacts with the listed token
 contracts.)
 
 Multiple transitions will need to check that the ``_sender`` is the
-current ``admin``, so let's define a procedure that checks that that
+current ``admin``, so let us define a procedure that checks that that
 is the case:
 
 .. code-block:: ocaml
@@ -982,13 +995,13 @@ on to someone else. The new admin must once again be an address that
 is in use.
 
 
-Intermezzo: Transferring Tokens On Behalf Of Users
-***************************************************
+Intermezzo: Transferring Tokens On Behalf Of The Token Owner
+*************************************************************
 
 Before we continue adding features to our exchange we must first look
 at how token contracts transfer tokens between users. 
 
-Each ZRC-2 token standard defines a field ``balances`` which keeps
+The ZRC2 token standard defines a field ``balances`` which keeps
 track of how many tokens each user has:
 
 .. code-block:: ocaml
@@ -999,27 +1012,34 @@ However, this is not particularly useful for our exchange, because the
 token contract won't allow the exchange to transfer tokens belonging
 to someone other than the exchange itself.
 
-Instead, the ZRC-2 defines a field ``allowances``, which a user who
-owns tokens can use to allow another user partial access to the
-owner's tokens:
+Instead, the ZRC2 standard defines a field ``allowances``, which a
+user who owns tokens can use to allow another user partial access to
+the owner's tokens:
 
 .. code-block:: ocaml
 
    field allowances: Map ByStr20 (Map ByStr20 Uint128)
 
+For instance, if Alice has given Bob an allowance of 100 tokens, then
+the ``allowances`` map in token contract will have the contain the
+value ``allowances[<address of Alice>][<address of Bob>] = 100``. This
+allows Bob to spend 100 of Alice's tokens as if they were his
+own. (Alice can of course withdraw the allowance, as long as Bob
+hasn't yet spent the tokens).
+   
 Before a user places an order, the user should provide the exchange
-with a token allowance equivalent to the amount that is put up for
-sale. The user can then place the order, and the exchange can check
+with an allowance of the token he wants to sell to cover the
+order. The user can then place the order, and the exchange can check
 that the allowance is sufficient. The exchange then transfers the
 tokens to its own account for holding until the order is matched.
 
 Similarly, before a user matches an order, the user should provide the
-exchange with a token allowance equivalent to the amount that the
-order placer wants to buy. The user can then match the order, and the
-exchange can check that the allowance is sufficent. The exchange then
-transfers those tokens to the user who placed the order, and transfers
-to the matching user the tokens that it transferred to itself when the
-order was placed.
+exchange with an allowance of the token that the order placer wants to
+buy. The user can then match the order, and the exchange can check
+that the allowance is sufficent. The exchange then transfers those
+tokens to the user who placed the order, and transfers to the matching
+user the tokens that it transferred to itself when the order was
+placed.
 
 In order to check the current allowance that a user has given to the
 exchange, we will need to specify the ``allowances`` field in the
@@ -1037,7 +1057,8 @@ also be satisfied:
   by a contract, and not by a user.
 
 + The keyword ``field`` specifies that the contract in question must
-  contain a mutable field of the specified type.
+  contain a mutable field with the specified name and of the specified
+  type.
 
 
 Listing a New Token
@@ -1046,3 +1067,95 @@ Listing a New Token
 The exchange keeps track of its listed tokens, i.e., which tokens are
 allowed to be traded on the exchange. We do this by defining a map
 from the token code (a ``String``) to the address of the token.
+
+.. code-block:: ocaml
+
+   field listed_tokens :
+     Map String (ByStr20 with contract
+                                field allowances : Map ByStr20 (Map ByStr20 Uint128)
+                         end)
+     = Emp String (ByStr20 with contract
+                                  field allowances : Map ByStr20 (Map ByStr20 Uint128)
+                           end)
+
+Only the administrator is allowed to list new tokens, so we leverage
+the ``CheckSenderIsAdmin`` procedure again here.
+
+Additionally, we only want to list tokens that have a different token
+code from the previously listed tokens. For this purpose we define a
+procedure ``CheckIsTokenUnlisted`` to check whether a token code is
+defined as a key in the ``listed_tokens`` map.
+:
+
+.. code-block:: ocaml
+
+   library SimpleExchangeLib
+
+   let false = False
+
+   ...
+
+   contract SimpleExchange (...)
+
+   ...
+                
+   procedure ThrowListingStatusException(
+     token_code : String,
+     expected_status : Bool,
+     actual_status : Bool)
+     e = { _exception : "UnexpectedListingStatus";
+          token_code: token_code;
+          expected : expected_status;
+          actual : actual_status };
+     throw e
+   end
+
+   procedure CheckIsTokenUnlisted(
+     token_code : String
+     )
+     (* Is the token code listed? *)
+     token_code_is_listed <- exists listed_tokens[token_code];
+     match token_code_is_listed with
+     | True =>
+       (* Incorrect listing status *)
+       ThrowListingStatusException token_code false token_code_is_listed
+     | False => (* Nothing to do *)
+     end
+   end
+
+This time we define a helper procedure ``ThrowListingStatusException``
+which unconditionally throws an exception. This will be useful later
+when we later write the transition for placing orders, because we will
+need to check that the tokens involved in the order are listed.
+
+We also define the constant ``false`` in the contract's library. This
+is due to the fact that Scilla requires all values to be named before
+they are used in computations. Defining constants in library code
+prevents us from cluttering the transition code with constant
+definitions:
+
+.. code-block:: ocaml
+
+   (* Incorrect listing status *)
+   false = False; (* We don't want to do it like this *)
+   ThrowListingStatusException token_code false token_code_is_listed
+
+With the helper procedures in place we are now ready to define the
+``ListToken`` transition as follows:
+
+.. code-block:: ocaml
+
+   transition ListToken(
+     token_code : String,
+     new_token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end
+     )
+     (* Only the admin may list new tokens.  *)
+     CheckSenderIsAdmin;
+     (* Only new token codes are allowed.  *)
+     CheckIsTokenUnlisted token_code;
+     (* Everything is ok. The token can be listed *)
+     listed_tokens[token_code] := new_token
+   end
+                   
+Placing an Order
+********************
