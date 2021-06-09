@@ -1514,7 +1514,7 @@ callbacks - if we don't, then the callbacks will not be recognised,
 causing the entire ``PlaceOrder`` transaction to fail.
 
 Token contracts notify the recipients of token transfers because such
-notifications adds an extra safeguard against the risk of transferring
+notifications add an extra safeguard against the risk of transferring
 tokens to a contract that is unable to deal with token ownership. For
 instance, if someone were to transfer tokens to the ``HelloWorld``
 contract in the first example in this section, then the tokens would
