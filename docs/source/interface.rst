@@ -181,6 +181,55 @@ A sample ``init.json`` for this contract will look like the following:
     }
   ]
 
+Example 3: Using Address Types
+***********************************
+
+Whenever a contract has an immutable parameter of an address type, the
+type ``ByStr20`` must be used in the to initialise the parameter.
+
+For the ``SimpleExchange`` we have a single the immutable parameter,
+which has an address type:
+
+.. code-block:: ocaml
+
+   contract SimpleExchange
+   (
+     initial_admin : ByStr20 with end
+   )
+
+The JSON entry for the ``initial_admin`` parameter must use the type
+``ByStr20`` rather than the type ``ByStr20 with end``, so an example
+``init.json`` for this contract could like the following:
+
+.. code-block:: json
+
+  [
+    { 
+        "vname" : "_scilla_version",
+        "type" : "Uint32",
+        "value" : "0"
+    },
+    {
+        "vname" : "_this_address",
+        "type" : "ByStr20",
+        "value" : "0xabfeccdc9012345678901234567890f777567890"
+    },
+    {
+        "vname" : "_creation_block",
+        "type" : "BNum",
+        "value" : "1"
+    },
+    { 
+        "vname" : "initial_admin",
+        "type" : "ByStr20",
+        "value" : "0x1234567890123456789012345678901234567890"
+    }
+  ]
+
+
+
+   
+
 Input Blockchain State
 ########################
 
