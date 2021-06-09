@@ -1021,8 +1021,8 @@ the owner's tokens:
    field allowances: Map ByStr20 (Map ByStr20 Uint128)
 
 For instance, if Alice has given Bob an allowance of 100 tokens, then
-the ``allowances`` map in token contract will have the contain the
-value ``allowances[<address of Alice>][<address of Bob>] = 100``. This
+the ``allowances`` map in token contract will contain the value
+``allowances[<address of Alice>][<address of Bob>] = 100``. This
 allows Bob to spend 100 of Alice's tokens as if they were his
 own. (Alice can of course withdraw the allowance, as long as Bob
 hasn't yet spent the tokens).
@@ -1235,7 +1235,10 @@ the result to get the actual allowance:
             | Some x => x
             | None => zero
             end;
-                
+
+Once again, we define the constant ``zero = Uint128 0`` in the
+contract library for convenience.
+
 We can now compare the actual allowance to the allowance we are
 expecting, and throw an exception if the actual allowance is
 insufficient:
@@ -1434,7 +1437,7 @@ A value of type ``Order`` is given by the type constructor ``Order``,
 a token address and an amount of tokens to sell, and a token address
 and an amount of tokens to buy.
 
-We now need field containing a map from order numbers (of type
+We now need a field containing a map from order numbers (of type
 ``Uint128``) to ``Order``, which represents the currently active
 orders. Additionally, we will need a way to generate a unique order
 number, so we'll define a field which holds the next order number to
@@ -1448,10 +1451,10 @@ use:
 
 To add a new order we need to generate a new order number, store the
 generated order number and the new order in the ``active_orders`` map,
-and finally increment the ``next_order_no`` field so that it is ready
-for the next order to be placed. We will put that in a helper
-procedure ``AddOrder``, and add a call to the procedure in the
-``PlaceOrder`` transition:
+and finally increment the ``next_order_no`` field (using the library
+constant ``one = Uint128 1``) so that it is ready for the next order
+to be placed. We will put that in a helper procedure ``AddOrder``, and
+add a call to the procedure in the ``PlaceOrder`` transition:
 
 .. code-block:: ocaml
 
@@ -1501,12 +1504,12 @@ procedure ``AddOrder``, and add a call to the procedure in the
 
 ``PlaceOrder`` is now complete, but there is still one thing
 missing. The `ZRC2` token standard specifies that when a
-``TransferFrom`` transition is executed, the recipient and the
-``_sender`` (known as the `initiator`) are notified in case of a
-successful transfer. These notifications are known as
+``TransferFrom`` transition is executed, the token sends messages to
+the recipient and the ``_sender`` (known as the `initiator`) notifying
+them of the successful transfer. These notifications are known as
 `callbacks`. Since our exchange executes a ``TransferFrom`` transition
 on the sell token, and since the exchange is the recipient of those
-tokens, we will need to specify transitions that can handle both 
+tokens, we will need to specify transitions that can handle both
 callbacks - if we don't, then the callbacks will not be recognised,
 causing the entire ``PlaceOrder`` transaction to fail.
 
@@ -1704,10 +1707,13 @@ transition, which gives rise to a different callback:
    end
 
 Note that we do not need to specify a transition handling the receipt
-of tokens from a ``Transfer`` transition. The exchange never executes
-a ``Transfer`` with itself as the recipient, so if a user decides to
-do so, then the recipient callback will fail by there not being such a
-transition on the exchange.
+of tokens from a ``Transfer`` transition, because the exchange never
+executes a ``Transfer`` with itself as the recipient. By not defining
+the callback transition at all, we also take care of the situation
+where a user performs a ``Transfer`` with the exchange as the
+recipient, because the recipient callback won't have a matching
+transition on the exchange, causing the entire transfer transaction to
+fail.
 
 Putting it All Together
 *************************
@@ -2018,7 +2024,9 @@ We now have everything in place to specify the entire contract:
    
                    
 As mentioned in the introduction we have kept the exchange simplistic
-in order to keep the focus on Scilla features. We encourage the reader
+in order to keep the focus on Scilla features.
+
+To further familiarise themselves with Scilla we encourage the reader
 to add additional features such as unlisting of tokens, cancellation
 of orders, orders with expiry time, prioritising orders so that the
 order matcher gets the best deal possible, partial matching of orders,
