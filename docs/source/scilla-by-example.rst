@@ -1513,11 +1513,12 @@ tokens, we will need to specify transitions that can handle both
 callbacks - if we don't, then the callbacks will not be recognised,
 causing the entire ``PlaceOrder`` transaction to fail.
 
-The intention behind notifying the recipient of a token transfer is to
-ensure that the recipient is capable of handling the token
-ownership. For instance, if someone were to transfer tokens to the
-``HelloWorld`` contract in the first section, the tokens would be
-locked forever, because the ``HelloWorld`` contract is incapable of
+Token contracts notify the recipients of token transfers because such
+notifications adds an extra safeguard against the risk of transferring
+tokens to a contract that is unable to deal with token ownership. For
+instance, if someone were to transfer tokens to the ``HelloWorld``
+contract in the first example in this section, then the tokens would
+be locked forever because the ``HelloWorld`` contract is incapable of
 doing anything with the tokens.
 
 Our exchange is only capable of dealing with tokens for which there is
