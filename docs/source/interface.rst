@@ -353,6 +353,46 @@ Say that the contract has been deployed at address ``0x1234567890123456789012345
    
 If a contract has immutable fields of user-defined types, then the fields must also be initialised using fully qualified names in the associated ``init.json``.
    
+Example 4: Using Address Types
+***********************************
+
+When passing an address value the type ``ByStr20`` must be used. It is
+not possible to use address types (``ByStr20 with ... end``) in
+messages.
+
+This means that for the following transition
+
+.. code-block:: ocaml
+
+   transition ListToken(
+     token_code : String,
+     new_token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end
+     )
+
+the ``input_message.json`` must use the type ``ByStr20`` for the
+``new_token`` parameter, e.g., as follows:
+
+.. code-block:: json
+
+    {
+      "_tag"    : "ListToken",
+      "_amount" : "0",
+      "_sender" : "0x64345678901234567890123456789012345678cd",
+      "_origin" : "0x64345678901234567890123456789012345678cd",
+      "params"  : [
+        {
+          "vname" : "token_code",
+          "type"  : "String",
+          "value" : "XYZ"
+        },
+        {
+          "vname" : "new_token",
+          "type"  : "ByStr20",
+          "value" : "0x78345678901234567890123456789012345678cd"
+        }
+      ]
+    }
+
 
 Interpreter Output
 #####################
