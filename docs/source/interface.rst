@@ -181,6 +181,55 @@ A sample ``init.json`` for this contract will look like the following:
     }
   ]
 
+Example 3: Using Address Types
+***********************************
+
+Whenever a contract has an immutable parameter of an address type, the
+type ``ByStr20`` must be used in the to initialise the parameter.
+
+For the ``SimpleExchange`` we have a single the immutable parameter,
+which has an address type:
+
+.. code-block:: ocaml
+
+   contract SimpleExchange
+   (
+     initial_admin : ByStr20 with end
+   )
+
+The JSON entry for the ``initial_admin`` parameter must use the type
+``ByStr20`` rather than the type ``ByStr20 with end``, so an example
+``init.json`` for this contract could like the following:
+
+.. code-block:: json
+
+  [
+    { 
+        "vname" : "_scilla_version",
+        "type" : "Uint32",
+        "value" : "0"
+    },
+    {
+        "vname" : "_this_address",
+        "type" : "ByStr20",
+        "value" : "0xabfeccdc9012345678901234567890f777567890"
+    },
+    {
+        "vname" : "_creation_block",
+        "type" : "BNum",
+        "value" : "1"
+    },
+    { 
+        "vname" : "initial_admin",
+        "type" : "ByStr20",
+        "value" : "0x1234567890123456789012345678901234567890"
+    }
+  ]
+
+
+
+   
+
 Input Blockchain State
 ########################
 
@@ -353,6 +402,46 @@ Say that the contract has been deployed at address ``0x1234567890123456789012345
    
 If a contract has immutable fields of user-defined types, then the fields must also be initialised using fully qualified names in the associated ``init.json``.
    
+Example 4: Using Address Types
+***********************************
+
+When passing an address value the type ``ByStr20`` must be used. It is
+not possible to use address types (``ByStr20 with ... end``) in
+messages.
+
+This means that for the following transition
+
+.. code-block:: ocaml
+
+   transition ListToken(
+     token_code : String,
+     new_token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end
+     )
+
+the ``input_message.json`` must use the type ``ByStr20`` for the
+``new_token`` parameter, e.g., as follows:
+
+.. code-block:: json
+
+    {
+      "_tag"    : "ListToken",
+      "_amount" : "0",
+      "_sender" : "0x64345678901234567890123456789012345678cd",
+      "_origin" : "0x64345678901234567890123456789012345678cd",
+      "params"  : [
+        {
+          "vname" : "token_code",
+          "type"  : "String",
+          "value" : "XYZ"
+        },
+        {
+          "vname" : "new_token",
+          "type"  : "ByStr20",
+          "value" : "0x78345678901234567890123456789012345678cd"
+        }
+      ]
+    }
+
 
 Interpreter Output
 #####################

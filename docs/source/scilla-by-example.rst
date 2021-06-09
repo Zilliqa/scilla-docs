@@ -846,3 +846,1189 @@ The complete crowdfunding contract is given below.
             end
           end  
         end
+
+A Third Example: A Simple Token Exchange
+########################################
+
+As a third example we look at how contracts written in Scilla can
+interact by passing messages to each other, and by reading each
+other's states. As our example application we choose a simplified
+token exchange contracts in which users can place offers of swapping
+one type of fungible tokens for another type.
+
+Fungible Tokens
+****************
+
+Recall that a fungible token is one which is indistinguishable from
+another token of the same type. For example, a US $1 bank note is
+indistinguishable from any other US $1 bank note (for the purposes of
+using the bank note to pay for goods, services, or other tokens, at
+least).
+
+The `Zilliqa Reference Contracts <https://github.com/Zilliqa/ZRC>`_
+library offers specifications and reference implementations of
+commonly used contract types, and the `ZRC2
+<https://github.com/Zilliqa/ZRC/blob/master/zrcs/zrc-2.md>`_ standard
+specifies a standard for fungible tokens, which we will use for this
+example. We will not go into detail about how the token contract
+works, but only point out a few important aspects that will be needed
+in order to implement the token exchange.
+
+
+Exchange Specification
+***********************
+
+We want our simple exchange to support the following functionality:
+
++ The exchange has a number of listed tokens that can be freely
+  swapped with each other. Each listed token is identified by its
+  token code (e.g., "USD" for US dollars).
+
++ The exchange should have an administrator at all times. The
+  administrator is in charge of approving token contracts, and listing
+  them on the exchange. The administrator may pass the administrator
+  role on to someone else.
+
++ Any user can place an order on the exchange. To place an order, the
+  user specifies which token he wants to sell and how many of them he
+  is offering, and which token he wants to buy and how many he
+  wants in return. The contract keeps track of every active
+  (unmatched) order.
+
++ When a user attempts to place an order to sell some tokens, the
+  exchange checks that the user actually has those tokens to sell. If
+  he does, then the exchange claims those tokens and holds on to them
+  until the order is matched.
+  
++ Any user can match an active order on the exchange. To match an
+  order, the user specifies which order to match.
+
++ When a user attempts to match an order, the exchange checks that the
+  user actually has the tokens that the order placer wants to buy. If
+  he does, then the exchange transfers the tokens that were claimed
+  when the order was placed to the order matcher, and transfers the
+  tokens that the order placer wants to buy from the order matcher to
+  the order placer. After the tokens have been transferred the
+  exchange deletes the fulfilled order.
+
+To keep the example brief our exchange will not support unlisting of
+tokens, cancellation of orders, orders with expiry time, prioritising
+orders so that the order matcher gets the best deal possible, partial
+matching of orders, securing the exchange against abuse, fees for
+trading on the exchange, etc.. We encourage the reader to implement
+additional features as a way to familiarise themselves even further
+with Scilla.
+
+
+The Administrator Role
+********************************
+
+The exchange must have an administrator at all times, including when
+it is first deployed. The administrator may change over time, so we
+define a mutable field ``admin`` to keep track of the current
+administrator, and initialise it to an ``initial_admin``, which is
+given as an immutable parameter:
+
+.. code-block:: ocaml
+
+   contract SimpleExchange
+   (
+     initial_admin : ByStr20 with end
+   )
+
+   field admin : ByStr20 with end = initial_admin
+
+The type of the ``admin`` field is ``ByStr20 with end``, which is an
+`address type`. As in the earlier examples ``ByStr20`` is the type of
+byte strings of length 20, but we now add the addtional requirement
+that when that byte string is interpreted as an address on the
+network, the address must be `in use`, and the contents at that
+address must satisfy whatever is between the ``with`` and ``end``
+keywords.
+
+In this case there is nothing between ``with`` and ``end``, so we have
+no additional requirements. However, the address must be in use,
+either by a user or by another contract - otherwise Scilla will not
+accept it as having a legal address type. (We will go into more detail
+about address types when the exchange interacts with the listed token
+contracts.)
+
+Multiple transitions will need to check that the ``_sender`` is the
+current ``admin``, so let us define a procedure that checks that that
+is the case:
+
+.. code-block:: ocaml
+
+   procedure CheckSenderIsAdmin()
+     current_admin <- admin;
+     is_admin = builtin eq _sender current_admin;
+     match is_admin with
+     | True =>  (* Nothing to do *)
+     | False =>
+       (* Construct an exception object and throw it *)
+       e = { _exception : "SenderIsNotAdmin" };
+       throw e
+     end
+   end
+
+If the ``_sender`` is the current administrator, then nothing happens,
+and whichever transition called this procedure can continue. If the
+``_sender`` is someone else, however, the procedure throws an
+`exception` causing the current transaction to be aborted.
+
+We want the administrator to be able to pass on the administrator role
+to someone else, so we define our first transition ``SetAdmin`` as
+follows:
+
+.. code-block:: ocaml
+
+   transition SetAdmin(new_admin : ByStr20 with end)
+     (* Only the former admin may appoint a new admin *)
+     CheckSenderIsAdmin;
+     admin := new_admin
+   end
+                
+The transition applies the ``CheckSenderIsAdmin`` procedure, and if no
+exception is thrown then the sender is indeed the current
+administrator, and is thus allowed to pass on the administrator role
+on to someone else. The new admin must once again be an address that
+is in use.
+
+
+Intermezzo: Transferring Tokens On Behalf Of The Token Owner
+*************************************************************
+
+Before we continue adding features to our exchange we must first look
+at how token contracts transfer tokens between users. 
+
+The ZRC2 token standard defines a field ``balances`` which keeps
+track of how many tokens each user has:
+
+.. code-block:: ocaml
+
+   field balances: Map ByStr20 Uint128
+
+However, this is not particularly useful for our exchange, because the
+token contract won't allow the exchange to transfer tokens belonging
+to someone other than the exchange itself.
+
+Instead, the ZRC2 standard defines a field ``allowances``, which a
+user who owns tokens can use to allow another user partial access to
+the owner's tokens:
+
+.. code-block:: ocaml
+
+   field allowances: Map ByStr20 (Map ByStr20 Uint128)
+
+For instance, if Alice has given Bob an allowance of 100 tokens, then
+the ``allowances`` map in token contract will contain the value
+``allowances[<address of Alice>][<address of Bob>] = 100``. This
+allows Bob to spend 100 of Alice's tokens as if they were his
+own. (Alice can of course withdraw the allowance, as long as Bob
+hasn't yet spent the tokens).
+   
+Before a user places an order, the user should provide the exchange
+with an allowance of the token he wants to sell to cover the
+order. The user can then place the order, and the exchange can check
+that the allowance is sufficient. The exchange then transfers the
+tokens to its own account for holding until the order is matched.
+
+Similarly, before a user matches an order, the user should provide the
+exchange with an allowance of the token that the order placer wants to
+buy. The user can then match the order, and the exchange can check
+that the allowance is sufficent. The exchange then transfers those
+tokens to the user who placed the order, and transfers to the matching
+user the tokens that it transferred to itself when the order was
+placed.
+
+In order to check the current allowance that a user has given to the
+exchange, we will need to specify the ``allowances`` field in the
+token address type. We do this as follows:
+
+.. code-block:: ocaml
+
+   ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end
+
+As with the ``admin`` field we require that the address is in
+use. Additionally, the requirements between ``with`` and ``end`` must
+also be satisfied:
+
++ The keyword ``contract`` specifies that the address must be in use
+  by a contract, and not by a user.
+
++ The keyword ``field`` specifies that the contract in question must
+  contain a mutable field with the specified name and of the specified
+  type.
+
+
+Listing a New Token
+********************
+
+The exchange keeps track of its listed tokens, i.e., which tokens are
+allowed to be traded on the exchange. We do this by defining a map
+from the token code (a ``String``) to the address of the token.
+
+.. code-block:: ocaml
+
+   field listed_tokens :
+     Map String (ByStr20 with contract
+                                field allowances : Map ByStr20 (Map ByStr20 Uint128)
+                         end)
+     = Emp String (ByStr20 with contract
+                                  field allowances : Map ByStr20 (Map ByStr20 Uint128)
+                           end)
+
+Only the administrator is allowed to list new tokens, so we leverage
+the ``CheckSenderIsAdmin`` procedure again here.
+
+Additionally, we only want to list tokens that have a different token
+code from the previously listed tokens. For this purpose we define a
+procedure ``CheckIsTokenUnlisted`` to check whether a token code is
+defined as a key in the ``listed_tokens`` map.
+:
+
+.. code-block:: ocaml
+
+   library SimpleExchangeLib
+
+   let false = False
+
+   ...
+
+   contract SimpleExchange (...)
+
+   ...
+                
+   procedure ThrowListingStatusException(
+     token_code : String,
+     expected_status : Bool,
+     actual_status : Bool)
+     e = { _exception : "UnexpectedListingStatus";
+          token_code: token_code;
+          expected : expected_status;
+          actual : actual_status };
+     throw e
+   end
+
+   procedure CheckIsTokenUnlisted(
+     token_code : String
+     )
+     (* Is the token code listed? *)
+     token_code_is_listed <- exists listed_tokens[token_code];
+     match token_code_is_listed with
+     | True =>
+       (* Incorrect listing status *)
+       ThrowListingStatusException token_code false token_code_is_listed
+     | False => (* Nothing to do *)
+     end
+   end
+
+This time we define a helper procedure ``ThrowListingStatusException``
+which unconditionally throws an exception. This will be useful later
+when we later write the transition for placing orders, because we will
+need to check that the tokens involved in the order are listed.
+
+We also define the constant ``false`` in the contract's library. This
+is due to the fact that Scilla requires all values to be named before
+they are used in computations. Defining constants in library code
+prevents us from cluttering the transition code with constant
+definitions:
+
+.. code-block:: ocaml
+
+   (* Incorrect listing status *)
+   false = False; (* We don't want to do it like this *)
+   ThrowListingStatusException token_code false token_code_is_listed
+
+With the helper procedures in place we are now ready to define the
+``ListToken`` transition as follows:
+
+.. code-block:: ocaml
+
+   transition ListToken(
+     token_code : String,
+     new_token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end
+     )
+     (* Only the admin may list new tokens.  *)
+     CheckSenderIsAdmin;
+     (* Only new token codes are allowed.  *)
+     CheckIsTokenUnlisted token_code;
+     (* Everything is ok. The token can be listed *)
+     listed_tokens[token_code] := new_token
+   end
+                   
+Placing an Order
+********************
+
+To place an order a user must specify the token code and the amount of
+the token he wants to sell, and the token code and amount he wants to
+buy. We invoke the ``ThrowListingStatusException`` procedure if any of
+the token codes are unlisted:
+
+.. code-block:: ocaml
+
+   transition PlaceOrder(
+     token_code_sell : String,
+     sell_amount : Uint128,
+     token_code_buy: String,
+     buy_amount : Uint128
+     )
+     (* Check that the tokens are listed *)
+     token_sell_opt <- listed_tokens[token_code_sell];
+     token_buy_opt <- listed_tokens[token_code_buy];
+     match token_sell_opt with
+     | Some token_sell =>
+       match token_buy_opt with
+       | Some token_buy => 
+         ...
+       | None =>
+         (* Unlisted token *)
+         ThrowListingStatusException token_code_buy true false
+       end
+     | None =>
+       (* Unlisted token *)
+       ThrowListingStatusException token_code_sell true false
+     end
+   end
+
+If both tokens are listed, we must first check that the user has
+supplied a sufficient allowance to the exchange. We will need a
+similar check when another user matches the order, so we define a
+helper procedure ``CheckAllowance`` to perform the check:
+
+.. code-block:: ocaml
+
+   procedure CheckAllowance(
+     token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end,
+     expected : Uint128
+     )
+     ...
+   end
+
+To perform the check we will need to perform a `remote read` of the
+``allowances`` field in the token contract. We are interested in the
+allowance given by the ``_sender`` to the exchange, whose address is
+given by a special immutable field ``_this_address``, so we want to
+remote read the value of ``allowances[_sender][_this_address]`` in the
+token contract.
+
+Remote reads in Scilla are performed using the operator ``<- &``, and
+we use ``.`` notation to specify the contract that we want to remote
+read from. The entire statement for the remote read is therefore as
+follows:
+
+.. code-block:: ocaml
+
+   actual_opt <-& token.allowances[_sender][_this_address];
+
+Just as when we perform a local read of a map, the result of reading
+from a remote map is an optional value. If the result is ``Some v``
+for some ``v``, then the user has provided the exchange with an
+allowance of ``v`` tokens, and if the result is ``None`` the user has
+not supplied an allowance at all. We therefore need to pattern-match
+the result to get the actual allowance:
+
+.. code-block:: ocaml
+
+   (* Find actual allowance. Use 0 if None is given *)
+   actual = match actual_opt with
+            | Some x => x
+            | None => zero
+            end;
+
+Once again, we define the constant ``zero = Uint128 0`` in the
+contract library for convenience.
+
+We can now compare the actual allowance to the allowance we are
+expecting, and throw an exception if the actual allowance is
+insufficient:
+
+.. code-block:: ocaml
+
+   is_sufficient = uint128_le expected actual;
+     match is_sufficient with
+     | True => (* Nothing to do *)
+     | False =>
+       ThrowInsufficientAllowanceException token expected actual
+     end
+
+The function ``uint128_le`` is a utility function which performs a
+less-than-or-equal comparison on values of type ``Uint128``. The
+function is defined in the ``IntUtils`` part of the standard library,
+so in order to use the function we must import ``IntUtils`` into the
+contract, which is done immediately after the ``scilla_version``
+preamble, and before the contract library definitions:
+
+.. code-block:: ocaml
+
+   scilla_version 0
+   
+   import IntUtils
+   
+   library SimpleExchangeLib
+   ...                
+
+
+We also utilise a helper procedure
+``ThrowInsufficientAllowanceException`` to throw an exception if the
+allowance is insufficient, so the ``CheckAllowance`` procedure ends up
+looking as follows:
+
+.. code-block:: ocaml
+
+   procedure ThrowInsufficientAllowanceException(
+     token : ByStr20,
+     expected : Uint128,
+     actual : Uint128)
+     e = { _exception : "InsufficientAllowance";
+          token: token;
+          expected : expected;
+          actual : actual };
+     throw e
+   end
+
+   procedure CheckAllowance(
+     token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end,
+     expected : Uint128
+     )
+     actual_opt <-& token.allowances[_sender][_this_address];
+     (* Find actual allowance. Use 0 if None is given *)
+     actual = match actual_opt with
+              | Some x => x
+              | None => zero
+              end;
+     is_sufficient = uint128_le expected actual;
+     match is_sufficient with
+     | True => (* Nothing to do *)
+     | False =>
+       ThrowInsufficientAllowanceException token expected actual
+     end
+   end
+                
+   transition PlaceOrder(
+     token_code_sell : String,
+     sell_amount : Uint128,
+     token_code_buy: String,
+     buy_amount : Uint128
+     )
+     (* Check that the tokens are listed *)
+     token_sell_opt <- listed_tokens[token_code_sell];
+     token_buy_opt <- listed_tokens[token_code_buy];
+     match token_sell_opt with
+     | Some token_sell =>
+       match token_buy_opt with
+       | Some token_buy => 
+         (* Check that the placer has allowed sufficient funds to be accessed *)
+         CheckAllowance token_sell sell_amount;
+         ...
+       | None =>
+         (* Unlisted token *)
+         ThrowListingStatusException token_code_buy true false
+       end
+     | None =>
+       (* Unlisted token *)
+       ThrowListingStatusException token_code_sell true false
+     end
+   end
+ 
+If the user has given the exchange a sufficient allowance, the
+exchange can send a message to the token contract to perform the
+transfer of tokens from the allowance the exchange's own balance. The
+transition we need to invoke on the token contract is called
+``TransferFrom``, as opposed to ``Transfer`` which transfers funds
+from the sender's own token balance rather than from the sender's
+allowance of someone else's balance.
+
+Since the message will look much like the messages that we need when
+an order is matched, we generate the message using helper functions in
+the contract library (we will also need a new constant ``true``):
+
+.. code-block:: ocaml
+
+   library SimpleExchangeLib
+
+   let true = True
+
+   ...
+   
+   let one_msg : Message -> List Message =
+     fun (msg : Message) =>
+       let mty = Nil { Message } in
+       Cons { Message } msg mty
+
+   let mk_transfer_msg : Bool -> ByStr20 -> ByStr20 -> ByStr20 -> Uint128 -> Message =
+     fun (transfer_from : Bool) =>
+     fun (token_address : ByStr20) =>
+     fun (from : ByStr20) =>
+     fun (to : ByStr20) =>
+     fun (amount : Uint128) =>
+       let tag = match transfer_from with
+                 | True => "TransferFrom"
+                 | False => "Transfer"
+                 end
+       in
+       { _recipient : token_address;
+        _tag : tag;
+        _amount : Uint128 0;  (* No Zil are transferred, only custom tokens *)
+        from : from;
+        to : to;
+        amount : amount }
+       
+   let mk_place_order_msg : ByStr20 -> ByStr20 -> ByStr20 -> Uint128 -> List Message =
+     fun (token_address : ByStr20) =>
+     fun (from : ByStr20) =>
+     fun (to : ByStr20) =>
+     fun (amount : Uint128) =>
+       (* Construct a TransferFrom messsage to transfer from seller's allowance to exhange *)
+       let msg = mk_transfer_msg true token_address from to amount in
+       (* Create a singleton list *)
+       one_msg msg
+                   
+   contract SimpleExchange (...)
+
+   ...
+
+   transition PlaceOrder(
+     token_code_sell : String,
+     sell_amount : Uint128,
+     token_code_buy: String,
+     buy_amount : Uint128
+     )
+     (* Check that the tokens are listed *)
+     token_sell_opt <- listed_tokens[token_code_sell];
+     token_buy_opt <- listed_tokens[token_code_buy];
+     match token_sell_opt with
+     | Some token_sell =>
+       match token_buy_opt with
+       | Some token_buy => 
+         (* Check that the placer has allowed sufficient funds to be accessed *)
+         CheckAllowance token_sell sell_amount;
+         (* Transfer the sell tokens to the exchange for holding. Construct a TransferFrom message to the token contract. *)
+         msg = mk_place_order_msg token_sell _sender _this_address sell_amount;
+         (* Send message when the transition completes. *)
+         send msg;
+         ...
+       | None =>
+         (* Unlisted token *)
+         ThrowListingStatusException token_code_buy true false
+       end
+     | None =>
+       (* Unlisted token *)
+       ThrowListingStatusException token_code_sell true false
+     end
+   end
+
+
+Finally, we need to store the new order, so that users may match the
+order in the future. For this we define a new type ``Order``, which
+holds all the information needed when eventually the order is matched:
+
+.. code-block:: ocaml
+
+   (* Order placer, sell token, sell amount, buy token, buy amount *)
+   type Order =
+   | Order of ByStr20
+              (ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end)
+              Uint128
+              (ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end)
+              Uint128
+
+A value of type ``Order`` is given by the type constructor ``Order``,
+a token address and an amount of tokens to sell, and a token address
+and an amount of tokens to buy.
+
+We now need a field containing a map from order numbers (of type
+``Uint128``) to ``Order``, which represents the currently active
+orders. Additionally, we will need a way to generate a unique order
+number, so we'll define a field which holds the next order number to
+use:
+
+.. code-block:: ocaml
+
+   field active_orders : Map Uint128 Order = Emp Uint128 Order
+
+   field next_order_no : Uint128 = zero
+
+To add a new order we need to generate a new order number, store the
+generated order number and the new order in the ``active_orders`` map,
+and finally increment the ``next_order_no`` field (using the library
+constant ``one = Uint128 1``) so that it is ready for the next order
+to be placed. We will put that in a helper procedure ``AddOrder``, and
+add a call to the procedure in the ``PlaceOrder`` transition:
+
+.. code-block:: ocaml
+
+   procedure AddOrder(
+     order : Order
+     )
+     (* Get the next order number *)
+     order_no <- next_order_no;
+     (* Add the order *)
+     active_orders[order_no] := order;
+     (* Update the next_order_no field *)
+     new_order_no = builtin add order_no one;
+     next_order_no := new_order_no
+   end
+
+   transition PlaceOrder(
+     token_code_sell : String,
+     sell_amount : Uint128,
+     token_code_buy: String,
+     buy_amount : Uint128
+     )
+     (* Check that the tokens are listed *)
+     token_sell_opt <- listed_tokens[token_code_sell];
+     token_buy_opt <- listed_tokens[token_code_buy];
+     match token_sell_opt with
+     | Some token_sell =>
+       match token_buy_opt with
+       | Some token_buy => 
+         (* Check that the placer has allowed sufficient funds to be accessed *)
+         CheckAllowance token_sell sell_amount;
+         (* Transfer the sell tokens to the exchange for holding. Construct a TransferFrom message to the token contract. *)
+         msg = mk_place_order_msg token_sell _sender _this_address sell_amount;
+         (* Send message when the transition completes. *)
+         send msg;
+         (* Create order and add to list of active orders  *)
+         order = Order _sender token_sell sell_amount token_buy buy_amount;
+         AddOrder order
+       | None =>
+         (* Unlisted token *)
+         ThrowListingStatusException token_code_buy true false
+       end
+     | None =>
+       (* Unlisted token *)
+       ThrowListingStatusException token_code_sell true false
+     end
+   end
+
+``PlaceOrder`` is now complete, but there is still one thing
+missing. The `ZRC2` token standard specifies that when a
+``TransferFrom`` transition is executed, the token sends messages to
+the recipient and the ``_sender`` (known as the `initiator`) notifying
+them of the successful transfer. These notifications are known as
+`callbacks`. Since our exchange executes a ``TransferFrom`` transition
+on the sell token, and since the exchange is the recipient of those
+tokens, we will need to specify transitions that can handle both
+callbacks - if we don't, then the callbacks will not be recognised,
+causing the entire ``PlaceOrder`` transaction to fail.
+
+The intention behind notifying the recipient of a token transfer is to
+ensure that the recipient is capable of handling the token
+ownership. For instance, if someone were to transfer tokens to the
+``HelloWorld`` contract in the first section, the tokens would be
+locked forever, because the ``HelloWorld`` contract is incapable of
+doing anything with the tokens.
+
+Our exchange is only capable of dealing with tokens for which there is
+an active order, but in principle there is nothing stopping a user
+from transferring funds to the exchange without placing an order, so
+we need to ensure that the exchange is only involved in token
+transfers that it itself has initiated. We therefore define a
+procedure ``CheckInitiator``, which throws an exception if the
+exchange is involved in a token transfer that it itself did not
+initiate, and invoke that procedure from all callback transitions:
+
+.. code-block:: ocaml
+
+   procedure CheckInitiator(
+     initiator : ByStr20)
+     initiator_is_this = builtin eq initiator _this_address;
+     match initiator_is_this with
+     | True => (* Do nothing *)
+     | False =>
+       e = { _exception : "UnexpecedTransfer";
+            token_address : _sender;
+            initiator : initiator };
+       throw e
+     end
+   end  
+     
+   transition RecipientAcceptTransferFrom (
+     initiator : ByStr20,
+     sender : ByStr20,
+     recipient : ByStr20,
+     amount : Uint128)
+     CheckInitiator initiator
+   end  
+   
+   transition TransferFromSuccessCallBack (
+     initiator : ByStr20,
+     sender : ByStr20,
+     recipient : ByStr20,
+     amount : Uint128)
+     CheckInitiator initiator
+   end  
+                
+
+Matching an Order
+********************
+
+For the ``MatchOrder`` transition we can leverage many of the helper
+functions and procedures defined in the previous section.
+
+The user specifies an order he wishes to match. We then look up the
+order number in the ``active_orders`` map, and throw an exception if
+the order is not found:
+
+.. code-block:: ocaml
+
+   transition MatchOrder(
+     order_id : Uint128)
+     order <- active_orders[order_id];
+     match order with
+     | Some (Order order_placer sell_token sell_amount buy_token buy_amount) =>
+       ...
+     | None =>
+       e = { _exception : "UnknownOrder";
+            order_id : order_id };
+       throw e
+     end
+   end
+                
+In order to match the order, the matcher has to provide sufficient
+allowance of the buy token. This is checked by the ``CheckAllowance``
+procedure we defined earlier, so we simply reuse that procedure here:
+
+.. code-block:: ocaml
+
+   transition MatchOrder(
+     order_id : Uint128)
+     order <- active_orders[order_id];
+     match order with
+     | Some (Order order_placer sell_token sell_amount buy_token buy_amount) =>
+       (* Check that the placer has allowed sufficient funds to be accessed *)
+       CheckAllowance buy_token buy_amount;
+       ...
+     | None =>
+       e = { _exception : "UnknownOrder";
+            order_id : order_id };
+       throw e
+     end
+   end
+
+We now need to generate two transfer messages: One message is a
+``TransferFrom`` message on the buy token, transferring the matcher's
+allowance to the user who placed the order, and the other message is a
+``Transfer`` message on the sell token, transferring the tokens held
+by the exchange to the order matcher. Once again, we define helper
+functions to generate the messages:
+
+.. code-block:: ocaml
+
+   library SimpleExchangeLib
+
+   ...
+   
+   let two_msgs : Message -> Message -> List Message =
+     fun (msg1 : Message) =>
+     fun (msg2 : Message) =>
+       let first = one_msg msg1 in
+       Cons { Message } msg2 first
+   
+   let mk_make_order_msgs : ByStr20 -> Uint128 -> ByStr20 -> Uint128 ->
+                             ByStr20 -> ByStr20 -> ByStr20 -> List Message =
+     fun (token_sell_address : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy_address : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+     fun (this_address : ByStr20) =>
+     fun (order_placer : ByStr20) =>
+     fun (order_maker : ByStr20) =>
+       (* Construct a Transfer messsage to transfer from exchange to maker *)
+       let sell_msg = mk_transfer_msg false token_sell_address this_address order_maker sell_amount in
+       (* Construct a TransferFrom messsage to transfer from maker to placer *)
+       let buy_msg = mk_transfer_msg true token_buy_address order_maker order_placer buy_amount in
+       (* Create a singleton list *)
+       two_msgs sell_msg buy_msg
+
+  ...
+
+  contract SimpleExchange (...)
+
+  ...
+  
+  transition MatchOrder(
+     order_id : Uint128)
+     order <- active_orders[order_id];
+     match order with
+     | Some (Order order_placer sell_token sell_amount buy_token buy_amount) =>
+       (* Check that the placer has allowed sufficient funds to be accessed *)
+       CheckAllowance buy_token buy_amount;
+       (* Create the two transfer messages and send them *)
+       msgs = mk_make_order_msgs sell_token sell_amount buy_token buy_amount _this_address order_placer _sender;
+       send msgs;
+       ...
+     | None =>
+       e = { _exception : "UnknownOrder";
+            order_id : order_id };
+       throw e
+     end
+   end
+
+Since the order has now been matched, it should no longer be listed as
+an active order, so we delete the entry in ``active_orders``:
+
+.. code-block:: ocaml
+
+   transition MatchOrder(
+     order_id : Uint128)
+     order <- active_orders[order_id];
+     match order with
+     | Some (Order order_placer sell_token sell_amount buy_token buy_amount) =>
+       (* Check that the placer has allowed sufficient funds to be accessed *)
+       CheckAllowance buy_token buy_amount;
+       (* Create the two transfer messages and send them *)
+       msgs = mk_make_order_msgs sell_token sell_amount buy_token buy_amount _this_address order_placer _sender;
+       send msgs;
+       (* Order has now been matched, so remove it *)
+       delete active_orders[order_id]
+     | None =>
+       e = { _exception : "UnknownOrder";
+            order_id : order_id };
+       throw e
+     end
+   end
+
+This concludes the ``MatchOrder`` transition, but we need to define
+one additional callback transition. When placing an order we executed
+a ``TransferFrom`` transition, but now we also execute a ``Transfer``
+transition, which gives rise to a different callback:
+
+.. code-block:: ocaml
+
+   transition TransferSuccessCallBack (
+     initiator : ByStr20,
+     sender : ByStr20,
+     recipient : ByStr20,
+     amount : Uint128)
+     (* The exchange only accepts transfers that it itself has initiated.  *)
+     CheckInitiator initiator
+   end
+
+Note that we do not need to specify a transition handling the receipt
+of tokens from a ``Transfer`` transition, because the exchange never
+executes a ``Transfer`` with itself as the recipient. By not defining
+the callback transition at all, we also take care of the situation
+where a user performs a ``Transfer`` with the exchange as the
+recipient, because the recipient callback won't have a matching
+transition on the exchange, causing the entire transfer transaction to
+fail.
+
+Putting it All Together
+*************************
+
+We now have everything in place to specify the entire contract:
+
+.. code-block:: ocaml
+
+   scilla_version 0
+   
+   import IntUtils
+   
+   library SimpleExchangeLib
+   
+   (* Order placer, sell token, sell amount, buy token, buy amount *)
+   type Order =
+   | Order of ByStr20
+              (ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end)
+              Uint128
+              (ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end)
+              Uint128
+   
+   (* Helper values and functions *)
+   let true = True
+   let false = False
+   
+   let zero = Uint128 0
+   let one = Uint128 1
+   
+   let one_msg : Message -> List Message =
+     fun (msg : Message) =>
+       let mty = Nil { Message } in
+       Cons { Message } msg mty
+   
+   let two_msgs : Message -> Message -> List Message =
+     fun (msg1 : Message) =>
+     fun (msg2 : Message) =>
+       let first = one_msg msg1 in
+       Cons { Message } msg2 first
+   
+   let mk_transfer_msg : Bool -> ByStr20 -> ByStr20 -> ByStr20 -> Uint128 -> Message =
+     fun (transfer_from : Bool) =>
+     fun (token_address : ByStr20) =>
+     fun (from : ByStr20) =>
+     fun (to : ByStr20) =>
+     fun (amount : Uint128) =>
+       let tag = match transfer_from with
+                 | True => "TransferFrom"
+                 | False => "Transfer"
+                 end
+       in
+       { _recipient : token_address;
+        _tag : tag;
+        _amount : Uint128 0;  (* No Zil are transferred, only custom tokens *)
+        from : from;
+        to : to;
+        amount : amount }
+       
+   let mk_place_order_msg : ByStr20 -> ByStr20 -> ByStr20 -> Uint128 -> List Message =
+     fun (token_address : ByStr20) =>
+     fun (from : ByStr20) =>
+     fun (to : ByStr20) =>
+     fun (amount : Uint128) =>
+       (* Construct a TransferFrom messsage to transfer from seller's allowance to exhange *)
+       let msg = mk_transfer_msg true token_address from to amount in
+       (* Create a singleton list *)
+       one_msg msg
+   
+   let mk_make_order_msgs : ByStr20 -> Uint128 -> ByStr20 -> Uint128 ->
+                             ByStr20 -> ByStr20 -> ByStr20 -> List Message =
+     fun (token_sell_address : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy_address : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+     fun (this_address : ByStr20) =>
+     fun (order_placer : ByStr20) =>
+     fun (order_maker : ByStr20) =>
+       (* Construct a Transfer messsage to transfer from exchange to maker *)
+       let sell_msg = mk_transfer_msg false token_sell_address this_address order_maker sell_amount in
+       (* Construct a TransferFrom messsage to transfer from maker to placer *)
+       let buy_msg = mk_transfer_msg true token_buy_address order_maker order_placer buy_amount in
+       (* Create a singleton list *)
+       two_msgs sell_msg buy_msg
+   
+   
+   contract SimpleExchange
+   (
+     (* Ensure that the initial admin is an address that is in use *)
+     initial_admin : ByStr20 with end
+   )
+   
+   (* Active admin. *)
+   field admin : ByStr20 with end = initial_admin
+   
+   (* Tokens listed on the exchange. *)
+   (* We identify the token by its exchange code, and map it to the address     *)
+   (* of the contract implementing the token. The contract at that address must *)
+   (* contain an allowances field that we can remote read.                      *)
+   field listed_tokens :
+     Map String (ByStr20 with contract
+                                field allowances : Map ByStr20 (Map ByStr20 Uint128)
+                         end)
+     = Emp String (ByStr20 with contract
+                                  field allowances : Map ByStr20 (Map ByStr20 Uint128)
+                           end)
+   
+   (* Active orders, identified by the order number *)
+   field active_orders : Map Uint128 Order = Emp Uint128 Order
+   
+   (* The order number to use when the next order is placed *)
+   field next_order_no : Uint128 = zero
+   
+   procedure ThrowListingStatusException(
+     token_code : String,
+     expected_status : Bool,
+     actual_status : Bool)
+     e = { _exception : "UnexpectedListingStatus";
+          token_code: token_code;
+          expected : expected_status;
+          actual : actual_status };
+     throw e
+   end
+   
+   procedure ThrowInsufficientAllowanceException(
+     token : ByStr20,
+     expected : Uint128,
+     actual : Uint128)
+     e = { _exception : "InsufficientAllowance";
+          token: token;
+          expected : expected;
+          actual : actual };
+     throw e
+   end
+   
+   (* Check that _sender is the active admin.          *)
+   (* If not, throw an error and abort the transaction *)
+   procedure CheckSenderIsAdmin()
+     current_admin <- admin;
+     is_admin = builtin eq _sender current_admin;
+     match is_admin with
+     | True =>  (* Nothing to do *)
+     | False =>
+       (* Construct an exception object and throw it *)
+       e = { _exception : "SenderIsNotAdmin" };
+       throw e
+     end
+   end
+   
+   (* Change the active admin *)
+   transition SetAdmin(
+     new_admin : ByStr20 with end
+     )
+     (* Only the former admin may appoint a new admin *)
+     CheckSenderIsAdmin;
+     admin := new_admin
+   end
+   
+   (* Check that a given token code is not already listed. If it is, throw an error. *)
+   procedure CheckIsTokenUnlisted(
+     token_code : String
+     )
+     (* Is the token code listed? *)
+     token_code_is_listed <- exists listed_tokens[token_code];
+     match token_code_is_listed with
+     | True =>
+       (* Incorrect listing status *)
+       ThrowListingStatusException token_code false token_code_is_listed
+     | False => (* Nothing to do *)
+     end
+   end
+   
+   (* List a new token on the exchange. Only the admin may list new tokens.  *)
+   (* If a token code is already in use, raise an error                      *)
+   transition ListToken(
+     token_code : String,
+     new_token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end
+     )
+     (* Only the admin may list new tokens.  *)
+     CheckSenderIsAdmin;
+     (* Only new token codes are allowed.  *)
+     CheckIsTokenUnlisted token_code;
+     (* Everything is ok. The token can be listed *)
+     listed_tokens[token_code] := new_token
+   end
+   
+   (* Check that the sender has allowed access to sufficient funds *)
+   procedure CheckAllowance(
+     token : ByStr20 with contract field allowances : Map ByStr20 (Map ByStr20 Uint128) end,
+     expected : Uint128
+     )
+     actual_opt <-& token.allowances[_sender][_this_address];
+     (* Find actual allowance. Use 0 if None is given *)
+     actual = match actual_opt with
+              | Some x => x
+              | None => zero
+              end;
+     is_sufficient = uint128_le expected actual;
+     match is_sufficient with
+     | True => (* Nothing to do *)
+     | False =>
+       ThrowInsufficientAllowanceException token expected actual
+     end
+   end
+   
+   procedure AddOrder(
+     order : Order
+     )
+     (* Get the next order number *)
+     order_no <- next_order_no;
+     (* Add the order *)
+     active_orders[order_no] := order;
+     (* Update the next_order_no field *)
+     new_order_no = builtin add order_no one;
+     next_order_no := new_order_no
+   end
+   
+   (* Place an order on the exchange *)
+   transition PlaceOrder(
+     token_code_sell : String,
+     sell_amount : Uint128,
+     token_code_buy: String,
+     buy_amount : Uint128
+     )
+     (* Check that the tokens are listed *)
+     token_sell_opt <- listed_tokens[token_code_sell];
+     token_buy_opt <- listed_tokens[token_code_buy];
+     match token_sell_opt with
+     | Some token_sell =>
+       match token_buy_opt with
+       | Some token_buy => 
+         (* Check that the placer has allowed sufficient funds to be accessed *)
+         CheckAllowance token_sell sell_amount;
+         (* Transfer the sell tokens to the exchange for holding. Construct a TransferFrom message to the token contract. *)
+         msg = mk_place_order_msg token_sell _sender _this_address sell_amount;
+         (* Send message when the transition completes. *)
+         send msg;
+         (* Create order and add to list of active orders  *)
+         order = Order _sender token_sell sell_amount token_buy buy_amount;
+         AddOrder order
+       | None =>
+         (* Unlisted token *)
+         ThrowListingStatusException token_code_buy true false
+       end
+     | None =>
+       (* Unlisted token *)
+       ThrowListingStatusException token_code_sell true false
+     end
+   end
+   
+   transition MatchOrder(
+     order_id : Uint128)
+     order <- active_orders[order_id];
+     match order with
+     | Some (Order order_placer sell_token sell_amount buy_token buy_amount) =>
+       (* Check that the placer has allowed sufficient funds to be accessed *)
+       CheckAllowance buy_token buy_amount;
+       (* Create the two transfer messages and send them *)
+       msgs = mk_make_order_msgs sell_token sell_amount buy_token buy_amount _this_address order_placer _sender;
+       send msgs;
+       (* Order has now been matched, so remove it *)
+       delete active_orders[order_id]
+     | None =>
+       e = { _exception : "UnknownOrder";
+            order_id : order_id };
+       throw e
+     end
+   end
+   
+   procedure CheckInitiator(
+     initiator : ByStr20)
+     initiator_is_this = builtin eq initiator _this_address;
+     match initiator_is_this with
+     | True => (* Do nothing *)
+     | False =>
+       e = { _exception : "UnexpecedTransfer";
+            token_address : _sender;
+            initiator : initiator };
+       throw e
+     end
+   end  
+     
+   transition RecipientAcceptTransferFrom (
+     initiator : ByStr20,
+     sender : ByStr20,
+     recipient : ByStr20,
+     amount : Uint128)
+     (* The exchange only accepts transfers that it itself has initiated.  *)
+     CheckInitiator initiator
+   end  
+   
+   transition TransferFromSuccessCallBack (
+     initiator : ByStr20,
+     sender : ByStr20,
+     recipient : ByStr20,
+     amount : Uint128)
+     (* The exchange only accepts transfers that it itself has initiated.  *)
+     CheckInitiator initiator
+   end  
+   
+   transition TransferSuccessCallBack (
+     initiator : ByStr20,
+     sender : ByStr20,
+     recipient : ByStr20,
+     amount : Uint128)
+     (* The exchange only accepts transfers that it itself has initiated.  *)
+     CheckInitiator initiator
+   end  
+   
+                   
+As mentioned in the introduction we have kept the exchange simplistic
+in order to keep the focus on Scilla features.
+
+To further familiarise themselves with Scilla we encourage the reader
+to add additional features such as unlisting of tokens, cancellation
+of orders, orders with expiry time, prioritising orders so that the
+order matcher gets the best deal possible, partial matching of orders,
+securing the exchange against abuse, fees for trading on the exchange,
+etc..
