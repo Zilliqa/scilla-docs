@@ -450,3 +450,11 @@ byte string.
 - ``append_uint256 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
   Serialize a ``Uint256`` value (with the specified encoding) and append it to the provied
   ``ByStr`` and return the result ``ByStr``.
+
+Polynetwork Support Library
+***************************
+
+This library provides utility functions used in building the Zilliqa Polynetwork bridge.
+These functions are migrated from
+`Polynetwork's ethereum support <https://github.com/polynetwork/eth-contracts/tree/master/contracts/core/cross_chain_manager>`_,
+with the contract itself separately deployed.
