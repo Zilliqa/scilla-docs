@@ -373,3 +373,80 @@ PairUtils
   fst_strings tobias
 
 - ``snd : Pair 'A 'B -> 'B``: Extract the second element of a Pair.
+
+Conversions
+***********
+
+This library provides conversions b/w Scilla types, particularly
+between integer and byte strings.
+
+To enable specifying the encoding of integer arguments to these functions,
+a type is defined for endianness.
+
+.. code-block:: ocaml
+
+  type IntegerEncoding =
+    | LittleEndian
+    | BigEndian
+
+The functions below, along with their primary result, also return ``next_pos : Uint32``
+which indicates the position from which any further data extraction from the input
+``ByStr`` value can proceed. This is useful when deserializing a byte stream. In other
+words, ``next_pos`` indicates where this function stopped reading bytes from the input
+byte string.
+
+- ``substr_safe : ByStr -> Uint32 -> Uint32 -> Option ByStr``
+  While Scilla provides a builtin to extract substrings
+  of byte strings (``ByStr``), it is not exception safe. When provided incorrect
+  arguments, it throws exceptions. This library function is provided as an
+  exception safe function to extract, from a string ``s : ByStr``, a substring
+  starting at position ``pos : Uint32`` and of length ``len : Uint32``. It
+  returns ``Some ByStr`` on success and ``None`` on failure.
+
+- ``extract_uint32 : IntegerEncoding -> ByStr -> Uint32 -> Option (Pair Uint32 Uint32)``
+  Extracts a ``Uint32`` value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_uint32_value next_pos`` is returned. ``None`` otherwise.
+
+- ``extract_uint64 : IntegerEncoding -> ByStr -> Uint32 -> Option (Pair Uint64 Uint32)``
+  Extracts a ``Uint64`` value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_uint64_value next_pos`` is returned. ``None`` otherwise.
+
+- ``extract_uint128 : IntegerEncoding -> ByStr -> Uint32 -> Option (Pair Uint128 Uint32)``
+  Extracts a Uint128 value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_uint128_value next_pos`` is returned. ``None`` otherwise.
+
+- ``extract_uint256 : IntegerEncoding -> ByStr -> Uint32 -> Option (Pair Uint256 Uint32)``
+  Extracts a ``Uint256`` value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_uint256_value next_pos`` is returned. ``None`` otherwise.
+
+- ``extract_bystr1 : ByStr -> Uint32 -> Option (Pair ByStr1 Uint32)``
+  Extracts a ``ByStr1`` value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_bystr1_value next_pos`` is returned. ``None`` otherwise.
+
+- ``extract_bystr2 : ByStr -> Uint32 -> Option (Pair ByStr2 Uint32)``
+  Extracts a ``ByStr2`` value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_bystr2_value next_pos`` is returned. ``None`` otherwise.
+
+- ``extract_bystr20 : ByStr -> Uint32 -> Option (Pair ByStr20 Uint32)``
+  Extracts a ``ByStr2`` value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_bystr20_value next_pos`` is returned. ``None`` otherwise.
+
+- ``extract_bystr32 : ByStr -> Uint32 -> Option (Pair ByStr32 Uint32)``
+  Extracts a ``ByStr2`` value from ``bs : ByStr``, starting at position ``pos : Uint32``.
+  On success, ``Some extracted_bystr32_value next_pos`` is returned. ``None`` otherwise.
+
+- ``append_uint32 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
+  Serialize a ``Uint32`` value (with the specified encoding) and append it to the provied
+  ``ByStr`` and return the result ``ByStr``.
+
+- ``append_uint64 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
+  Serialize a ``Uint64`` value (with the specified encoding) and append it to the provied
+  ``ByStr`` and return the result ``ByStr``.
+
+- ``append_uint128 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
+  Serialize a ``Uint128`` value (with the specified encoding) and append it to the provied
+  ``ByStr`` and return the result ``ByStr``.
+
+- ``append_uint256 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
+  Serialize a ``Uint256`` value (with the specified encoding) and append it to the provied
+  ``ByStr`` and return the result ``ByStr``.
