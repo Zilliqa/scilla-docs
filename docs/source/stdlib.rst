@@ -378,7 +378,7 @@ Conversions
 ***********
 
 This library provides conversions b/w Scilla types, particularly
-between integer and byte strings.
+between integers and byte strings.
 
 To enable specifying the encoding of integer arguments to these functions,
 a type is defined for endianness.
@@ -436,19 +436,19 @@ byte string.
   On success, ``Some extracted_bystr32_value next_pos`` is returned. ``None`` otherwise.
 
 - ``append_uint32 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
-  Serialize a ``Uint32`` value (with the specified encoding) and append it to the provied
+  Serialize a ``Uint32`` value (with the specified encoding) and append it to the provided
   ``ByStr`` and return the result ``ByStr``.
 
 - ``append_uint64 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
-  Serialize a ``Uint64`` value (with the specified encoding) and append it to the provied
+  Serialize a ``Uint64`` value (with the specified encoding) and append it to the provided
   ``ByStr`` and return the result ``ByStr``.
 
 - ``append_uint128 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
-  Serialize a ``Uint128`` value (with the specified encoding) and append it to the provied
+  Serialize a ``Uint128`` value (with the specified encoding) and append it to the provided
   ``ByStr`` and return the result ``ByStr``.
 
 - ``append_uint256 : IntegerEncoding -> ByStr -> Uint32 -> ByStr``
-  Serialize a ``Uint256`` value (with the specified encoding) and append it to the provied
+  Serialize a ``Uint256`` value (with the specified encoding) and append it to the provided
   ``ByStr`` and return the result ``ByStr``.
 
 Polynetwork Support Library
