@@ -84,6 +84,7 @@ Contents
    scilla-trial
    scilla-by-example
    scilla-in-depth
+   stdlib
    scilla-tips-and-tricks
    scilla-checker
    interface
