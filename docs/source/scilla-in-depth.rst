@@ -474,6 +474,15 @@ mathematical. Scilla contains the following types of statements:
   containing the field ``f``. See the secion on :ref:`Addresses
   <Addresses>` for details on address types.
 
+- ``x <- & c as t``: Address type cast. Check whether ``c`` satisfies
+  the type ``t``. If it does, then store the value ``Some v`` into
+  ``x``, where ``v`` is the same value as ``c``, but of type ``t``
+  rather than the type of ``c``. If it does not, then store the value
+  ``None`` into ``x``. Note that ``c`` must be of type ``ByStr20`` or
+  an address type, and that ``t`` must be an address type. See the
+  section on :ref:`Addresses <Addresses>` for details on address
+  types.
+  
 - ``v = e`` : Evaluate the expression ``e``, and assign the value to
   the local variable ``v``.
 
@@ -980,6 +989,28 @@ typecheck is considered a run-time error, causing the current
 transaction to abort. (For the purposes of dynamic typechecks of
 immutable fields the deployment of a contract is considered a
 transaction).
+
+It is also possible to perform a dynamic typecheck as a statement,
+using the address type cast construct:
+
+.. code-block:: ocaml
+
+   x <- & c as ByStr20 with ... end
+
+If ``c`` satisfies the address type, then ``x`` is bound to ``Some
+v``, where ``v`` is the same value as ``c`` but is treated as having
+the address type specified in cast. On the other hand, if ``c`` does
+not satisfy the address type, then ``x`` is bound to ``None``.
+
+The advantage of using an address type cast instead of a dynamic
+typecheck of transition parameters is that a type cast does not cause
+a run-time failure in case of a failed cast - a failed cast just
+results in a ``None`` value.
+
+The disadvantage of address type casts is that they cost more gas. The
+type cast itself costs the same as a typecheck of a transition
+parameter, but one then needs to pattern-match on the result of the
+type cast, which costs additional gas.
 
 .. note::
 
