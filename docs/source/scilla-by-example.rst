@@ -1716,6 +1716,126 @@ recipient, because the recipient callback won't have a matching
 transition on the exchange, causing the entire transfer transaction to
 fail.
 
+Adding callbacks
+*****************
+
+Similar to how tokens execute callbacks whenever a transfer is
+performed, we will want to issue callbacks to the users and contracts
+that trade on our exchange. Callbacks should be issued in the following
+cases:
+
+- When an order is placed: The address placing the order should receive a
+  callback.
+- When an order is matched: The address that placed the order and the
+  address matching the order should each receive a callback.
+
+We choose to only issue callbacks whenever the addresses involved are
+contracts. This is not strictly necessary, since a callback sent to a
+user address does not cause a failure, but we do this to illustrate
+the use of address type casts.
+
+We add the following helper functions to the contract library. These
+simply construct the callback messages to the relevant addresses in
+the cases mentioned above:
+
+.. code-block:: ocaml
+
+   let mk_place_order_callback_msg : ByStr20 -> ByStr20 -> Uint128 -> ByStr20 -> Uint128 -> List Message =
+     fun (order_placer : ByStr20) =>
+     fun (token_sell : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+       let msg = { _recipient : order_placer;
+                   _tag : "PlaceOrderSuccesful";
+                   _amount : Uint128 0;
+                   selling_token : token_sell;
+                   selling_amount : sell_amount;
+                   buying_token : token_buy;
+                   buying_amount : buy_amount }
+       in
+       one_msg msg
+   
+   let mk_order_matched_callback_msg =
+     fun (order_matcher : ByStr20) =>
+     fun (token_sell : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+       let msg = { _recipient : order_matcher;
+                   _tag : "MatchOrderSuccesful";
+                   _amount : Uint128 0;
+                   selling_token : token_sell;
+                   selling_amount : sell_amount;
+                   buying_token : token_buy;
+                   buying_amount : buy_amount }
+       in
+       one_msg msg
+   
+   let mk_placed_order_matched_callback_msg =
+     fun (order_placer : ByStr20) =>
+     fun (token_sell : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+       let msg = { _recipient : order_placer;
+                   _tag : "PlacedOrderMatched";
+                   _amount : Uint128 0;
+                   selling_token : token_sell;
+                   selling_amount : sell_amount;
+                   buying_token : token_buy;
+                   buying_amount : buy_amount }
+       in
+       one_msg msg
+                   
+
+When an order is placed successfully we want to check if the placer is
+a contract. The way to check this is by using an `address type cast`,
+which is done as follows:
+
+.. code-block:: ocaml
+
+   sender_as_contract_opt <-& _sender as ByStr20 with contract end;
+
+If ``_sender`` satisfies the address type ``ByStr20 with contract
+end``, then ``sender_as_contract_opt`` will be bound to the value
+``Some v``, where ``v`` is a value that is equal to ``_sender``, but
+which has the type ``ByStr20 with contract end``. If ``_sender`` does
+not satisfy the type, then ``sender_as_contract_opt`` will be bound to
+``None``.
+
+Performing this type cast allows us to issue a callback in
+``PlaceOrder`` when ``_sender`` is a contract:
+
+.. code-block:: ocaml
+
+   match sender_as_contract_opt with
+   | Some sender_as_contract =>
+     callback_msg = mk_place_order_callback_msg _sender token_sell sell_amount token_buy buy_amount;
+     send callback_msg
+   | None => (* Do nothing *)
+   end
+
+We add a similar check to ``MatchOrder``, except that here we might
+need to issue callbacks both to the ``_sender`` and the order placer:
+
+.. code-block:: ocaml
+
+   match sender_as_contract_opt with
+   | Some sender_as_contract =>
+     callback_msg = mk_order_matched_callback_msg _sender sell_token sell_amount buy_token buy_amount;
+     send callback_msg
+   | None => (* Do nothing *)
+   end;
+   placer_as_contract_opt <-& order_placer as ByStr20 with contract end;
+   match placer_as_contract_opt with
+   | Some placer_as_contract =>
+     callback_msg = mk_placed_order_matched_callback_msg order_placer sell_token sell_amount buy_token buy_amount;
+     send callback_msg
+   | None => (* Do nothing *)
+   end
+
+   
 Putting it All Together
 *************************
 
@@ -1772,7 +1892,7 @@ We now have everything in place to specify the entire contract:
         from : from;
         to : to;
         amount : amount }
-       
+   
    let mk_place_order_msg : ByStr20 -> ByStr20 -> ByStr20 -> Uint128 -> List Message =
      fun (token_address : ByStr20) =>
      fun (from : ByStr20) =>
@@ -1799,10 +1919,57 @@ We now have everything in place to specify the entire contract:
        (* Create a singleton list *)
        two_msgs sell_msg buy_msg
    
+   (* Callback messages *)
+   let mk_place_order_callback_msg : ByStr20 -> ByStr20 -> Uint128 -> ByStr20 -> Uint128 -> List Message =
+     fun (order_placer : ByStr20) =>
+     fun (token_sell : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+       let msg = { _recipient : order_placer;
+                   _tag : "PlaceOrderSuccesful";
+                   _amount : Uint128 0;
+                   selling_token : token_sell;
+                   selling_amount : sell_amount;
+                   buying_token : token_buy;
+                   buying_amount : buy_amount }
+       in
+       one_msg msg
+   
+   let mk_order_matched_callback_msg =
+     fun (order_matcher : ByStr20) =>
+     fun (token_sell : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+       let msg = { _recipient : order_matcher;
+                   _tag : "MatchOrderSuccesful";
+                   _amount : Uint128 0;
+                   selling_token : token_sell;
+                   selling_amount : sell_amount;
+                   buying_token : token_buy;
+                   buying_amount : buy_amount }
+       in
+       one_msg msg
+   
+   let mk_placed_order_matched_callback_msg =
+     fun (order_placer : ByStr20) =>
+     fun (token_sell : ByStr20) =>
+     fun (sell_amount : Uint128) =>
+     fun (token_buy : ByStr20) =>
+     fun (buy_amount : Uint128) =>
+       let msg = { _recipient : order_placer;
+                   _tag : "PlacedOrderMatched";
+                   _amount : Uint128 0;
+                   selling_token : token_sell;
+                   selling_amount : sell_amount;
+                   buying_token : token_buy;
+                   buying_amount : buy_amount }
+       in
+       one_msg msg
    
    contract SimpleExchange
    (
-     (* Ensure that the initial admin is an address that is in use *)
      initial_admin : ByStr20 with end
    )
    
@@ -1810,9 +1977,6 @@ We now have everything in place to specify the entire contract:
    field admin : ByStr20 with end = initial_admin
    
    (* Tokens listed on the exchange. *)
-   (* We identify the token by its exchange code, and map it to the address     *)
-   (* of the contract implementing the token. The contract at that address must *)
-   (* contain an allowances field that we can remote read.                      *)
    field listed_tokens :
      Map String (ByStr20 with contract
                                 field allowances : Map ByStr20 (Map ByStr20 Uint128)
@@ -1953,7 +2117,15 @@ We now have everything in place to specify the entire contract:
          send msg;
          (* Create order and add to list of active orders  *)
          order = Order _sender token_sell sell_amount token_buy buy_amount;
-         AddOrder order
+         AddOrder order;
+         (* Do a callback if the placer is a contract *)
+         sender_as_contract_opt <-& _sender as ByStr20 with contract end;
+         match sender_as_contract_opt with
+         | Some sender_as_contract =>
+           callback_msg = mk_place_order_callback_msg _sender token_sell sell_amount token_buy buy_amount;
+           send callback_msg
+         | None => (* Do nothing *)
+         end
        | None =>
          (* Unlisted token *)
          ThrowListingStatusException token_code_buy true false
@@ -1975,7 +2147,22 @@ We now have everything in place to specify the entire contract:
        msgs = mk_make_order_msgs sell_token sell_amount buy_token buy_amount _this_address order_placer _sender;
        send msgs;
        (* Order has now been matched, so remove it *)
-       delete active_orders[order_id]
+       delete active_orders[order_id];
+       (* Do callbacks if the matcher or the placer were contracts *)
+       sender_as_contract_opt <-& _sender as ByStr20 with contract end;
+       match sender_as_contract_opt with
+       | Some sender_as_contract =>
+         callback_msg = mk_order_matched_callback_msg _sender sell_token sell_amount buy_token buy_amount;
+         send callback_msg
+       | None => (* Do nothing *)
+       end;
+       placer_as_contract_opt <-& order_placer as ByStr20 with contract end;
+       match placer_as_contract_opt with
+       | Some placer_as_contract =>
+         callback_msg = mk_placed_order_matched_callback_msg order_placer sell_token sell_amount buy_token buy_amount;
+         send callback_msg
+       | None => (* Do nothing *)
+       end
      | None =>
        e = { _exception : "UnknownOrder";
             order_id : order_id };
@@ -2022,7 +2209,7 @@ We now have everything in place to specify the entire contract:
      (* The exchange only accepts transfers that it itself has initiated.  *)
      CheckInitiator initiator
    end  
-   
+      
                    
 As mentioned in the introduction we have kept the exchange simplistic
 in order to keep the focus on Scilla features.
