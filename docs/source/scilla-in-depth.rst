@@ -2587,10 +2587,9 @@ the queue in the following order:
   the first ``send`` get processed first.
 
 - If a ``send`` statement is given a list with multiple messages in
-  it, then the head of the list is added to the queue before the
-  messages in the tail of the list are added. This means that the last
-  message in the list (the one that that was added to the list first)
-  gets processed first.
+  it, then the messages of the tail of the list are added to the queue
+  before the head of the list is added. This means that the first
+  message in the list gets processed first.
 
 Any run-time failure during the execution of a transaction causes the
 entire transaction to be aborted, with no further statements being
