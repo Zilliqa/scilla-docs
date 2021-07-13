@@ -2587,10 +2587,9 @@ the queue in the following order:
   the first ``send`` get processed first.
 
 - If a ``send`` statement is given a list with multiple messages in
-  it, then the head of the list is added to the queue before the
-  messages in the tail of the list are added. This means that the last
-  message in the list (the one that that was added to the list first)
-  gets processed first.
+  it, then the messages of the tail of the list are added to the queue
+  before the head of the list is added. This means that the first
+  message in the list gets processed first.
 
 Any run-time failure during the execution of a transaction causes the
 entire transaction to be aborted, with no further statements being
@@ -2607,3 +2606,44 @@ Contracts of different Scilla versions may invoke transitions on each
 other. The semantics of message passing between contracts is
 guaranteed to be backward compatible between major versions.
 
+
+Accounting
+**********
+
+For the transfer of native ZIL funds, Scilla follows an `acceptance
+semantics`. For a transfer to take place between contracts the funds
+must explicitly be accepted by the recipient by executing an
+``accept`` statement - it is not sufficient that the sender executes a
+``send`` statement.
+
+When a contract executes a ``send`` statement the ``_amount`` values
+of the outgoing messages are deducted from the ``_balance``
+field. However, the funds are not yet added to the recipient's
+``_balance`` field, because they have not yet been explicitly accepted
+by the recipient.
+
+When the recipient executes an ``accept`` statement the ``_amount`` of
+the incoming message is added to the contract's ``_balance`` field.
+
+If the recipient does not execute and ``accept`` statement, the
+``_amount`` is transferred back to the sender before the next message
+is processed.
+
+While the funds in a message are "in transit", i.e., between the point
+at which they is sent by the sender and the point at which they are
+accepted by the recipient (or, in the case of non-acceptance, the
+point at which the recipient transition finishes executing), the funds
+are stored away in the message itself, and therefore do not appear in
+neither the sender's nor the recipient's balances.
+
+.. note::
+
+   A user account (i.e., an address that does not hold a contract)
+   implicitly accepts all incoming funds, but does not do so until the
+   message carrying the funds is processed.
+
+If a contract executes a ``send`` statement on messages for which the
+total amount is more than the contract's current balance, then a
+run-time error occurs, and the entire transaction is aborted. In other
+words, no account balance may drop below 0 at any point during a
+transaction.
