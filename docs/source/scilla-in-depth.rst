@@ -201,7 +201,7 @@ fields get modified.
    type ``Uint128``, which is initialised to 0 when the contract is
    deployed. The ``_balance`` field keeps the amount of funds held by
    the contract, measured in QA (1 ZIL = 1,000,000,000,000 QA).  This
-   field can be freely read within the implementation, but can only
+   field can be freely read within the implementation, but can only be
    modified by explicitly transferring funds to other accounts (using
    ``send``), or by accepting money from incoming messages (using
    ``accept``).
