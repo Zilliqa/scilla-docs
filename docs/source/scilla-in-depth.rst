@@ -294,23 +294,25 @@ multiple parameters are separated by ``,``.
 
 .. note::
 
-   Transition parameters must be of a *serialisable* type:
+    Transition parameters must be of a *serialisable* type.
 
-   - Messages, events and the special ``Unit`` type are not
-     serialisable.
+    Serialisable:
+    
+    - Byte strings are serialisable.
 
-   - Byte strings are serialisable. Addresses are serialisable only as
-     ``ByStr20`` values. All other primitive types like integers and
-     strings are serialisable.
+    - Addresses are serialisable only as ``ByStr20`` values.
 
-   - Function types and map types are not serialisable.
+    - All other primitive types like integers and strings are serialisable.
 
-   - Complex types involving uninstantiated type variables are not
-     serialisable.
+    - ADT are serialisable if the types of their subvalues are serialisable. This means that the type of every constructor argument must be serialisable.
 
-   - ADT are serialisable if the types of their subvalues are
-     serialisable. This means that the type of every constructor
-     argument must be serialisable.
+    Not Serialisable:
+    
+    - Messages, events and the special ``Unit`` type are not serialisable.
+
+    - Function types and map types are not serialisable.
+
+    - Complex types involving uninstantiated type variables are not serialisable.
 
 Procedures
 ************
