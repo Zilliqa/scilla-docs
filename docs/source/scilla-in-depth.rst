@@ -470,7 +470,7 @@ mathematical. Scilla contains the following types of statements:
 
 - ``x <- & TIMESTAMP(block_num)`` : Fetch the timestamp of block
   ``block_num : BNum`` and store it into the local variable
-  ``x : Uint256``.
+  ``x : Uint64``.
 
 - ``x <- & c.f`` : Remote fetch. Fetch the value of the contract field
   ``f`` at address ``c``, and store it into the local variable
