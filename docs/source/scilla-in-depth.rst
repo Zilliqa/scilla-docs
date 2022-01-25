@@ -1071,11 +1071,11 @@ including byte sequences.
 - ``builtin eq h1 h2``: Is ``h1`` equal to ``h2``? Both inputs are of the
   same type ``ByStrX`` (or both are of type ``ByStr``). Returns a ``Bool``.
 
-- ``builtin sha256hash x`` : Convert ``x`` of any non-closure type to its SHA256 hash. Returns a ``ByStr32``.
+- ``builtin sha256hash x`` : Convert ``x`` of any non-closure and non-ADT (see ADTs_) type to its SHA256 hash. Returns a ``ByStr32``.
 
-- ``builtin keccak256hash x``: Convert ``x`` of any non-closure type to its Keccak256 hash. Returns a ``ByStr32``.
+- ``builtin keccak256hash x``: Convert ``x`` of any non-closure and non-ADT (see ADTs_) type to its Keccak256 hash. Returns a ``ByStr32``.
 
-- ``builtin ripemd160hash x``: Convert ``x`` of any non-closure type to its RIPEMD-160 hash. Returns a ``ByStr20``.
+- ``builtin ripemd160hash x``: Convert ``x`` of any non-closure and non-ADT (see ADTs_) type to its RIPEMD-160 hash. Returns a ``ByStr20``.
 
 - ``builtin substr h idx len`` : Extract the sub-byte-string of ``h`` of
   length ``len`` starting from position ``idx``. ``idx`` and
