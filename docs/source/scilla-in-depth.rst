@@ -1110,13 +1110,17 @@ including byte sequences.
   The return type is ``Option String``. On success, ``Some addr`` is returned and on invalid inputs ``None`` is returned.
 
 - ``builtin alt_bn128_G1_add p1 p2``. The builtin takes two points ``p1``, ``p2`` on the ``alt_bn128`` curve and returns 
-  the sum of the points in the underlying group G1. The input points and the result point are each a ``Pair {Bystr32 ByStr32}``.
+  the sum of the points in the underlying group G1. The input points are each a ``Pair {Bystr32 ByStr32}``. The return type 
+  is ``Option (Pair (ByStr32) (ByStr32))``. On success, ``Some point`` is returned and on invalid inputs ``None`` is returned.
   Each scalar component ``ByStr32`` of a point is a big-endian encoded number.
   Also see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-196.md
 
 - ``builtin alt_bn128_G1_mul p s``. The builtin takes a point ``p`` on the ``alt_bn128`` curve (as described previously),
-  and a scalar ``ByStr32`` value ``s`` and returns the sum of the point ``p`` taken ``s`` times. The result is a point
-  on the curve.
+  and a scalar ``ByStr32`` value ``s`` and returns the sum of the point ``p`` taken ``s`` times. The return type is
+  ``Option (Pair (ByStr32) (ByStr32))``. On success, ``Some point`` is returned and on invalid inputs ``None`` is returned.
+
+- ``builtin alt_bn128_G1_neg p``. The builtin takes a point ``p`` on the ``alt_bn128`` curve and returns the negation of the point.
+  The result is ``Option (Pair (ByStr32) (ByStr32))``. On success, ``Some point`` is returned and on invalid inputs ``None`` is returned.
 
 - ``builtin alt_bn128_pairing_product pairs``. This builtin takes in a list of pairs ``pairs`` of points.
   Each pair consists of a point in group G1 (``Pair {Bystr32 ByStr32}``) as the first component and a point in
