@@ -298,11 +298,9 @@ multiple parameters are separated by ``,``.
 
     Serialisable:
     
-    - Byte strings are serialisable.
+    - Byte strings, integers, strings, and block numbers are serialisable.
 
     - Addresses are serialisable only as ``ByStr20`` values.
-
-    - All other primitive types like integers and strings are serialisable.
 
     - ADT are serialisable if the types of their subvalues are serialisable. This means that the type of every constructor argument must be serialisable.
 
