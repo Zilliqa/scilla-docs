@@ -606,6 +606,11 @@ Here's an example that sends multiple messages.
    finished. More details can be found in the :ref:`Chain Calls
    <Chaincalls>` section.
    
+.. note::
+
+   Messages sent to a user-defined library are ignored. They do not
+   cause the transaction to fail, but they have no effect.
+   
 A contract can also communicate to the outside world by emitting
 events. An event is a signal that gets stored on the blockchain for
 everyone to see. If a user uses a client application invoke a
@@ -874,11 +879,11 @@ The hierarchy of address types is as follows:
 
 - ``ByStr20 with end``: A ``ByStr20`` which, when interpreted as a
   network address, refers to an address that is in use. An address is
-  in use if it either contains a contract, or if the balance or the
-  *nonce* of the address is greater than 0. (The balance of an address
-  is the number of Qa held by the address account. The nonce of an
-  address is the number of transactions that have been initiated from
-  that address).
+  in use if it either contains a contract or a library, or if the
+  balance or the *nonce* of the address is greater than 0. (The
+  balance of an address is the number of Qa held by the address
+  account. The nonce of an address is the number of transactions that
+  have been initiated from that address).
 
 - ``ByStr20 with contract end``: A ``ByStr20`` which, when interpreted
   as a network address, refers to the address of a contract.
@@ -1022,9 +1027,10 @@ type cast, which costs additional gas.
                 
                    let x : ByStr20 with end = 0x1234567890123456789012345678901234567890
    
-   The only way for a byte string to be validated against an address
-   type is to pass it as the value of an immutable field or as a
-   transition parameter, of the appropriate type.
+   The only ways for a byte string to be validated against an address
+   type is either to pass it as the value of an immutable field or as
+   a transition parameter of the appropriate type, or to perform a
+   cast statement to the appropriate type.
 
    
 Remote fetches
@@ -2373,7 +2379,6 @@ turn imports library ``Z``, then the names in ``Z`` are not in scope in `X``, bu
 in ``Y``. Cyclic dependencies in imports are not allowed and flagged as errors
 during the checking phase.
 
-
 Local Development with User-defined Libraries
 *********************************************
 
@@ -2428,7 +2433,7 @@ the following entry in its ``init.json``:
       ]
     }
   ]
-
+  
 Namespaces
 **********
 Import statements can be used to define separate namespaces for imported names.
@@ -2601,7 +2606,7 @@ senders. However, gas is still charged for the transcaction up until
 the point of the failure.
 
 The total number of messages that can be sent in a single transaction
-is currently set at 10. The number is subject to revision in the
+is currently set at 20. The number is subject to revision in the
 future.
 
 Contracts of different Scilla versions may invoke transitions on each
