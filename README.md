@@ -13,8 +13,8 @@ documentation, help us log an issue
 
 To compile the documentation you need the following dependencies.
 
-1. You need to have [sphinx](http://www.sphinx-doc.org/en/master/) installed.
-   Install Sphinx by running `pip install -U Sphinx`.
+1. You need to have [sphinx](http://www.sphinx-doc.org/en/master/) and [sphinx_rtd_theme](https://github.com/readthedocs/sphinx_rtd_theme) installed.
+   Install them by running `pip install -U Sphinx sphinx_rtd_theme`.
 2. Our build system checks for spelling mistakes automatically (we use the UK
    spelling, by the way). To enable it some additional dependencies are needed.
    - The [sphinxcontrib.spelling][spelling] spelling cheker for Sphinx:
