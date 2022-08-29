@@ -471,7 +471,7 @@ mathematical. Scilla contains the following types of statements:
 - ``x <- & c.f`` : Remote fetch. Fetch the value of the contract field
   ``f`` at address ``c``, and store it into the local variable
   ``x``. Note that the type of ``c`` must be an address type
-  containing the field ``f``. See the secion on :ref:`Addresses
+  containing the field ``f``. See the section on :ref:`Addresses
   <Addresses>` for details on address types.
 
 - ``x <- & c as t``: Address type cast. Check whether ``c`` satisfies
@@ -824,7 +824,7 @@ converting between byte string types:
 - ``builtin to_bystr h`` : Convert a value ``h`` of type ``ByStrX`` (for
   some known ``X``) to one of arbitrary length of type ``ByStr``.
 
-- ``builtin to_bystrX h`` : (note that ``X`` is a numerical paratemeter here and
+- ``builtin to_bystrX h`` : (note that ``X`` is a numerical parameter here and
   not a part of the builtin name, see the examples below)
 
   - if the argument ``h`` is of type ``ByStr``: Convert an arbitrary size byte
@@ -920,7 +920,7 @@ The hierarchy of address types defines a subtype relation:
 - Any contract address type ``ByStr20 with contract ... end`` is
   a subtype of ``ByStr20 with end``.
 
-- Any contract address type specifying explict fields ``ByStr20 with
+- Any contract address type specifying explicit fields ``ByStr20 with
   contract field f1 : t11, field f2 : t12, ... end`` is a subtype of
   a contract address type specifying a subset of those fields
   ``ByStr20 with contract field f1 : t21, field f2 : t22, ... end``,
@@ -1933,7 +1933,7 @@ As an example, consider the following two contracts:
    end
    
 Even though both contracts define identical types ``T``, the two types
-are considered different in Scilla. In particlar this means that the
+are considered different in Scilla. In particular this means that the
 message sent from ``Contract1`` to ``Contract2`` will not trigger the
 ``Receiving`` transition, because the value sent as the ``param``
 message field has the type ``T`` from ``Contract1``, whereas the type
@@ -2602,7 +2602,7 @@ Any run-time failure during the execution of a transaction causes the
 entire transaction to be aborted, with no further statements being
 executed, no further messages being processed, all state changes being
 rolled back, and all transferred funds returned to their respective
-senders. However, gas is still charged for the transcaction up until
+senders. However, gas is still charged for the transaction up until
 the point of the failure.
 
 The total number of messages that can be sent in a single transaction

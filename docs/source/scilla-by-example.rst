@@ -940,7 +940,7 @@ given as an immutable parameter:
 
 The type of the ``admin`` field is ``ByStr20 with end``, which is an
 `address type`. As in the earlier examples ``ByStr20`` is the type of
-byte strings of length 20, but we now add the addtional requirement
+byte strings of length 20, but we now add the additional requirement
 that when that byte string is interpreted as an address on the
 network, the address must be `in use`, and the contents at that
 address must satisfy whatever is between the ``with`` and ``end``
@@ -1036,7 +1036,7 @@ tokens to its own account for holding until the order is matched.
 Similarly, before a user matches an order, the user should provide the
 exchange with an allowance of the token that the order placer wants to
 buy. The user can then match the order, and the exchange can check
-that the allowance is sufficent. The exchange then transfers those
+that the allowance is sufficient. The exchange then transfers those
 tokens to the user who placed the order, and transfers to the matching
 user the tokens that it transferred to itself when the order was
 placed.

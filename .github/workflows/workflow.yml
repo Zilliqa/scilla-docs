@@ -1,0 +1,22 @@
+name: build
+
+on:
+  - pull_request
+  - push
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install OS packages
+      run: sudo apt-get update && sudo apt-get install -yq python3 python3-pip libenchant-2-dev aspell-en
+    - name: Install Python packages
+      run: pip install -r requirements.txt
+    - name: Run spellcheck
+      run: pushd docs && make spell && popd
+    - name: Build HTML
+      run: pushd docs && make html && popd

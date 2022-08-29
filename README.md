@@ -1,5 +1,7 @@
 # Scilla Docs
 
+![](https://github.com/Zilliqa/scilla-docs/workflows/build/badge.svg)
+
 Scilla short for Smart Contract Intermediate-Level LAnguage is a smart contract
 language being developed for Zilliqa.
 
@@ -7,35 +9,33 @@ language being developed for Zilliqa.
 
 If you spot any issues or have any ideas on how we can improve the
 documentation, help us log an issue
-[here](https://github.com/Zilliqa/scilla-docs/issues)
+[here](https://github.com/Zilliqa/scilla-docs/issues).
 
 ## Installing dependencies
 
-To compile the documentation you need the following dependencies.
+To compile the documentation you need the following system packages:
+[Python3](https://www.python.org/downloads/) with the
+[pip](https://pypi.org/project/pip/) package and
+[libenchant](https://www.abisource.com/projects/enchant/) used to check
+spelling.
 
-1. You need to have [sphinx](http://www.sphinx-doc.org/en/master/) and [sphinx_rtd_theme](https://github.com/readthedocs/sphinx_rtd_theme) installed.
-   Install them by running `pip install -U Sphinx sphinx_rtd_theme`.
-2. Our build system checks for spelling mistakes automatically (we use the UK
-   spelling, by the way). To enable it some additional dependencies are needed.
-   - The [sphinxcontrib.spelling][spelling] spelling cheker for Sphinx:
-   `pip install -U sphinxcontrib-spelling`.
-   - The command above will automatically install [PyEnchant][pyenchant] library
-     which itself needs the C [Enchant][enchant] library which one has to
-     install using e.g. your OS's package manager. You can find the installation
-     instructions [here][enchant-install]. Basically, you want either
-     `libenchant` or `enchant` package depending on your setup.
+On Debian-based systems you can install them with:
+```
+sudo apt-get install python3 python3-pip libenchant-2-dev
+```
 
-[spelling]: https://sphinxcontrib-spelling.readthedocs.io/en/latest/index.html
-[pyenchant]: https://pyenchant.github.io/pyenchant/index.html
-[enchant]: https://www.abisource.com/projects/enchant/
-[enchant-install]: https://pyenchant.github.io/pyenchant/install.html#installing-the-enchant-c-library
-   
+Then clone this repository and install the required Python packages from
+[`requirements.txt`](https://github.com/Zilliqa/scilla-docs/blob/master/requirements.txt):
+```
+pip3 -U install -r requirements.txt
+```
+
 ## Building the docs
-   
+
 ### Spellchecking
 
 Run `make spell` from [docs](./docs/) folder. In case of any found spelling
-mistakes you will see an output like the following.
+mistakes you will see an output like the following:
 ```
 Spelling checker messages written to /path/to/scilla-docs/docs/build/spelling/output.txt
 WARNING: Found 1 misspelled words
