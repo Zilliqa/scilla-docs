@@ -1,5 +1,7 @@
 # Scilla Docs
 
+![](https://github.com/Zilliqa/scilla-docs/workflows/build/badge.svg)
+
 Scilla short for Smart Contract Intermediate-Level LAnguage is a smart contract
 language being developed for Zilliqa.
 
