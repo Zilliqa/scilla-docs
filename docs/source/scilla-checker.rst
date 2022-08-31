@@ -58,6 +58,10 @@ annotations to each piece of syntax:
 + `Sanity-checking` performs a number of minor checks, e.g., that all
   parameters to a transition or a procedure have distinct names.
 
+Additionally, the Scilla checker provides an option that dumps the `call graph
+<https://en.wikipedia.org/wiki/Call_graph>`_ in the ``.dot`` format which is
+useful for auditing contracts.
+
 
 Annotations
 ***********
@@ -501,3 +505,69 @@ The cashflow analysis will tag the parameters and fields according to
 how they are used in the contract's transitions and procedures, and if
 the resulting tags do not correspond to the expectation, then the
 contract likely contains a bug somewhere.
+
+Exploring the call graph
+########################
+.. _scilla_checker_call_graph:
+
+Call graph allows the user to view the graphical representation of relationships
+between functions, procedures and transitions in contracts. It is useful for
+auditing contracts.
+
+Notation and example
+********************
+
+Consider the notation used in the following example:
+
+.. code-block:: ocaml
+
+    scilla_version 0
+
+    library Callgraph
+
+    let id = fun (a: Uint32) => a
+    let id_alias = id
+
+    let option_value =
+      tfun 'A =>
+      fun (default: 'A) =>
+      fun (v: Option 'A) =>
+        match v with
+        | Some v => v
+        | None => default
+        end
+    let option_uint32 = @option_value Uint32
+
+    contract Callgraph()
+
+    procedure pr1(a: Uint32)
+      accept
+    end
+
+    procedure pr2(a: Uint32)
+      pr1 a
+    end
+
+    transition tr(a: Uint32)
+      res = id_alias a;
+      pr2 res
+    end
+
+Calling ``scilla-checker`` with the ``-dump-callgraph`` option generates the
+``.dot`` file. The result file will be saved in the same directory as the
+contract file and will have the extension ``.dot``.
+
+It could be converted to a picture using the ``dot`` command line tool which is
+a part of the `Graphviz package <https://graphviz.org/>`_. Install Graphviz and
+run the following command: ``dot -Tsvg filename.dot -o filename.svg``.
+
+It will generate the call graph (the notation is additionally commented):
+
+.. image:: nstatic/imgs/callgraph.png
+
+Tools to work with the call graph
+*********************************
+
+The suggested way to work with the call graph is the `Graphviz plugin <https://marketplace.visualstudio.com/items?itemName=joaompinto.vscode-graphviz>`_ for `VSCode <https://code.visualstudio.com/>`_. It allows the user to interactively view the call graph in their editor.
+
+Another graphical viewer for the dot file is the crossplatform `dot.py <https://github.com/jrfonseca/xdot.py>`_ utility.
