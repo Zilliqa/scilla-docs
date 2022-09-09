@@ -468,6 +468,9 @@ mathematical. Scilla contains the following types of statements:
   variable ``BLOCKNUMBER``, and store it into the local variable
   ``x``.
 
+- ``x <- & CHAINID`` : Fetch the value of the current chain ID, and store it
+  into the local variable ``x`` of type ``Uint32``.
+
 - ``x <- & c.f`` : Remote fetch. Fetch the value of the contract field
   ``f`` at address ``c``, and store it into the local variable
   ``x``. Note that the type of ``c`` must be an address type
