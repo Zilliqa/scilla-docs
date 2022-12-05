@@ -78,13 +78,16 @@ Field      Description
 ``value``  Value of the immutable contract parameter
 =========  ==========================================
 
-``init.json`` must specify ``_scilla_version`` with type ``Uint32``,
-specifying a value that is the same as specified in the contract's source.
-Additionally, the blockchain will provide two implicit contract parameters
-``_this_address``, a ``ByStr20`` value denoting the address of the contract
-itself, and ``_creation_block``, a ``BNum`` value denoting the block in which
-the contract is / was created. While working with the offline interpreter,
-you may need to provide these values in the ``init.json`` yourself.
+``init.json`` must specify ``_scilla_version`` of type ``Uint32``
+specifying a value that is the same as specified in the contract's
+source, and ``_library`` of type ``Bool`` specifying whether the
+deployed code file is a library. Additionally, the
+blockchain will provide two implicit contract parameters
+``_this_address``, a ``ByStr20`` value denoting the address of the
+contract itself, and ``_creation_block``, a ``BNum`` value denoting
+the block in which the contract is / was created. While working with
+the offline interpreter, you may need to provide these values in the
+``init.json`` yourself.
 
 Example 1
 **********
@@ -108,6 +111,11 @@ A sample ``init.json`` for this contract will look like the following:
           "vname" : "_scilla_version",
           "type" : "Uint32",
           "value" : "0"
+      },
+      {
+          "vname" : "_library",
+          "type" : "Bool",
+          "value": { "constructor": "False", "argtypes": [], "arguments": [] }
       },
       {
           "vname" : "owner",
@@ -153,6 +161,11 @@ A sample ``init.json`` for this contract will look like the following:
         "vname" : "_scilla_version",
         "type" : "Uint32",
         "value" : "0"
+    },
+    {
+        "vname" : "_library",
+        "type" : "Bool",
+        "value": { "constructor": "False", "argtypes": [], "arguments": [] }
     },
     {
         "vname" : "owner",
@@ -208,6 +221,11 @@ The JSON entry for the ``initial_admin`` parameter must use the type
         "vname" : "_scilla_version",
         "type" : "Uint32",
         "value" : "0"
+    },
+    {
+        "vname" : "_library",
+        "type" : "Bool",
+        "value": { "constructor": "False", "argtypes": [], "arguments": [] }
     },
     {
         "vname" : "_this_address",

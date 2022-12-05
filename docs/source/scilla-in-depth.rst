@@ -2402,8 +2402,22 @@ While the Zilliqa blockchain is designed to provide the standard Scilla librarie
 executing contract, it must be provided with extra information to support user-defined
 libraries.
 
-The ``init.json`` of a library must include a ``Bool`` entry named ``_library``, set to
-``True``. Additionally,
+The `init.json` of a library must include a ``Bool`` entry named ``_library``, set to
+``True``:
+
+.. code-block:: javascript
+
+  [
+    ...,
+    {
+        "vname" : "_library",
+        "type" : "Bool",
+        "value": { "constructor": "True", "argtypes": [], "arguments": [] }
+    }
+  ]
+
+For contracts the ``_library`` entry must be set to ``False``.
+
 A contract or a library that imports user-defined libraries must include in its `init.json`
 an entry named ``_extlibs``, of Scilla type ``List (Pair String ByStr20)``. Each entry in
 the list maps an imported library's name to its address in the blockchain.
@@ -2416,9 +2430,9 @@ the following entry in its ``init.json``:
   [
     ...,
     {
-        "vname" : "_library",
-        "type" : "Bool",
-        "value": { "constructor": "True", "argtypes": [], "arguments": [] }
+      "vname" : "_library",
+      "type" : "Bool",
+      "value": { "constructor": "False", "argtypes": [], "arguments": [] }
     }
     {
       "vname" : "_extlibs",
@@ -2543,7 +2557,7 @@ code to decide which interpreter to invoke.
 A mismatch in the versions specified in ``init.json`` and the source code
 will lead to a gas-charged error by the interpreter.
 
-An example ``init.json``:
+An example ``init.json`` for a contract:
 
 .. code-block:: json
 
@@ -2557,6 +2571,11 @@ An example ``init.json``:
         "vname" : "_scilla_version",
         "type" : "Uint32",
         "value" : "1",
+     },
+     {
+        "vname" : "_library",
+        "type" : "Bool",
+        "value": { "constructor": "False", "argtypes": [], "arguments": [] }
      }
    ]
 
