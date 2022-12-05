@@ -471,6 +471,12 @@ mathematical. Scilla contains the following types of statements:
 - ``x <- & CHAINID`` : Fetch the value of the current chain ID, and store it
   into the local variable ``x`` of type ``Uint32``.
 
+- ``x <- & TIMESTAMP(block_num)`` : If ``block_num`` refers to an
+  earlier block than the current one, then fetch the timestamp ``t``
+  of that block, and store the value ``Some t`` into the local
+  variable ``x : Option Uint64``. If ``block_num`` refers to the
+  current block or later, then store the value ``None`` into ``x``.
+
 - ``x <- & c.f`` : Remote fetch. Fetch the value of the contract field
   ``f`` at address ``c``, and store it into the local variable
   ``x``. Note that the type of ``c`` must be an address type
@@ -2405,8 +2411,22 @@ While the Zilliqa blockchain is designed to provide the standard Scilla librarie
 executing contract, it must be provided with extra information to support user-defined
 libraries.
 
-The ``init.json`` of a library must include a ``Bool`` entry named ``_library``, set to
-``True``. Additionally,
+The `init.json` of a library must include a ``Bool`` entry named ``_library``, set to
+``True``:
+
+.. code-block:: javascript
+
+  [
+    ...,
+    {
+        "vname" : "_library",
+        "type" : "Bool",
+        "value": { "constructor": "True", "argtypes": [], "arguments": [] }
+    }
+  ]
+
+For contracts the ``_library`` entry must be set to ``False``.
+
 A contract or a library that imports user-defined libraries must include in its `init.json`
 an entry named ``_extlibs``, of Scilla type ``List (Pair String ByStr20)``. Each entry in
 the list maps an imported library's name to its address in the blockchain.
@@ -2419,9 +2439,9 @@ the following entry in its ``init.json``:
   [
     ...,
     {
-        "vname" : "_library",
-        "type" : "Bool",
-        "value": { "constructor": "True", "argtypes": [], "arguments": [] }
+      "vname" : "_library",
+      "type" : "Bool",
+      "value": { "constructor": "False", "argtypes": [], "arguments": [] }
     }
     {
       "vname" : "_extlibs",
@@ -2546,7 +2566,7 @@ code to decide which interpreter to invoke.
 A mismatch in the versions specified in ``init.json`` and the source code
 will lead to a gas-charged error by the interpreter.
 
-An example ``init.json``:
+An example ``init.json`` for a contract:
 
 .. code-block:: json
 
@@ -2560,6 +2580,11 @@ An example ``init.json``:
         "vname" : "_scilla_version",
         "type" : "Uint32",
         "value" : "1",
+     },
+     {
+        "vname" : "_library",
+        "type" : "Bool",
+        "value": { "constructor": "False", "argtypes": [], "arguments": [] }
      }
    ]
 
