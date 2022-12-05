@@ -510,14 +510,24 @@ Exploring the call graph
 ########################
 .. _scilla_checker_call_graph:
 
-Call graph allows the user to view the graphical representation of relationships
-between functions, procedures and transitions in contracts. It is useful for
-auditing contracts.
+The call graph option allows the user to view the graphical
+representation of relationships between functions, procedures and
+transitions in a contract.
 
-Notation and example
-********************
+Calling ``scilla-checker`` with the ``-dump-callgraph`` option
+generates a ``.dot`` file in the same directory as the contract
+file. Using the ``dot`` command line tool (part of the `Graphviz
+package <https://graphviz.org/>`_) this file can be converted into a
+picture using the command ``dot -Tsvg filename.dot -o filename.svg``.
 
-Consider the notation used in the following example:
+It is also possible to dump the callgraph to stdout using the option
+``-dump-callgraph-stdout``.
+
+Example
+*******
+
+Consider the following contract, which we assume to be located in the
+file ``callgraph.scilla``:
 
 .. code-block:: ocaml
 
@@ -553,21 +563,26 @@ Consider the notation used in the following example:
       pr2 res
     end
 
-Calling ``scilla-checker`` with the ``-dump-callgraph`` option generates the
-``.dot`` file. The result file will be saved in the same directory as the
-contract file and will have the extension ``.dot``.
+We now run the shell commands
 
-It could be converted to a picture using the ``dot`` command line tool which is
-a part of the `Graphviz package <https://graphviz.org/>`_. Install Graphviz and
-run the following command: ``dot -Tsvg filename.dot -o filename.svg``.
+.. code-block:: bash
 
-It will generate the call graph (the notation is additionally commented):
+                $ scilla-checker -dump-callgraph -libdir path/to/stdlib -gaslimit 1000 callgraph.scilla
+                $ dot -Tsvg callgraph.dot -o callgraph.svg
+    
+This will generate the following graphic illustrating the callgraph,
+located in the file ``callgraph.svg`` (note that comments have been
+added manually):
 
 .. image:: nstatic/imgs/callgraph.png
 
 Tools to work with the call graph
 *********************************
 
-The suggested way to work with the call graph is the `Graphviz plugin <https://marketplace.visualstudio.com/items?itemName=joaompinto.vscode-graphviz>`_ for `VSCode <https://code.visualstudio.com/>`_. It allows the user to interactively view the call graph in their editor.
+The suggested way to work with the call graph is the `Graphviz plugin
+<https://marketplace.visualstudio.com/items?itemName=joaompinto.vscode-graphviz>`_
+for `VSCode <https://code.visualstudio.com/>`_. It allows the user to
+interactively view the call graph in their editor.
 
-Another graphical viewer for the dot file is the crossplatform `dot.py <https://github.com/jrfonseca/xdot.py>`_ utility.
+Another graphical viewer for the dot file is the crossplatform `dot.py
+<https://github.com/jrfonseca/xdot.py>`_ utility.
