@@ -468,6 +468,9 @@ mathematical. Scilla contains the following types of statements:
   variable ``BLOCKNUMBER``, and store it into the local variable
   ``x``.
 
+- ``x <- & CHAINID`` : Fetch the value of the current chain ID, and store it
+  into the local variable ``x`` of type ``Uint32``.
+
 - ``x <- & TIMESTAMP(block_num)`` : If ``block_num`` refers to an
   earlier block than the current one, then fetch the timestamp ``t``
   of that block, and store the value ``Some t`` into the local
