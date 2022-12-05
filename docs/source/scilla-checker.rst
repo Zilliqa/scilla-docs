@@ -520,14 +520,12 @@ file. Using the ``dot`` command line tool (part of the `Graphviz
 package <https://graphviz.org/>`_) this file can be converted into a
 picture using the command ``dot -Tsvg filename.dot -o filename.svg``.
 
-It is also possible to dump the callgraph to stdout using the option
-``-dump-callgraph-stdout``.
+It is also possible to dump the call graph to ``stdout`` using the option ``-dump-callgraph-stdout``.
 
 Example
 *******
 
-Consider the following contract, which we assume to be located in the
-file ``callgraph.scilla``:
+Consider the following contract, which we assume to be located in the file ``callgraph.scilla``:
 
 .. code-block:: ocaml
 
@@ -570,7 +568,7 @@ We now run the shell commands
                 $ scilla-checker -dump-callgraph -libdir path/to/stdlib -gaslimit 1000 callgraph.scilla
                 $ dot -Tsvg callgraph.dot -o callgraph.svg
     
-This will generate the following graphic illustrating the callgraph,
+This will generate the following graphic illustrating the call graph,
 located in the file ``callgraph.svg`` (note that comments have been
 added manually):
 
