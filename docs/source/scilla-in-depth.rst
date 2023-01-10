@@ -332,7 +332,7 @@ keyword.
   end
 
 where ``vname : vtype`` specifies the name and type of each parameter and
-multiple parameters are separated by ``,``. 
+multiple parameters are separated by ``,``.
 
 Once a procedure is defined it is available to be invoked from
 transitions and procedures in the rest of the contract file. It is not
@@ -349,9 +349,35 @@ actual arguments to the procedure:
         v2 = ...;
         foo v1 v2;
 
-All arguments must be supplied when the procedure is invoked. A
-procedure does not return a result.
-        
+All arguments must be supplied when the procedure is invoked.
+
+A procedure can return a result. To use this, the user should specify a return
+type in the signature and use the ``_return :=`` statement to return a value:
+
+.. code-block:: ocaml
+
+  procedure inc (a : UInt32) : Uint32
+    result = builtin add a one;
+    _return := result
+  end
+
+The ``_return :=`` statement breaks control flow and terminates the procedure.
+If a procedure contains a return type in its signature, return statements must
+be present in all the branches of the code.
+
+The invocation syntax of procedures with return values is the same, but the
+user should specify a local variable for the return value:
+
+.. code-block:: ocaml
+
+   two = inc one
+
+.. note::
+
+    The invocation syntax of library functions and procedures with return
+    values is the same. Hence, name conflicts are possible when there is a
+    library function and a procedure with the same name. In this case, the
+    interpreter will treat such calls as procedure calls.
 
 .. note::
 
@@ -359,16 +385,14 @@ procedure does not return a result.
    implicitly passed to all the procedures that a transition
    calls. There is therefore no need to declare those parameters
    explicitly when defining a procedure.
-   
+
 .. note::
 
-   Procedure parameters cannot be (or contain) maps. If a procedure
-   needs to access a map, it is therefore necessary to either make the
-   procedure directly access the contract field containing the map, or
-   use a library function to perform the necessary computations on the
-   map.
+   Procedure parameters and return type cannot be (or contain) maps. If a
+   procedure needs to access a map, it is therefore necessary to either make
+   the procedure directly access the contract field containing the map, or use
+   a library function to perform the necessary computations on the map.
 
-     
 Expressions 
 ************
 
