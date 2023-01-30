@@ -948,9 +948,9 @@ The hierarchy of address types defines a subtype relation:
   ``ByStr20 with contract (p2_1 : tp2_1, p2_2 : tp2_2, ...) field f2_1 : t2_1, field
   f2_2 : t2_2, ... end``), provided that all the following hold:
 
-  - All immutable fields in the supertype must exist in the subtype (that is, the set ``p2_j`` is a subset of ``p1_j``),
-  - All mutable fields in the supertype must exist in the subtype (that is, the set ``t2_j`` is a subset of ``t1_i``),
-  - The type of all (mutable or immutable) fields in the supertype must be a subtype of the matching field in the subtype (that is, for if ``p1_i`` = ``p2_j``, then ``tp1_i`` must be a subtype of ``tp2_j``, and similarly for ``f1_i`` = ``f2_j``).
+  - All immutable fields in the super-type must exist in the subtype (that is, the set ``p2_j`` is a subset of ``p1_j``),
+  - All mutable fields in the super-type must exist in the subtype (that is, the set ``t2_j`` is a subset of ``t1_i``),
+  - The type of all (mutable or immutable) fields in the super-type must be a subtype of the matching field in the subtype (that is, for if ``p1_i`` = ``p2_j``, then ``tp1_i`` must be a subtype of ``tp2_j``, and similarly for ``f1_i`` = ``f2_j``).
 
   The order of the fields is irrelevant.
 
