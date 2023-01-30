@@ -477,11 +477,19 @@ mathematical. Scilla contains the following types of statements:
   variable ``x : Option Uint64``. If ``block_num`` refers to the
   current block or later, then store the value ``None`` into ``x``.
 
-- ``x <- & c.f`` : Remote fetch. Fetch the value of the contract field
-  ``f`` at address ``c``, and store it into the local variable
-  ``x``. Note that the type of ``c`` must be an address type
-  containing the field ``f``. See the section on :ref:`Addresses
-  <Addresses>` for details on address types.
+- ``x <- & c.f`` : Remote fetch of a mutable field. Fetch the value of
+  the mutable contract field ``f`` at address ``c``, and store it into
+  the local variable ``x``. Note that the type of ``c`` must be an
+  address type containing the field ``f``, and that ``f`` must be
+  mutable. See the section on :ref:`Addresses <Addresses>` for details
+  on address types.
+
+- ``x <- & c.(f)`` : Remote fetch of an immutable field. Fetch the
+  value of the immutable contract field ``f`` at address ``c``, and
+  store it into the local variable ``x``. Note that the type of ``c``
+  must be an address type containing the field ``f``, and that ``f``
+  must be immutable. See the section on :ref:`Addresses <Addresses>`
+  for details on address types.
 
 - ``x <- & c as t``: Address type cast. Check whether ``c`` satisfies
   the type ``t``. If it does, then store the value ``Some v`` into
@@ -897,12 +905,15 @@ The hierarchy of address types is as follows:
 - ``ByStr20 with contract end``: A ``ByStr20`` which, when interpreted
   as a network address, refers to the address of a contract.
 
-- ``ByStr20 with contract field f1 : t1, field f2 : t2, ... end``: A
-  ``ByStr20`` which, when interpreted as a network address, refers to
-  the address of a contract containing the mutable fields ``f1`` of
-  type ``t1``, ``f2`` of type ``t2``, and so on. The contract in
-  question may define more fields than the ones specified in the type,
-  but the fields specified in the type must be defined in the contract.
+- ``ByStr20 with contract (p1 : tp1, p2 : tp2, ...) field f1 : t1,
+  field f2 : t2, ... end``: A ``ByStr20`` which, when interpreted as a
+  network address, refers to the address of a contract containing the
+  immutable fields ``p1`` of type ``tp1``, ``p2`` of type ``tp2`` and
+  so on, and containing the mutable fields ``f1`` of type ``t1``,
+  ``f2`` of type ``t2``, and so on. The contract in question may
+  define more fields than the ones specified in the type, but the
+  fields specified in the type must be defined in the contract. The
+  order of the fields is irrelevant.
 
 .. note::
 
@@ -913,8 +924,8 @@ The hierarchy of address types is as follows:
 
 .. note::
 
-   Address types specifying immutable parameters or transitions of a
-   contract are not supported.
+   Address types specifying transitions of a contract are not
+   supported.
 
 Address subtyping
 -----------------
@@ -929,13 +940,19 @@ The hierarchy of address types defines a subtype relation:
 - Any contract address type ``ByStr20 with contract ... end`` is
   a subtype of ``ByStr20 with end``.
 
-- Any contract address type specifying explicit fields ``ByStr20 with
-  contract field f1 : t11, field f2 : t12, ... end`` is a subtype of
-  a contract address type specifying a subset of those fields
-  ``ByStr20 with contract field f1 : t21, field f2 : t22, ... end``,
-  provided that ``t11`` is a subtype of ``t21``, ``t12`` is
-  a subtype of ``t22``, and so on for each field specified in both
-  contract types.
+- Any contract address type specifying immutable fields ``p1_i :
+  tp1_i`` and mutable fields ``f1_i : t1_i`` (that is, the type is
+  ``ByStr20 with contract (p1_1 : tp1_1, p1_2 : tp1_2, ...) field f1_1 : t1_1, field
+  f1_2 : t1_2, ... end``) is a subtype of a contract address type
+  specifying immutable fields ``p2_j : tp2_j`` and mutable fields ``f2_j : t2_j`` (that is, the type is
+  ``ByStr20 with contract (p2_1 : tp2_1, p2_2 : tp2_2, ...) field f2_1 : t2_1, field
+  f2_2 : t2_2, ... end``), provided that all the following hold:
+
+  - All immutable fields in the super-type must exist in the subtype (that is, the set ``p2_j`` is a subset of ``p1_j``),
+  - All mutable fields in the super-type must exist in the subtype (that is, the set ``t2_j`` is a subset of ``t1_i``),
+  - The type of all (mutable or immutable) fields in the super-type must be a subtype of the matching field in the subtype (that is, for if ``p1_i`` = ``p2_j``, then ``tp1_i`` must be a subtype of ``tp2_j``, and similarly for ``f1_i`` = ``f2_j``).
+
+  The order of the fields is irrelevant.
 
 - For ADTs with type parameters such as ``List`` or ``Option``, an ADT
   ``T t1 t2 ...`` is a subtype of ``S s1 s2 ...`` if ``T`` is the same
@@ -980,7 +997,7 @@ Similarly, a transition might specify a parameter
 .. code-block:: ocaml
                 
       transition Transfer (
-          token_contract : ByStr20 with contract
+          token_contract : ByStr20 with contract (name : String)
                                           field balances : Map ByStr20 Uint128
                                    end
           )
@@ -988,21 +1005,23 @@ Similarly, a transition might specify a parameter
 When the transition is invoked, the byte string supplied as the
 ``token_contract`` parameter is looked up as an address on the
 blockchain, and if the contents of that address matches the address
-type (in this case that the address contains a contract with a
-field ``balances`` of a type that is assignable to ``Map ByStr20
-Uint128``), then the transition parameter is initialised
+type (in this case that the address contains a contract with an
+immutable field ``name`` of a type that is assignable to ``String``
+and a mutable field ``balances`` of a type that is assignable to ``Map
+ByStr20 Uint128``), then the transition parameter is initialised
 successfully, and ``token_contract`` can be treated as a ``ByStr20
-with contract field balances : Map ByStr20 Uint128 end`` throughout
-this transition invocation.
+with contract (name : String) field balances : Map ByStr20 Uint128
+end`` throughout this transition invocation.
 
 In either case, if the contents of the address does not match the
-specified type, then the dynamic typecheck is unsuccessful, causing
-deployment (for failed immutable parameters) or transition
-invocation (for transition parameters) to fail. A failed dynamic
-typecheck is considered a run-time error, causing the current
-transaction to abort. (For the purposes of dynamic typechecks of
-immutable fields the deployment of a contract is considered a
-transaction).
+specified type, then the dynamic typecheck is unsuccessful. A failed
+dynamic typecheck is considered a run-time error, causing the current
+transaction to abort. If the current transaction is a deployment of a
+contract, and the contract's immutable parameters fail to typecheck,
+then deployment fails and is aborted. If the current transaction is a
+(chain of) transition invocation(s), and the current transition's
+parameters fail to typecheck, then the transition invocation fails and
+the entire chain of transition invocations is aborted.
 
 It is also possible to perform a dynamic typecheck as a statement,
 using the address type cast construct:
@@ -1209,9 +1228,15 @@ In-place map operations
   m[k1][k2][...]``. If one or more of the intermediate keys do not
   exist in the corresponding map, the result of the fetch is ``None``.
 
-- ``x <- & c.m[k]``: *In-place* remote fetch. Works in the same way as
-  the local fetch operation, except that ``m`` must refer to a
-  mutable field in the contract at address ``c``.
+- ``x <- & c.(m)[k]``: *In-place* remote fetch from a map stored in an
+  immutable field. Works in the same way as the local fetch operation,
+  except that ``m`` must refer to an immutable field in the contract
+  at address ``c``.
+
+- ``x <- & c.m[k]``: *In-place* remote fetch from a map stored in a
+  mutable field. Works in the same way as the local fetch operation,
+  except that ``m`` must refer to a mutable field in the contract at
+  address ``c``.
 
 - ``x <- exists m[k]``: *In-place* local key existence check. ``m``
   must refer to a mutable field in the current contract. If ``k`` has
@@ -1223,10 +1248,15 @@ In-place map operations
   the intermediate keys do not exist in the corresponding map, the
   result is ``False``.
 
-- ``b <- & exists c.m[k]``: *In-place* remote key existence
-  check. Works in the same way as the local key existence check,
-  except that ``m`` must refer to a mutable field in the contract at
-  address ``c``.
+- ``b <- & exists c.(m)[k]``: *In-place* remote key existence check
+  for maps stored in an immutable field. Works in the same way as the
+  local key existence check, except that ``m`` must refer to an
+  immutable field in the contract at address ``c``.
+
+- ``b <- & exists c.m[k]``: *In-place* remote key existence check for
+  maps stored in a mutable field. Works in the same way as the local
+  key existence check, except that ``m`` must refer to a mutable field
+  in the contract at address ``c``.
 
 - ``delete m[k]``: *In-place* remove. Removes a key ``k`` and its
   associated value from the map ``m``. The identifier ``m`` must refer
